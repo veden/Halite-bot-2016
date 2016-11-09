@@ -1,3 +1,5 @@
+package game;
+
 public class Move {
     public Location loc;
     public Direction dir;

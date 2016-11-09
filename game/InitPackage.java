@@ -1,3 +1,4 @@
+package game;
 
 public class InitPackage {
     public int myID;
