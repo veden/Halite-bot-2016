@@ -1,16 +1,20 @@
 package game;
 
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import logic.AI;
+import logic.structure.Map;
+import logic.unit.Troops;
 
 public class MyBot {
     private static PrintWriter pw;
+    public static int ID;
     private static int frames = 0;
 
     public static void printLn(String s) {
 	pw.println(s);
+    }
+
+    public static void flush() {
 	pw.flush();
     }
     
@@ -18,13 +22,14 @@ public class MyBot {
 	pw = new PrintWriter("debug.txt");
 	try {
 	    InitPackage iPackage = Networking.getInit();
-	    int myID = iPackage.myID;
+	    ID = iPackage.myID;
 	    GameMap gameMap = iPackage.map;
 
 	    printLn("starting AI");
 
-	    AI p = new AI(gameMap);
-
+	    Troops troops = new Troops();
+	    Map map = new Map(gameMap, troops);
+	    
 	    printLn("starting game");
 
 	    Networking.sendInit("VedenV1");
@@ -34,10 +39,11 @@ public class MyBot {
 		printLn("round - " + frames++);
 		gameMap = Networking.getFrame();
 
-		p.refreshTiles(gameMap);
+		map.refresh(gameMap);
 	    
-		Networking.sendFrame(p.process());
+		Networking.sendFrame(troops.makeMoves(map));
 		printLn((System.currentTimeMillis() - start) + "-duration, " + frames + "-round");
+		flush();
 	    }
 	} finally {
 	    pw.close();
