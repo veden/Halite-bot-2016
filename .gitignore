@@ -1,3 +1,7 @@
 /halite.exe
 /runGame.bat
 /runGame.sh
+*.class
+*.xmi
+*.hlt
+/debug.txt
