@@ -2,8 +2,9 @@ package game;
 
 import java.io.PrintWriter;
 
-import logic.structure.Map;
+import logic.Constants;
 import logic.unit.Troops;
+import logic.world.Map;
 
 public class MyBot {
     private static PrintWriter pw;
@@ -23,12 +24,10 @@ public class MyBot {
 	try {
 	    InitPackage iPackage = Networking.getInit();
 	    ID = iPackage.myID;
-	    GameMap gameMap = iPackage.map;
-
 	    printLn("starting AI");
 
+	    Map map = new Map(iPackage.map);
 	    Troops troops = new Troops();
-	    Map map = new Map(gameMap, troops);
 	    
 	    printLn("starting game");
 
@@ -37,10 +36,7 @@ public class MyBot {
 	    while(true) {
 		long start = System.currentTimeMillis();
 		printLn("round - " + frames++);
-		gameMap = Networking.getFrame();
-
-		map.refresh(gameMap);
-	    
+		map.refresh(Networking.getFrame(), Constants.MAP_LIGHT_BURN_IN_ROUNDS);
 		Networking.sendFrame(troops.makeMoves(map));
 		printLn((System.currentTimeMillis() - start) + "-duration, " + frames + "-round");
 		flush();
