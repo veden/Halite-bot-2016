@@ -1,5 +1,3 @@
-package game;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -9,9 +7,9 @@ public class RandomBot {
         int myID = iPackage.myID;
         GameMap gameMap = iPackage.map;
 
-        Networking.sendInit("RandomJavaBot");
+        Networking.sendInit("rVedenV1");
 
-	Random r = new Random(12);
+	Random r = new Random();
 	
 	while(true) {
 	    ArrayList<Move> moves = new ArrayList<Move>();

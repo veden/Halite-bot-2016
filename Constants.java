@@ -1,10 +1,8 @@
-package logic;
-
 public class Constants {
 
-    public static float SITE_ACCUMULATION_MULTIPLIER = 4f;
+    public static float SITE_ACCUMULATION_MULTIPLIER = 5f;
 
-    public static int SITE_MAX_STRENGTH = 255;
+    public static float SITE_MAX_STRENGTH = 255f;
 
     public static float GAME_SCALING = 100.0f; 
 

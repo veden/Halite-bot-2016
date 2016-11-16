@@ -1,5 +1,3 @@
-package game;
-
 public class Location {
     public int x, y;
 
