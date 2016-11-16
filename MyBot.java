@@ -1,28 +1,42 @@
-import java.util.ArrayList;
+import java.io.PrintWriter;
 
 public class MyBot {
+    private static PrintWriter pw;
+    public static int ID;
+    private static int frames = 0;
+
+    public static void printLn(String s) {
+	//	pw.println(s);
+    }
+
+    public static void flush() {
+	//	pw.flush();
+    }
+    
     public static void main(String[] args) throws java.io.IOException {
-        InitPackage iPackage = Networking.getInit();
-        int myID = iPackage.myID;
-        GameMap gameMap = iPackage.map;
+	//	pw = new PrintWriter("debug.txt");
+	//	try {
+	InitPackage iPackage = Networking.getInit();
+	ID = iPackage.myID;
+	printLn("starting AI");
 
-        Networking.sendInit("MyJavaBot");
+	Map map = new Map(iPackage.map);
+	Troops troops = new Troops();
+	    
+	printLn("starting game");
 
-        while(true) {
-            ArrayList<Move> moves = new ArrayList<Move>();
-
-            gameMap = Networking.getFrame();
-
-            for(int y = 0; y < gameMap.height; y++) {
-                for(int x = 0; x < gameMap.width; x++) {
-                    Site site = gameMap.getSite(new Location(x, y));
-                    if(site.owner == myID) {
-                        Direction dir = Direction.randomDirection();
-                        moves.add(new Move(new Location(x, y), dir));
-                    }
-                }
-            }
-            Networking.sendFrame(moves);
-        }
+	Networking.sendInit("VedenV1");
+	    
+	while(true) {
+	    long start = System.currentTimeMillis();
+	    printLn("round - " + frames);
+	    map.refresh(Networking.getFrame());
+	    Networking.sendFrame(troops.makeMoves(map));
+	    printLn((System.currentTimeMillis() - start) + "-duration, " + frames++ + "-round");
+	    flush();
+	}
+	// } finally {
+	//     pw.close();
+	// }
     }
 }

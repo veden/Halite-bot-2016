@@ -4,4 +4,8 @@
 *.class
 *.xmi
 *.hlt
+*.class
 /debug.txt
+/logic/structure/workbench.xmi
+/game/workbench.xmi
+*.xmi
