@@ -21,23 +21,24 @@ public class DistributeProcess implements ProcessTile {
 		if (!center.mine()) {
 		    if (!tile.mine()) {
 			if (tile.getUnits() != 0)
-			    tile.production += generatePower * (1/(distance)) * (1 - (tile.getUnits()/(Constants.SITE_MAX_STRENGTH)));
-			else 
-			    tile.strength += generatePower * (1/(distance));
-		    } else {
+			    tile.production += generatePower * (1/(distance)) * (1 - (tile.getUnits()/(Constants.SITE_MAX_STRENGTH*2)));
+			else
+			    tile.strength += generatePower * (1/(distance)); 
+		    } else
 			tile.strength += generatePower * (1/(distance));
-			if (center.enemy() && (distance <= 7) && (tile.defense < (1/distance)))
-			    tile.defense = (1/distance);
-		    }
 		}
+		// if (center.enemy())
+		//     tile.strength += center.getUnits() * (1/distance);
 	    }
 	} else {
 	    if (!center.mine()) {
 		if (tile.getUnits() != 0)
-		    tile.production += generatePower * (1 - (tile.getUnits()/(Constants.SITE_MAX_STRENGTH)));
+		    tile.production += generatePower * (1 - (tile.getUnits()/Constants.SITE_MAX_STRENGTH));
 		else
 		    tile.strength += generatePower;
 	    }
+	    // if (center.enemy())
+	    // 	tile.strength += center.getUnits();
 	}
     }    
 }

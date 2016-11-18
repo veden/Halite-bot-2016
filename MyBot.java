@@ -14,29 +14,30 @@ public class MyBot {
     }
     
     public static void main(String[] args) throws java.io.IOException {
-	//	pw = new PrintWriter("debug.txt");
-	//	try {
-	InitPackage iPackage = Networking.getInit();
-	ID = iPackage.myID;
-	printLn("starting AI");
+	pw = new PrintWriter("debug.txt");
+	try {
+	    InitPackage iPackage = Networking.getInit();
+	    ID = iPackage.myID;
+	    printLn("starting AI");
 
-	Map map = new Map(iPackage.map);
-	Troops troops = new Troops();
+	    Map map = new Map(iPackage.map);
+	    Troops troops = new Troops();
 	    
-	printLn("starting game");
+	    printLn("starting game");
 
-	Networking.sendInit("VedenV1");
+	    Networking.sendInit("VedenV3");
 	    
-	while(true) {
-	    long start = System.currentTimeMillis();
-	    printLn("round - " + frames);
-	    map.refresh(Networking.getFrame());
-	    Networking.sendFrame(troops.makeMoves(map));
-	    printLn((System.currentTimeMillis() - start) + "-duration, " + frames++ + "-round");
-	    flush();
+	    while(true) {
+		long start = System.currentTimeMillis();
+		printLn("round - " + frames);
+		map.refresh(Networking.getFrame());
+		Networking.sendFrame(troops.makeMoves(map));
+		printLn(Troops.lostStrength+"-lostStrength");
+		printLn((System.currentTimeMillis() - start) + "-duration, " + frames++ + "-round");
+		flush();
+	    }
+	} finally {
+	    pw.close();
 	}
-	// } finally {
-	//     pw.close();
-	// }
     }
 }

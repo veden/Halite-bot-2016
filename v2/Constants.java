@@ -1,6 +1,6 @@
 public class Constants {
 
-    public static float SITE_ACCUMULATION_MULTIPLIER = 4.5f;
+    public static float SITE_ACCUMULATION_MULTIPLIER = 5f;
 
     public static float SITE_MAX_STRENGTH = 255f;
 

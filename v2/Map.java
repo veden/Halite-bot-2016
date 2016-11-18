@@ -6,7 +6,7 @@ public class Map {
     private HashMap<Integer, HashMap<Integer, Tile>> tiles;
 
     public final int width;
-    public final int height;
+    public final int height; 
 
     private AnalysisProcess analysisProcess;
     private DispersalProcess dispersalProcess;
@@ -15,8 +15,10 @@ public class Map {
 	width = gameMap.width;
 	height = gameMap.height;
 	tiles = new HashMap<Integer, HashMap<Integer, Tile>>();
-	analysisProcess = new AnalysisProcess(); 
-	dispersalProcess = new DispersalProcess((int)Math.floor(Math.min(width, height) / 2.0f) - 1);
+	analysisProcess = new AnalysisProcess();
+	
+	//assuming square map
+	dispersalProcess = new DispersalProcess((int)Math.floor(width / 2.0f) - 1);
 	refresh(gameMap);
     }
 
@@ -56,20 +58,20 @@ public class Map {
 	analysisProcess.postProcess();
 
 	MyBot.printLn(Tile.getGeneratorScaling() + "-gs, " + Tile.getGeneratorMin() + "-gmi, " + Tile.getGeneratorMax() + "-gma, " + Tile.getGeneratorAverage() + "-ga, " +
-		      Tile.getUnitMin() + "-umi, " + Tile.getUnitMax() + "-uma, " + Tile.getUnitAverage() + "-ua, " + width + "-w, " + height + "-h");
+		      Tile.getUnitMin() + "-umi, " + Tile.getUnitMax() + "-uma, " + Tile.getUnitAverage() + "-ua");
 	    
-	// ArrayList<Tile> rankedOwnedTiles = getOwnedTiles();
-	// MyBot.printLn(rankedOwnedTiles.size()+"");
-	// for (int i = 0; i < rankedOwnedTiles.size(); i++)
-	//	    MyBot.printLn(rankedOwnedTiles.get(i).toString());
+	ArrayList<Tile> rankedOwnedTiles = getOwnedTiles();
+	MyBot.printLn(rankedOwnedTiles.size()+"");
+	for (int i = 0; i < rankedOwnedTiles.size(); i++)
+	    MyBot.printLn(rankedOwnedTiles.get(i).toString());
 	MyBot.printLn("--");
 	ArrayList<Tile> rankedFrontTiles = getFrontTiles();
 	float totalProduction = 0.0f;
-	// MyBot.printLn(rankedFrontTiles.size()+"");
+	MyBot.printLn(rankedFrontTiles.size()+"");
 	for (int i = 0; i < rankedFrontTiles.size(); i++) {
 	    Tile t = rankedFrontTiles.get(i);
 	    totalProduction += t.production;
-	    //MyBot.printLn(t.toString());
+	    MyBot.printLn(t.toString());
 	}
 	MyBot.printLn("p-" + (totalProduction / rankedFrontTiles.size()));
 	MyBot.printLn("");
@@ -121,8 +123,6 @@ public class Map {
 	    return x % limit;
     }
 
-    
-
     //does only one cardinal adjacent tile
     public Direction directionFromTileToTile(Tile a, Tile b) {	
 	if (a.equals(b))
@@ -135,20 +135,6 @@ public class Map {
 	    return Direction.SOUTH;
 	else if ((safeCoordinate(a.y - 1, height) == b.y) && (a.x == b.x))
 	    return Direction.NORTH;
-	return null;
-    }
-
-    public Tile getTileWithPositionDirection(int x, int y, Direction d) {
-	if (d == Direction.NORTH)
-	    return getTile(x, y-1);
-	else if (d == Direction.SOUTH)
-	    return getTile(x, y+1);
-	else if (d == Direction.EAST)
-	    return getTile(x+1, y);
-	else if (d == Direction.WEST)
-	    return getTile(x-1, y);
-	else if (d == Direction.STILL)
-	    return getTile(x, y);
 	return null;
     }
 

@@ -20,7 +20,6 @@ public class Tile implements Comparable<Tile> {
     public int openings = 0;
     public int ambushes = 0;
     public boolean used;
-    public boolean optimized;
     public final int id;
     
     public Tile(int x, int y, Site site) {
@@ -29,7 +28,6 @@ public class Tile implements Comparable<Tile> {
 	this.x = x;
 	this.y = y;
 	used = false;
-	optimized = false;
 	if (site.production > maxGenerator)
 	    maxGenerator = site.production;
 	if (site.production < minGenerator)
@@ -119,7 +117,6 @@ public class Tile implements Comparable<Tile> {
     public void updateTile(Site site) {
 	this.site = site;
 	used = false;
-	optimized = false;
 	production = 0;
 	strength = 0;
 	defense = 0;

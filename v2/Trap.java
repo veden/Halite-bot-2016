@@ -1,23 +1,49 @@
 
 import java.util.ArrayList;
+import java.util.function.Predicate;
+
 
 public class Trap {
+    
+    private ArrayList<UnitDirectionPair> layer1;
+    private ArrayList<UnitDirectionPair> layer2;
+    private ArrayList<UnitDirectionPair> layer3;
+
     public final ArrayList<Move> moves;
     
     public Trap(Map map, Tile target) {
 	moves = new ArrayList<Move>();
+	layer1 = new ArrayList<UnitDirectionPair>();
+	layer2 = new ArrayList<UnitDirectionPair>();
+	layer3 = new ArrayList<UnitDirectionPair>();
 
-	final ArrayList<UnitDirectionPair> layer1 = new ArrayList<UnitDirectionPair>();
+	final ArrayList<UnitDirectionPair> temp = new ArrayList<UnitDirectionPair>();
 	
 	ProcessTile getNeighbors = new ProcessTile() {
 		@Override
 		public void process(Map map, Tile tile) {
 		    if (tile.mine())
-			layer1.add(new UnitDirectionPair(tile, map.directionFromTileToTile(tile, target)));
+			temp.add(new UnitDirectionPair(tile, map.directionFromTileToTile(tile, target)));
 		}
 	    };
 	
 	map.processCardinal(target.x, target.y, getNeighbors);
+        layer1.addAll(temp);
+	temp.clear();
+	for (UnitDirectionPair up : layer1)
+	    map.processCardinal(up.tile.x, up.tile.y, getNeighbors);
+	layer2.addAll(temp);
+	temp.clear();
+	for (UnitDirectionPair up : layer2)
+	    map.processCardinal(up.tile.x, up.tile.y, getNeighbors);
+	layer3.addAll(temp);
+	temp.clear();
+
+	// MyBot.printLn(layer1.toString());
+	// MyBot.printLn(layer2.toString());
+	// MyBot.printLn(layer3.toString());
+	// MyBot.printLn("-------");
+	// MyBot.flush();
 	
 	boolean moved = false;
 	for (int i = 0; i < layer1.size() && !moved; i++) {
@@ -55,5 +81,7 @@ public class Trap {
 		}
 	    }
 	}
+
+	//TODO: all sides
     }
 }

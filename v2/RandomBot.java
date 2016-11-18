@@ -7,7 +7,7 @@ public class RandomBot {
         int myID = iPackage.myID;
         GameMap gameMap = iPackage.map;
 
-        Networking.sendInit("VedenV1");
+        Networking.sendInit("rVedenV1");
 
 	Random r = new Random();
 	

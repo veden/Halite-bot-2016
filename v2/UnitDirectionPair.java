@@ -8,13 +8,6 @@ public class UnitDirectionPair implements Comparable<UnitDirectionPair> {
     }
 
     @Override
-    public boolean equals(Object obj) {
-	if (obj instanceof UnitDirectionPair)
-	    return ((UnitDirectionPair)obj).equals(this);
-	return false;
-    }
-
-    @Override
     public int compareTo(UnitDirectionPair o) {
 	return this.tile.compareTo(o.tile);
     }

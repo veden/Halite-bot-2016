@@ -4,5 +4,8 @@ del *.class
 
 javac MyBot.java
 javac RandomBot.java
-z:/halite.exe -q -d "35 35" -s 1230 "java MyBot" "java RandomBot" "java RandomBot"
+cd v2
+javac MyBot.java
+cd ..
+z:/halite.exe -q -d "35 35" -s 3895162942 "java MyBot" "cd v2 && java MyBot" "java RandomBot"
 pause
