@@ -1,7 +1,5 @@
 (module BuildScript racket
   (provide (all-defined-out))
-  
-  (require file/zip)
 
   (current-directory "/home/veden/haliteFiles/")
   
@@ -26,9 +24,9 @@
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot")
 
-  (define botPool  '("cd /data/factory/repo/wkJava/halite/src/v1; java RandomBot"
-                     "cd /data/factory/repo/wkJava/halite/src/v2; java MyBot"
-                     "cd /data/factory/repo/wkJava/halite/src/v3; java MyBot"))
+  (define botPool  '("cd /data/factory/repo/wkJava/halite/src/release/v1/; java RandomBot"
+                     "cd /data/factory/repo/wkJava/halite/src/release/v2/; java MyBot"
+                     "cd /data/factory/repo/wkJava/halite/src/release/v3/; java MyBot"))
 
   (define sizePool '(20
                      25
@@ -72,8 +70,17 @@
             (close-input-port e))
           (Proc report size bots seed)))))
 
+  (define (cleanClasses folder recurse)
+    (map (lambda (f)
+           (when (path-has-extension? f "class")
+             (delete-file f))
+           (when (and recurse (directory-exists? f))
+             (cleanClasses f recurse)))
+         (directory-list folder #:build? #t)))
+  
   (define (compileCurrent)
-    (system "cd /data/factory/repo/wkJava/halite/src/; rm *.class")
+    (cleanClasses (string->path "/data/factory/repo/wkJava/halite/src/") #f)
+    (cleanClasses (string->path "/data/factory/repo/wkJava/halite/src/game") #t)
     (system "cd ~/haliteFiles/; rm *.log")
     (system "cd ~/haliteFiles/; rm *.hlt")
     (system/exit-code "cd /data/factory/repo/wkJava/halite/src/; javac MyBot.java"))
@@ -166,16 +173,15 @@
                                  (ResultRecord 0 0 0)
                                  (ResultRecord 0 0 0)))))
 
-  (if (eq? (vector-length (current-command-line-arguments)) 0) "need commandline argument - series <int games> <int seed (-1 is random))>"
+  (if (eq? (vector-length (current-command-line-arguments)) 0) "need commandline argument - <int games> <int seed (-1 is random))>"
       (let ((arg (vector-ref (current-command-line-arguments) 0)))
         (if (not (eq? 0 (compileCurrent))) "bad compile"
-            (cond  ((string=? arg "series") (begin
-                                              ;;                                             (random-seed 1234)
-                                              (if (> (vector-length (current-command-line-arguments)) 2) 
-                                                  (let ((arg1 (vector-ref (current-command-line-arguments) 1))
-                                                        (arg2 (vector-ref (current-command-line-arguments) 2)))
-                                                    (unless (eq? (string->number arg2) -1)
-                                                      (random-seed (string->number arg2)))
-                                                    (pretty-display (playGames (string->number arg1))))
-                                                  "you need a number of rounds"))))))))
+            (begin
+              (if (> (vector-length (current-command-line-arguments)) 1) 
+                  (let ((arg1 (vector-ref (current-command-line-arguments) 0))
+                        (arg2 (vector-ref (current-command-line-arguments) 1)))
+                    (unless (eq? (string->number arg2) -1)
+                      (random-seed (string->number arg2)))
+                    (pretty-display (playGames (string->number arg1))))
+                  "you need a number of rounds"))))))
 
