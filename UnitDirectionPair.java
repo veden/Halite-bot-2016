@@ -1,9 +1,9 @@
 public class UnitDirectionPair implements Comparable<UnitDirectionPair> {
-    public final Tile tile;
+    public final Site site;
     public final Direction direction; 
 	
-    public UnitDirectionPair(Tile tile, Direction direction) {
-	this.tile = tile;
+    public UnitDirectionPair(Site site, Direction direction) {
+	this.site = site;
 	this.direction = direction;
     }
 
@@ -16,10 +16,10 @@ public class UnitDirectionPair implements Comparable<UnitDirectionPair> {
 
     @Override
     public int compareTo(UnitDirectionPair o) {
-	return this.tile.compareTo(o.tile);
+	return this.site.compareTo(o.site);
     }
 
     public String toString() {
-	return tile.toString() + ", " + direction.ordinal();
+	return site.toString() + ", " + direction.ordinal();
     }
 }

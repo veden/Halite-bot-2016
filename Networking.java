@@ -4,7 +4,8 @@ public class Networking {
     public static final int SIZE_OF_INTEGER_PREFIX = 4;
     public static final int CHAR_SIZE = 1;
     private static int _width, _height;
-    private static ArrayList< ArrayList<Integer> > _productions;
+    private static ArrayList< ArrayList<Byte> > _productions;
+    private static GameMap gameMap;
 
     static void deserializeGameMapSize(String inputString) {
         String[] inputStringComponents = inputString.split(" ");
@@ -18,11 +19,11 @@ public class Networking {
         String[] inputStringComponents = inputString.split(" ");
 
         int index = 0;
-        _productions = new ArrayList< ArrayList<Integer> >();
+        _productions = new ArrayList< ArrayList<Byte> >();
         for(int a = 0; a < _height; a++) {
-            ArrayList<Integer> row = new ArrayList<Integer>();
+            ArrayList<Byte> row = new ArrayList<Byte>();
             for(int b = 0; b < _width; b++) {
-                row.add(Integer.parseInt(inputStringComponents[index]));
+                row.add(Byte.parseByte(inputStringComponents[index]));
                 index++;
             }
             _productions.add(row);
@@ -31,43 +32,58 @@ public class Networking {
 
     static String serializeMoveList(ArrayList<Move> moves) {
         StringBuilder builder = new StringBuilder();
-        for(Move move : moves) builder.append(move.loc.x + " " + move.loc.y + " " + move.dir.ordinal() + " ");
+        for(Move move : moves) builder.append(move.x + " " + move.y + " " + move.dir.ordinal() + " ");
         return builder.toString();
     }
 
     static GameMap deserializeGameMap(String inputString) {
         String[] inputStringComponents = inputString.split(" ");
 
-        GameMap map = new GameMap(_width, _height);
+	boolean setProductions = false;
+	if (gameMap == null) {
+	    gameMap = new GameMap(_width, _height);
+	    MyBot.ai = new AI(_width, _height);
+	    MyBot.map = gameMap;
+	    setProductions = true;
+	}
 
-        // Run-length encode of owners
-        int y = 0, x = 0;
-        int counter = 0, owner = 0;
-        int currentIndex = 0;
-        while(y != map.height) {
-            counter = Integer.parseInt(inputStringComponents[currentIndex]);
-            owner = Integer.parseInt(inputStringComponents[currentIndex + 1]);
-            currentIndex += 2;
-            for(int a = 0; a < counter; ++a) {
-                map.contents.get(y).get(x).owner = owner;
-                ++x;
-                if(x == map.width) {
-                    x = 0;
-                    ++y;
-                }
-            }
-        }
+	// Run-length encode of owners
+	int y = 0, x = 0;
+	int counter = 0;
+	byte owner = 0;
+	int currentIndex = 0;
+	while(y != gameMap.height) {
+	    counter = Integer.parseInt(inputStringComponents[currentIndex]);
+	    owner = Byte.parseByte(inputStringComponents[currentIndex + 1]);
+	    currentIndex += 2;
+	    for(int a = 0; a < counter; ++a) {
+	        gameMap.getSite(x, y).owner = owner;
+		++x;
+		if(x == gameMap.width) {
+		    x = 0;
+		    ++y;
+		}
+	    }
+	}
+	
+	for (int a = 0; a < gameMap.height; ++a) {
+	    for (int b = 0; b < gameMap.width; ++b) {
+	        Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
+		currentIndex++;
+		Site s = gameMap.getSite(b, a);
+		s.units = strengthInt;
+		if (setProductions) {
+		    s.generator = _productions.get(a).get(b);
+		    s.initialUnits = strengthInt;
+		}
+		s.reset();
+	    }
+	}
 
-        for (int a = 0; a < map.contents.size(); ++a) {
-            for (int b = 0; b < map.contents.get(a).size(); ++b) {
-                int strengthInt = Integer.parseInt(inputStringComponents[currentIndex]);
-                currentIndex++;
-                map.contents.get(a).get(b).strength = strengthInt;
-                map.contents.get(a).get(b).production = _productions.get(a).get(b);
-            }
-        }
+	if (_productions.size() > 0)
+	    _productions.clear();
 
-        return map;
+	return gameMap;
     }
 
     static void sendString(String sendString) {

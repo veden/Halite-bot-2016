@@ -1,33 +1,87 @@
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 public class APC {
     
-    public Tile target;
+    public Site target;
     public final Direction targetDirection;
     
     public ArrayList<UnitDirectionPair> reinforcements;
     
-    public APC(Map map, Tile position, float productionThreshold) {
-	target = position;
-	map.processCardinal(position.x, position.y, new ProcessTile() {
-		@Override
-		public void process(Map map, Tile tile) {
-		    if (tile.mine())
-			if (target.strength < tile.strength)
-			    target = tile;
-		}
-	    });
+    public APC(Site center) {
+	target = center;
 
-	if (target == position)
-	    map.processCardinal(position.x, position.y, new ProcessTile() {
-		    @Override
-		    public void process(Map map, Tile tile) {
-			if (!tile.mine())
-			    if ((target.production < tile.production) && (position.getUnits() > tile.getUnits()))
-				target = tile;
-		    }
-		});
+	if (center.aboveCombatThreshold()) {
+	    MyBot.map.processCardinal(center.x,
+				      center.y,
+				      site -> {
+					  byte owner = MyBot.ai.getOwner(site.x, site.y);
+					  if (owner == 0) {
+					      int unitTotal = (center.units + site.incoming - site.units);
+					      if ((target.defense < site.defense) &&
+						  (target.damage < site.damage) &&
+						  (center.units > site.units) &&
+						  (unitTotal < Constants.SITE_MAX_LOSSY_STRENGTH))
+						  target = site;
+					  }
+				      });
+
+	    if (target == center)
+		MyBot.map.processCardinal(center.x,
+					  center.y,
+					  site -> {
+					      byte owner = MyBot.ai.getOwner(site.x, site.y);
+					      if (owner == MyBot.ID) {
+						  int unitTotal = (center.units + site.incoming + site.units - site.outgoing);
+						  if ((target.defense < site.defense) && (unitTotal < Constants.SITE_MAX_LOSSY_STRENGTH))
+						      target = site;
+					      }
+					  });
+
+	    if (target == center)
+		MyBot.map.processCardinal(center.x,
+					  center.y,
+					  site -> {
+					      byte owner = MyBot.ai.getOwner(site.x, site.y);
+					      if (owner == 0) {
+						  if ((target.explore < site.explore) &&
+						      MyBot.ai.isObjective(site.x, site.y) &&
+						      (center.units > site.units))
+						      target = site;
+					      }
+					  });
+
+	}
 	
-	targetDirection = map.directionFromTileToTile(position, target);
+	if (center.aboveActionThreshold()) {		
+	    if (target == center) {
+		MyBot.map.processCardinal(center.x,
+					  center.y,
+					  site -> {
+					      int unitTotal = (center.units + site.incoming + site.units - site.outgoing); 
+					      if (MyBot.ai.isMine(site.x, site.y) &&
+						  (target.strength < site.strength) &&
+						  (unitTotal < Constants.SITE_MAX_LOSSY_STRENGTH))
+						  target = site;
+					  });
+	    }
+
+	    if (target == center)
+		MyBot.map.processCardinal(center.x,
+					  center.y,
+					  site -> {
+					      if (MyBot.ai.isNeutral(site.x, site.y)) {
+						  int unitTotal = (center.units + site.incoming - site.units);
+						  if ((target.explore < site.explore) &&
+						      (center.units > site.units) &&
+						      (unitTotal < Constants.SITE_MAX_LOSSY_STRENGTH))
+						      target = site;
+					      }
+					  });
+	}
+
+	target.incoming += center.units;
+	center.outgoing += center.units;
+	targetDirection = MyBot.map.directionFromSiteToSite(center, target);
     }
 }

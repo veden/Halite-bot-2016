@@ -1,9 +1,11 @@
 public class Move {
-    public Location loc;
+    public int x;
+    public int y;
     public Direction dir;
 
-    public Move(Location loc_, Direction dir_) {
-        loc = loc_;
-        dir = dir_;
+    public Move(int x, int y, Direction dir_) {
+	this.x = x;
+	this.y = y;
+	dir = dir_;
     }
 }
