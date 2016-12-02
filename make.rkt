@@ -24,7 +24,7 @@
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot")
 
-  (define botPool  '("cd /data/factory/repo/wkJava/halite/src/release/v1/; java RandomBot"
+  (define botPool  '(;;"cd /data/factory/repo/wkJava/halite/src/release/v1/; java RandomBot"
                      "cd /data/factory/repo/wkJava/halite/src/release/v2/; java MyBot"
                      "cd /data/factory/repo/wkJava/halite/src/release/v3/; java MyBot"))
 
@@ -57,8 +57,7 @@
                                "/home/veden/haliteFiles/halite"
                                (string-append "-d " (~v size) " " (~v size))
                                (string-append "-s " (~v seed))
-                               "-q"
-                               "-t")
+                               "-q")
                          bots)))
       (let-values ([(sp i o e) (apply subprocess args)])
         (let ((report (port->string i)))

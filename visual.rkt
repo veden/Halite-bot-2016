@@ -112,7 +112,7 @@
                                        (set-Replay-currentFrame! replay
                                                                  (+ (Replay-currentFrame replay) 10))
                                        (set-Replay-currentFrame! replay
-                                                                 (Replay-lastFrame replay)))
+                                                                 (- (Replay-lastFrame replay) 1)))
                                    (refresh))
                                  (super on-subwindow-char r event))
                                (super-new)))

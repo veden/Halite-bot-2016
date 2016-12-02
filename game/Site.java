@@ -1,35 +1,41 @@
 package game;
 
+import java.util.EnumMap;
+import java.util.EnumSet;
 
 public class Site implements Comparable<Site> {    
+
+    public static enum State {
+	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
+        FIELD, MINE, NEUTRAL, ENEMY, EXPLORE_CANDIDATE, READY
+    }
+    
+    public static final short MAX_CAPTURE_STRENGTH = 20;
     public static final short MAX_STRENGTH = 255;
     public static final short MAX_STRENGTH_LOSSY = 270;
 
     public short id;
     public short units; // originally strength
-    public short initialUnits;
     public byte generator; // originally production
     public final byte x;
     public final byte y;
 
     public byte owner;
-    public byte status;
+    public EnumSet<State> status = EnumSet.noneOf(State.class);
     
     public short incoming;
     public short outgoing;
 
     public Direction heading;
 
-    public Site[] neighbors = new Site[4]; // N, E, S, W
+    public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
 
-    public byte[] distances;
-    
     public float accumulatorThreshold = 5f;
     public float explore;
     public float strength;
     public float defense;
     public float damage;
-    public float value = -Float.MAX_VALUE;
+    private float exploreValue = -Float.MAX_VALUE;
  
     public Site(byte x, byte y) {
 	this.x = x;
@@ -37,10 +43,13 @@ public class Site implements Comparable<Site> {
 	this.id = (short)(x * Harness.map.height + y);
     }
 
-    public float getValue() {
-	if (value == -Float.MAX_VALUE)
-	    value = (1f / (initialUnits / (1f * generator))) * (0.1f * generator) * (1f - (initialUnits / MAX_STRENGTH));
-	return value;
+    public float getExploreValue() {
+	if (generator != 0) {
+	    if (exploreValue == -Float.MAX_VALUE)
+		exploreValue = (1f - (units / (float)MAX_STRENGTH)) * (1f - ((units / (float)generator) / (float)MAX_STRENGTH)) * generator;
+	} else
+	    return 0;
+	return exploreValue;
     }
  
     public boolean aboveActionThreshold() {
@@ -51,61 +60,33 @@ public class Site implements Comparable<Site> {
 	return generator * accumulatorThreshold * 0.75 < units;
     }
 
-    public byte distanceTo(Site s) {
-	return distances[s.id];
-    }
-
     public String encodeMove() {
 	return x + " " + y + " " + Direction.encodeDirection(heading) + " ";
     }
-    
-    public boolean mine() {
-	return owner == Harness.map.bot.id;
+
+    public Site target() {
+	switch(heading) {
+	case STILL:
+	    return this;
+	default:
+	    return neighbors.get(heading);
+	}
     }
 
-    public boolean neutral() {
-	return owner == 0;
+    public void set(Site.State s) {
+	status.add(s);
     }
 
-    public boolean enemy() {
-	return !mine() && !neutral();
-    }
-
-    public void setObjective() {
-	status = (byte)(status | 0x01);
-    }
- 
-    public boolean objective() {
-	return (byte)(status & 0x01) == 1;
-    }
-    public boolean used() {
-	return (byte)(status & 0x02) == 2;
-    }
-    public void setUsed() {
-	status = (byte)(status | 2);
+    public void remove(Site.State s) {
+	status.remove(s);
     }
     
-    public void setBattle() {
-	status = (byte)(status | 4); 
+    public boolean get(Site.State s) {
+	return status.contains(s);
     }
  
-    public boolean battle() {
-	return (byte)(status & 0x04) == 4;
-    }
-
-    public void setFront() {
-	status = (byte)(status | 8);
-    }
-   
-    public boolean front() {
-	return (byte)(status & 0x08) == 8;
-    }
- 
-    public void reset() {	
-	if (owner == Harness.map.bot.id)
-	    status = 0;
-	else
-	    status = (byte)(status & 0xFE);
+    public void reset() {
+	status.clear();
 	explore = 0;
 	strength = 0;
 	defense = 0;
@@ -120,7 +101,7 @@ public class Site implements Comparable<Site> {
     }
 
     public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + objective();
+	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + get(Site.State.BATTLE);
     }
      
     @Override
@@ -129,7 +110,7 @@ public class Site implements Comparable<Site> {
 	if (v == 0) {
 	    v = (t.strength - this.strength);
 	    if (v == 0)
-		return (this.x - t.x) - (this.y - t.y);
+		return this.id - t.id;
 	}
 	return v>0?1:-1;
     }
@@ -137,7 +118,7 @@ public class Site implements Comparable<Site> {
     public boolean equals(Object obj) {
 	if (obj instanceof Site) {
 	    Site that = (Site)obj;
-	    return ((that.x == x) && (that.y == y));
+	    return (this.id - that.id) == 0;
 	}
 	return false;
     }

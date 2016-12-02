@@ -3,10 +3,14 @@ package game;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
+import game.bot.Bot;
+import game.bot.model.Enemy;
+
 public class Harness {
 
     private static boolean debug = true;
         
+    public static Bot bot;
     public static GameMap map;
     private static Networking server;
     
@@ -31,6 +35,12 @@ public class Harness {
 	pw.flush();
     }
 
+    public static void abort(String message) {
+	println(message);
+	flush();
+	throw new RuntimeException();
+    }
+    
     public static void startBot() throws FileNotFoundException {
 	if (debug) {
 	    pw = new PrintWriter("debug.txt");
@@ -56,9 +66,19 @@ public class Harness {
 	    println("Frame-" + round++);
 	    start = System.currentTimeMillis();
 	}
+
 	map.reset();
+	bot.reset();
+	Enemy.resetAll();
+	
 	server.getFrame();
-	map.play();
+
+	Enemy.analyze();
+	bot.analyze();
+	Enemy.postAnalyze();
+	bot.postAnalyze();
+	
+	bot.move();
 	
 	if (debug) {
 	    println((System.currentTimeMillis() - start) + "-duration");

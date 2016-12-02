@@ -1,11 +1,11 @@
 package game;
 
 import game.bot.Bot;
-import game.bot.model.Player;
+import game.bot.model.Enemy;
 
 public class Networking {
     public Networking() {
-        Harness.map.bot = new Bot(Byte.parseByte(getString()));
+        Harness.bot = new Bot(Byte.parseByte(getString()), Harness.map);
         deserializeGameMapSize(getString());
         deserializeProductions(getString());
         deserializeGameMap(getString());
@@ -27,22 +27,20 @@ public class Networking {
 		byte gen = Byte.parseByte(inputStringComponents[index++]);
 		Site center = Harness.map.getSite(b, a);
                 center.generator = gen;
-		center.neighbors[0] = Harness.map.getSite(b, a - 1);
-		center.neighbors[1] = Harness.map.getSite(b + 1, a);
-		center.neighbors[2] = Harness.map.getSite(b, a + 1);
-		center.neighbors[3] = Harness.map.getSite(b - 1, a);
-		center.distances = new byte[Harness.map.totalSites];
-		for (int i = 0; i < Harness.map.totalSites; i++)
-		    center.distances[i] = (byte)Harness.map.manhattanDistance(center, Harness.map.getSite(i));
-		if (gen > Harness.map.maxGenerator)
-		    Harness.map.maxGenerator = gen;
-		if (gen < Harness.map.minGenerator)
-		    Harness.map.minGenerator = gen;
+		Harness.map.totalProduction += center.generator;
+		center.neighbors.put(Direction.NORTH, Harness.map.getSite(b, a - 1));
+		center.neighbors.put(Direction.EAST, Harness.map.getSite(b + 1, a));
+		center.neighbors.put(Direction.SOUTH, Harness.map.getSite(b, a + 1));
+		center.neighbors.put(Direction.WEST,  Harness.map.getSite(b - 1, a));
+		if (center.generator > Harness.map.maxGenerator)
+		    Harness.map.maxGenerator = center.generator;
+		if (center.generator < Harness.map.minGenerator)
+		    Harness.map.minGenerator = center.generator;
 	    }
     }
 
     private void deserializeGameMap(String inputString) {
-        String[] inputStringComponents = inputString.split(" ");
+	String[] inputStringComponents = inputString.split(" ");
 
 	// Run-length encode of owners
 	int y = 0;
@@ -56,7 +54,14 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = Harness.map.getSite(x, y);
-	        s.owner = owner;
+		s.reset();
+		s.owner = owner;
+		if (owner == 0)
+		    s.set(Site.State.NEUTRAL);
+		else if (owner == Harness.bot.id)
+		    s.set(Site.State.MINE);
+		else
+		    s.set(Site.State.ENEMY);
 		++x;
 		if(x == Harness.map.width) {
 		    x = 0;
@@ -67,75 +72,76 @@ public class Networking {
 	
 	for (int a = 0; a < Harness.map.height; ++a)
 	    for (int b = 0; b < Harness.map.width; ++b) {
-	        Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
+		Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
 		currentIndex++;
-		Site s = Harness.map.getSite(b, a);	
+		Site s = Harness.map.getSite(b, a);
 		s.units = strengthInt;
 		analyzeSite(s);
-		s.reset();
-		if (s.units > Harness.map.maxUnit)
-		    Harness.map.maxUnit = s.units;
-		if (s.units < Harness.map.minUnit)
-		    Harness.map.minUnit = s.units;
 	    }
     }
 
-    private void analyzeSite(Site s) {
-	if (s.mine()) {
+    //not all sites will have strength at this point
+    private void analyzeSite(Site site) {
+	if (site.get(Site.State.MINE) || site.get(Site.State.ENEMY)) {
+	    if (site.get(Site.State.MINE) && (site.units == 0))
+		site.set(Site.State.USED);
+	    
 	    boolean border = false;
-	    for (int i = 0; i < Direction.CARDINALS.length; i++)
-		if (s.neighbors[i].neutral())
+	    for (Site neighbor : site.neighbors.values())
+		if (neighbor.get(Site.State.NEUTRAL)) {
 		    border = true;
-	    if (!border)
-		Harness.map.bot.addInterior(s);
-	    else
-		Harness.map.bot.addBorder(s);
-	} else if (s.neutral()) {
-	    if (s.units == 0) {
-		Harness.map.battles.add(s);
-		for (int i = 0; i < Direction.CARDINALS.length; i++) {
-		    Site neighbor = s.neighbors[i];
-		    if (neighbor.mine())
-			Harness.map.bot.borderToContact(neighbor); //TODO check contact flag
-		    else if (neighbor.enemy()) {
-			if (!Harness.map.enemies.containsKey(s.owner))
-			    Harness.map.enemies.put(s.owner, new Player((byte)s.owner));
-			Harness.map.enemies.get(s.owner).borderToContact(s);
-		    }
-		}		
-	    } else {
-		boolean frontier = false;
-		boolean frontierEnemy = false;
-		for (int i = 0; i < Direction.CARDINALS.length; i++) {
-		    Site neighbor = s.neighbors[i];
-		    if (neighbor.mine())
-			frontier = true;
-		    else if (neighbor.enemy())
-			frontierEnemy = true;
+		    break;
 		}
-		if (!frontier)
-		    Harness.map.bot.addUnexplored(s);
+
+	    if (site.get(Site.State.MINE)) {
+		if (site.aboveActionThreshold())
+		    site.set(Site.State.READY);
+		if (!border)
+		    Harness.bot.addInterior(site);
 		else
-		    Harness.map.bot.addFrontier(s);
-		if (frontierEnemy) {
-		    if (!Harness.map.enemies.containsKey(s.owner))
-			Harness.map.enemies.put(s.owner, new Player((byte)s.owner));
-		    Harness.map.enemies.get(s.owner).addFrontier(s);
-		}
-		    
+		    Harness.bot.addBorder(site);
+	    } else {
+		if (!border)
+		    Enemy.get(site.owner).addInterior(site);
+		else
+		    Enemy.get(site.owner).addBorder(site);
 	    }
-	} else if (s.enemy()) {
-	    boolean border = false;
-	    for (int i = 0; i < Direction.CARDINALS.length; i++)
-		if (s.neighbors[i].neutral())
-		    border = true;
-	    if (!Harness.map.enemies.containsKey(s.owner))
-		Harness.map.enemies.put(s.owner, new Player((byte)s.owner));
-	    Player enemy = Harness.map.enemies.get(s.owner);
-	    if (!border)
-		enemy.addInterior(s);
-	    else
-		enemy.addBorder(s);
+	} else if (site.get(Site.State.NEUTRAL)) {
+	    if (site.units == 0) {
+		boolean field = false;
+		boolean enemy = false;
+	    	for (Site neighbor : site.neighbors.values())
+	    	    if (neighbor.get(Site.State.MINE)) {
+	    		Harness.bot.addBattle(neighbor);
+			field = true;
+		    } else if (neighbor.get(Site.State.ENEMY)) {
+	    		Enemy.get(neighbor.owner).addBattle(neighbor);
+			enemy = true;
+		    }
+		if (field && !enemy)
+		    Harness.map.addField(site);
+		Harness.map.addBattle(site);
+	    } else {
+	    	boolean frontier = false;
+	    	boolean frontierEnemy = false;
+	    	for (Site neighbor : site.neighbors.values()) {
+	    	    if (neighbor.get(Site.State.MINE))
+	    		frontier = true;
+	    	    else if (neighbor.get(Site.State.ENEMY))
+	    		frontierEnemy = true;
+	    	}
+		if (frontier && frontierEnemy) {
+		    Harness.bot.addBattle(site);
+		    Enemy.get(site.owner).addBattle(site);
+		    Harness.map.addBattle(site);
+		} else {
+		    if (frontier)
+			Harness.bot.addFrontier(site);
+		    if (frontierEnemy)
+			Enemy.get(site.owner).addFrontier(site);
+		    Harness.map.addUnexplored(site);
+		}
+	    }
 	}
     }
 
