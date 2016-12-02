@@ -8,7 +8,7 @@ import game.bot.model.Enemy;
 
 public class Harness {
 
-    private static boolean debug = true;
+    private static boolean debug = false;
         
     public static Bot bot;
     public static GameMap map;
