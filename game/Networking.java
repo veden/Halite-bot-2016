@@ -26,8 +26,8 @@ public class Networking {
             for(int b = 0; b < Harness.map.width; b++) {
 		byte gen = Byte.parseByte(inputStringComponents[index++]);
 		Site center = Harness.map.getSite(b, a);
-                center.generator = gen;
-		Harness.map.totalProduction += center.generator;
+                center.setGenerator(gen);
+		Harness.map.totalGenerator += center.generator;
 		center.neighbors.put(Direction.NORTH, Harness.map.getSite(b, a - 1));
 		center.neighbors.put(Direction.EAST, Harness.map.getSite(b + 1, a));
 		center.neighbors.put(Direction.SOUTH, Harness.map.getSite(b, a + 1));

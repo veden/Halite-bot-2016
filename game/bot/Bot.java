@@ -1,13 +1,11 @@
 
 package game.bot;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 import game.Direction;
 import game.GameMap;
-import game.Harness;
 import game.Site;
 import game.bot.model.Entity;
 
@@ -25,6 +23,9 @@ public class Bot extends Entity {
 
     public void postAnalyze() {
 
+	if (frontier.size() == 0)
+	    map.defenseRange = 0.01f;
+	
 	Collections.sort(frontier,
 			 new Comparator<Site>() {
 			     @Override
@@ -36,45 +37,16 @@ public class Bot extends Entity {
 			     }
 			 });
 	
-
-	float totalFrontierExplore = 0;
-	for (Site s : frontier)
-	    totalFrontierExplore += s.explore;
-	
-	totalFrontierExplore *= Harness.map.frontierRange + (0.30f * (float)totalSites / (float)map.totalSites);
 	for (Site s : frontier) {
-	    if (totalFrontierExplore > 0) {
-		totalFrontierExplore -= s.explore;
-		s.set(Site.State.EXPLORE_CANDIDATE);
-		for (Site neighbor : s.neighbors.values())
-		    if (neighbor.get(Site.State.MINE)) {
-			float v = s.explore;
-			if (v > neighbor.strength)
-			    neighbor.strength = v;
-		    }
-	    } else
-		break;
+	    for (Site neighbor : s.neighbors.values())
+		if (neighbor.get(Site.State.MINE)) {
+		    float v = s.explore;
+		    if (v > neighbor.strength)
+			neighbor.strength = v;
+		}
 	}
 
-	Collections.sort(border,
-			 new Comparator<Site>() {
-			     @Override
-			     public int compare(Site o1, Site o2) {
-				 float v = o2.strength - o1.strength;
-				 if (v == 0)
-				     return o1.id - o2.id;
-				 return v > 0 ? 1 : -1;
-			     }
-			 });
-
-	ArrayList<Site> spearHeads = new ArrayList<Site>();
 	for (Site s : border)
-	    if (s.strength > 0)
-		spearHeads.add(s);
-	    else
-		break;
-
-	for (Site s : spearHeads)
 	    SiteUtils.floodFillStrength(s, map);
 
 	for (Site s : battles) {
@@ -95,12 +67,12 @@ public class Bot extends Entity {
 			 new Comparator<Site>() {
 			     @Override
 			     public int compare(Site o1, Site o2) {  
-				 // float v = o2.defense - o1.defense;
-				 // if (v == 0) {
-				     float v = o2.damage - o1.damage;
+				 float v = o2.defense - o1.defense;
+				 if (v == 0) {
+				     v = o2.damage - o1.damage;
 				     if (v == 0)
 					 return o1.id - o2.id;
-				     //}
+				 }
 				 return v > 0 ? 1 : -1;
 			     }
 			 });
@@ -108,7 +80,7 @@ public class Bot extends Entity {
 	    if (s.get(Site.State.NEUTRAL) && !s.get(Site.State.FIELD) && MoveUtils.validJoint(s, false))
 		for (Direction d : Direction.CARDINALS) {
 		    Site neighbor = s.neighbors.get(d);
-		    if (neighbor.get(Site.State.MINE)) {
+		    if (neighbor.get(Site.State.MINE) && MoveUtils.validAttack(neighbor, s)) {
 			neighbor.heading = Direction.reverse(d);
 			MoveUtils.moveSiteToSite(neighbor, s);
 		    }
@@ -132,7 +104,7 @@ public class Bot extends Entity {
 	    Direction lowestD = null;
 	    for (Direction d : Direction.CARDINALS) {
 		Site neighbor = s.neighbors.get(d);
-		if (MoveUtils.validCapture(neighbor, s) && ((lowest == null) || (lowest.defense > neighbor.defense))) {
+		if (MoveUtils.validCapture(neighbor, s) && ((lowest == null) || (lowest.units > neighbor.units))) {
 		    lowestD = Direction.reverse(d);
 		    lowest = neighbor;
 		}
@@ -147,7 +119,7 @@ public class Bot extends Entity {
 		if (MoveUtils.validJoint(s, true))
 		    for (Direction d : Direction.CARDINALS) {
 			Site neighbor = s.neighbors.get(d);	
-			if (neighbor.get(Site.State.MINE)) {
+			if (neighbor.get(Site.State.MINE) && MoveUtils.validExplore(neighbor, s)) {
 			    neighbor.heading = Direction.reverse(d);
 			    MoveUtils.moveSiteToSite(neighbor, s);
 			}
@@ -155,16 +127,17 @@ public class Bot extends Entity {
 	    }
 	}
 	for (Site s : border) {
-	    for (Direction d : Direction.CARDINALS) {
-		Site neighbor = s.neighbors.get(d);
-		if (MoveUtils.validExplore(s, neighbor) && (s.target().explore < neighbor.explore))
-		    s.heading = d;
-	    }
-
-	    if ((s.heading == Direction.STILL) && s.get(Site.State.READY))
+	    if (s.get(Site.State.READY))
 		for (Direction d : Direction.CARDINALS) {
 		    Site neighbor = s.neighbors.get(d);
 		    if (MoveUtils.validMove(s, neighbor) && (s.target().defense < neighbor.defense))
+			s.heading = d;
+		}
+
+	    if (s.heading == Direction.STILL)
+		for (Direction d : Direction.CARDINALS) {
+		    Site neighbor = s.neighbors.get(d);
+		    if (MoveUtils.validExplore(s, neighbor) && (s.target().explore < neighbor.explore))
 			s.heading = d;
 		}
 	    
@@ -194,14 +167,18 @@ public class Bot extends Entity {
 	    if (s.get(Site.State.READY)) {
 		for (Direction d : Direction.CARDINALS) {
 		    Site neighbor = s.neighbors.get(d);
-		    if (MoveUtils.validMove(s, neighbor) && (s.target().defense < neighbor.defense))
+		    if (MoveUtils.validMove(s, neighbor) &&
+			(s.defense < neighbor.defense) &&
+			((s.heading == Direction.STILL) || (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))))
 			s.heading = d;
 		}
 
 		if (s.heading == Direction.STILL)
 		    for (Direction d : Direction.CARDINALS) {
 			Site neighbor = s.neighbors.get(d);
-			if (MoveUtils.validMove(s, neighbor) && (s.target().strength < neighbor.strength))
+			if (MoveUtils.validMove(s, neighbor) &&
+			    (s.strength < neighbor.strength) &&
+			    ((s.heading == Direction.STILL) || (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))))
 			    s.heading = d;
 		    }
 

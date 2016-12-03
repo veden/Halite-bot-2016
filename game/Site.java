@@ -2,6 +2,7 @@ package game;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 
 public class Site implements Comparable<Site> {    
 
@@ -9,6 +10,8 @@ public class Site implements Comparable<Site> {
 	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
         FIELD, MINE, NEUTRAL, ENEMY, EXPLORE_CANDIDATE, READY
     }
+
+    public static HashMap<Integer, Integer> siteGeneratorCounts = new HashMap<Integer, Integer>();
     
     public static final short MAX_CAPTURE_STRENGTH = 20;
     public static final short MAX_STRENGTH = 255;
@@ -30,7 +33,7 @@ public class Site implements Comparable<Site> {
 
     public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
 
-    public float accumulatorThreshold = 5f;
+    public float accumulatorThreshold = 4f;
     public float explore;
     public float strength;
     public float defense;
@@ -43,10 +46,21 @@ public class Site implements Comparable<Site> {
 	this.id = (short)(x * Harness.map.height + y);
     }
 
+    public void setGenerator(byte generator) {
+	this.generator = generator;
+	if (!siteGeneratorCounts.containsKey(generator))
+	    siteGeneratorCounts.put((int)generator, 0);
+	siteGeneratorCounts.put((int)generator, siteGeneratorCounts.get((int)generator)+1);
+    }
+
     public float getExploreValue() {
 	if (generator != 0) {
-	    if (exploreValue == -Float.MAX_VALUE)
-		exploreValue = (1f - (units / (float)MAX_STRENGTH)) * (1f - ((units / (float)generator) / (float)MAX_STRENGTH)) * generator;
+	    if (exploreValue == -Float.MAX_VALUE) {
+		//		int count = siteGeneratorCounts.get((int)generator); 
+		// float v = 0;// (count / Harness.map.totalSites);
+		// v += (count * generator) / (float)Harness.map.totalGenerator;
+		exploreValue = (1f - (units / (float)MAX_STRENGTH)) * (generator / (float)Harness.map.maxGenerator) * (1f - ((units / (float)generator) / (float)MAX_STRENGTH));
+	    }
 	} else
 	    return 0;
 	return exploreValue;

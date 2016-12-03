@@ -57,7 +57,7 @@ public class Harness {
 	    println(((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024)) + "MB-used memory");
 	    flush();
 	}
-	server.sendInit("VedenV4");
+	server.sendInit("VedenV5");
     }
 
     public static void readMap() {

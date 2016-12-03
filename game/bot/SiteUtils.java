@@ -25,7 +25,7 @@ public class SiteUtils {
 		Site ringSite = c.next();
 		for (Site neighbor : ringSite.neighbors.values()) {
 		    if (neighbor.get(Site.State.NEUTRAL) && (neighbor.units != 0)) {
-			totalWeight += (1 - (0.1f * distance));
+			totalWeight += (1 - (0.2f * distance));
 			total += neighbor.getExploreValue();
 			if ((distance+1<3) && (!used.get(neighbor.id))) {
 			    next.add(neighbor);
@@ -103,16 +103,19 @@ public class SiteUtils {
 
     public static void reduceDamage(Site b) {
 	b.damage -= b.units;
+	//		b.defense *= 0.1f;
 	if (b.damage < 0)
 	    b.damage = 0;
 	for (Site neighbor : b.neighbors.values()) {
 	    if ((neighbor.get(Site.State.NEUTRAL) && (neighbor.units == 0)) || neighbor.get(Site.State.ENEMY)) {
 		neighbor.damage -= 0.9f * b.units;
+		//		neighbor.defense *= 0.5f;
 		if (neighbor.damage < 0)
 		    neighbor.damage = 0;
 		for (Site secondNeighbor : neighbor.neighbors.values()) {
 		    if ((secondNeighbor.get(Site.State.NEUTRAL) && (secondNeighbor.units == 0)) || (neighbor.get(Site.State.ENEMY))) {
 			secondNeighbor.damage -= 0.8f * b.units;
+			//		neighbor.defense *= 0.7f;
 			if (secondNeighbor.damage < 0)
 			    secondNeighbor.damage = 0;
 		    }
@@ -121,7 +124,7 @@ public class SiteUtils {
 	}
     }
 
-    public static void floodReduceExplore(Site center) {
+    public static void floodExplore(Site center, boolean reduce) {
 	int distance = 0;
         BitSet used = new BitSet();
 	HashSet<Site> current = new HashSet<Site>();
@@ -137,7 +140,10 @@ public class SiteUtils {
 		boolean valid = false;
 		if (ringSite == center) {
 		    valid = true;
-		    ringSite.explore = 0;
+		    if (reduce)
+			ringSite.explore = 0;
+		    else
+			ringSite.explore *= 1.2f;
 		} else {
 		    for (Site neighbor : ringSite.neighbors.values())
 			if ((used.get(neighbor.id) || (center == ringSite)))
@@ -145,12 +151,23 @@ public class SiteUtils {
 		}
 		if (valid) {
 		    used.set(ringSite.id);
-		    float v = distance * Harness.map.enemyDistance;
-		    if (v < 1) {
-			ringSite.explore *= v;
-			for (Site neighbor : ringSite.neighbors.values())
-			    if ((neighbor.owner == center.owner) && !used.get(neighbor.id))
-				next.add(neighbor);
+		    float v;
+		    if (reduce) {
+			v = distance * Harness.map.enemyDistance;
+			if (v < 1) {
+			    ringSite.explore *= v;
+			    for (Site neighbor : ringSite.neighbors.values())
+				if ((neighbor.owner == center.owner) && !used.get(neighbor.id))
+				    next.add(neighbor);
+			}
+		    } else {
+			v = (distance * Harness.map.enemyDistance) + 1;
+			if (v < 1.2) {
+			    ringSite.explore *= v;	
+			    for (Site neighbor : ringSite.neighbors.values())
+				if ((neighbor.owner == center.owner) && !used.get(neighbor.id))
+				    next.add(neighbor);		    
+			}
 		    }
 		} else
 		    next.add(ringSite);
@@ -164,7 +181,6 @@ public class SiteUtils {
 		c = current.iterator();
 	    }
 	}
-
     }
 
     public static void floodFillDefense(Site center, GameMap map, boolean limited) {

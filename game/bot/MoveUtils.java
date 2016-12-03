@@ -14,6 +14,12 @@ public class MoveUtils {
 	return false;
     }
 
+    public static int totalUnits(Site a, Site b) {
+	if (a == b)
+	    return a.incoming + a.units - a.outgoing;
+	return b.incoming + b.units + a.units - b.outgoing;
+    }
+
     public static boolean validMove(Site a, Site b) {
 	if (!a.get(Site.State.USED) && b.get(Site.State.MINE))
 	    return (a.units + b.incoming + b.units - b.outgoing + b.generator) < Site.MAX_STRENGTH_LOSSY;
@@ -22,7 +28,7 @@ public class MoveUtils {
     }
 
     public static boolean validExplore(Site a, Site b) {
-	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && b.get(Site.State.EXPLORE_CANDIDATE) && (b.units != 0))
+	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && (b.units != 0))
 	    return ((a.units + b.incoming - b.units) > 0) && ((a.units + b.incoming - b.units) < Site.MAX_STRENGTH_LOSSY);
 	else
 	    return false;
@@ -30,7 +36,7 @@ public class MoveUtils {
 
     public static boolean validCapture(Site a, Site b) {
 	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && b.get(Site.State.FIELD)) {
-	    return ((a.units + b.incoming) > 0) && ((a.units + b.incoming) < Site.MAX_CAPTURE_STRENGTH);
+	    return ((a.units + b.incoming) > 0) && ((a.units + b.incoming) < Site.MAX_STRENGTH_LOSSY);
 	} else
 	    return false;	
     }
@@ -49,13 +55,12 @@ public class MoveUtils {
 	    return (v > 0) && (v < Site.MAX_STRENGTH_LOSSY);
 	} else
 	    return false;
-	    
     }
 
     public static boolean validJoint(Site center, boolean explore) {
 	float total = 0f;
 	for (Site neighbor : center.neighbors.values())
-	    if (neighbor.get(Site.State.MINE) && !neighbor.get(Site.State.USED) && neighbor.aboveCombatThreshold() &&
+	    if (neighbor.get(Site.State.MINE) && !neighbor.get(Site.State.USED) && neighbor.aboveActionThreshold() &&
 		((explore && neighbor.defense == 0) || !explore))
 		total += neighbor.units;
 	float v = total + center.incoming - center.units;

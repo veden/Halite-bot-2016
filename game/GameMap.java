@@ -11,12 +11,13 @@ public class GameMap{
     public int width;
     public int height;
     public int totalSites;
-    public short totalProduction = 0;
+    public short totalGenerator = 0;
     public short totalUnexploredGenerator = 0;
     public byte maxGenerator = 0;
     public byte minGenerator = 100;
 
     public static final byte MAX_SIZE = 50;
+    public static final byte MIN_SIZE = 15;
     
     public HashSet<Site> unexplored = new HashSet<Site>();
     public ArrayList<Site> battles = new ArrayList<Site>();
@@ -31,13 +32,13 @@ public class GameMap{
         this.width = width;
         this.height = height;
 	this.totalSites = width * height;
-	int size = Math.min(width, height) - 15;
+	float a = Math.min(width, height);
+	float size = (float)(a - MIN_SIZE) / (float)(MAX_SIZE - MIN_SIZE);
 	if (size < 0)
-	    size = 0;
-        float maxSize = (float)(MAX_SIZE - 15f);
-	this.defenseRange = 0.25f - (0.15f * (size / maxSize)); //smaller is further
-	this.enemyDistance = 0.35f - (0.06f * (size / maxSize)); //smaller is further
-	this.frontierRange = 0.35f + (0.30f * (size / maxSize)); //larger is more paths
+	    size = 0f;
+	this.defenseRange = 0.35f - (0.20f * size); //smaller is further
+	this.enemyDistance = 0.43f - (0.13f * size); //smaller is further
+	this.frontierRange = 0.25f + (0.15f * size); //larger is more paths //0.1
         sites = new Site[width * height];
         for(byte x = 0; x < width; x++)
             for(byte y = 0; y < height; y++)

@@ -43,7 +43,8 @@ public class Enemy extends Entity {
 	for (Site b : border) {
 	    for (Site s : b.neighbors.values())
 		if (s.get(Site.State.NEUTRAL))
-		    SiteUtils.floodReduceExplore(s);
+		    SiteUtils.floodExplore(s, !((Harness.bot.totalGenerator < (totalGenerator * 1.25f)) &&
+						(Harness.bot.totalUnits < (totalGenerator * 1.3f))));
 	}
     }
     
@@ -72,4 +73,12 @@ public class Enemy extends Entity {
 	for (Entry<Byte, Enemy> e : enemies.entrySet())
 	    e.getValue().reset();
     }
+
+    // public static boolean ramp() {
+    // 	boolean ramp = true;
+    // 	for (Entry<Byte, Enemy> e : enemies.entrySet())
+    // 	    if (e.getValue().totalGenerator * 1.2f > Harness.bot.totalGenerator)
+    // 		ramp = false;
+    // 	return ramp;
+    // }
 }
