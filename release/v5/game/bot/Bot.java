@@ -178,8 +178,7 @@ public class Bot extends Entity {
 			Site neighbor = s.neighbors.get(d);
 			if (MoveUtils.validMove(s, neighbor) &&
 			    (s.strength < neighbor.strength) &&
-			    ((s.heading == Direction.STILL) || (((s.units == 255) && (MoveUtils.totalUnits(s, s.target()) > MoveUtils.totalUnits(s, neighbor))) ||
-								((s.units != 255) && (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))))))
+			    ((s.heading == Direction.STILL) || (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))))
 			    s.heading = d;
 		    }
 
