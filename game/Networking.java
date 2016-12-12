@@ -1,10 +1,13 @@
 package game;
 
-import game.bot.AI;
-
 public class Networking {
-    public Networking(AI ai) {
-        ai.id = Byte.parseByte(getString());
+    private GameMap map;
+
+    public final byte myId;
+    
+    public Networking(GameMap map) {
+	this.map = map;
+	myId = Byte.parseByte(getString());
         deserializeGameMapSize(getString());
         deserializeProductions(getString());
         deserializeGameMap(getString());
@@ -12,8 +15,8 @@ public class Networking {
     
     private void deserializeGameMapSize(String inputString) {
         String[] inputStringComponents = inputString.split(" ");
-	Harness.map.buildSites(Byte.parseByte(inputStringComponents[0]),
-			       Byte.parseByte(inputStringComponents[1]));
+	map.buildSites(Byte.parseByte(inputStringComponents[0]),
+		       Byte.parseByte(inputStringComponents[1]));
     }
 
 
@@ -21,16 +24,16 @@ public class Networking {
         String[] inputStringComponents = inputString.split(" ");
 	
         int index = 0;
-        for(int a = 0; a < Harness.map.height; a++)
-            for(int b = 0; b < Harness.map.width; b++) {
+        for(int a = 0; a < map.height; a++)
+            for(int b = 0; b < map.width; b++) {
 		byte gen = Byte.parseByte(inputStringComponents[index++]);
-		Site center = Harness.map.getSite(b, a);
+		Site center = map.getSite(b, a);
                 center.generator = gen;
 		Stats.totalGenerator += center.generator;
-		center.neighbors.put(Direction.NORTH, Harness.map.getSite(b, a - 1));
-		center.neighbors.put(Direction.EAST, Harness.map.getSite(b + 1, a));
-		center.neighbors.put(Direction.SOUTH, Harness.map.getSite(b, a + 1));
-		center.neighbors.put(Direction.WEST,  Harness.map.getSite(b - 1, a));
+		center.neighbors.put(Direction.NORTH, map.getSite(b, a - 1));
+		center.neighbors.put(Direction.EAST, map.getSite(b + 1, a));
+		center.neighbors.put(Direction.SOUTH, map.getSite(b, a + 1));
+		center.neighbors.put(Direction.WEST,  map.getSite(b - 1, a));
 		if (center.generator > Stats.maxGenerator)
 		    Stats.maxGenerator = center.generator;
 		if (center.generator < Stats.minGenerator)
@@ -51,26 +54,26 @@ public class Networking {
 	int counter = 0;
 	byte owner = 0;
 	int currentIndex = 0;
-	while(y != Harness.map.height) {
+	while(y != map.height) {
 	    counter = Integer.parseInt(inputStringComponents[currentIndex]);
 	    owner = Byte.parseByte(inputStringComponents[currentIndex + 1]);
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
-		Site s = Harness.map.getSite(x, y);
+		Site s = map.getSite(x, y);
 		s.newOwner = owner;
 		++x;
-		if(x == Harness.map.width) {
+		if(x == map.width) {
 		    x = 0;
 		    ++y;
 		}
 	    }
 	}
 	
-	for (int a = 0; a < Harness.map.height; ++a)
-	    for (int b = 0; b < Harness.map.width; ++b) {
+	for (int a = 0; a < map.height; ++a)
+	    for (int b = 0; b < map.width; ++b) {
 		Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
 		currentIndex++;
-		Site s = Harness.map.getSite(b, a);
+		Site s = map.getSite(b, a);
 		s.newUnits = strengthInt;
 	    }
     }
@@ -109,8 +112,8 @@ public class Networking {
 
     public void sendFrame() {
 	StringBuilder sb = new StringBuilder();
-	for (int i = 0; i < Harness.map.totalSites; i++) {
-	    Site s = Harness.map.getSite(i);
+	for (int i = 0; i < map.totalSites; i++) {
+	    Site s = map.getSite(i);
 	    if (s.heading != Direction.STILL)
 		sb.append(s.encodeMove());
 	}

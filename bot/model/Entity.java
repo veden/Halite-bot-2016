@@ -1,4 +1,4 @@
-package game.bot.model;
+package bot.model;
 
 import java.util.HashSet;
 

@@ -1,20 +1,20 @@
-
-package game.bot;
+package bot;
 
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 
+import bot.model.Entity;
+import bot.util.FloodFunction;
+import bot.util.MoveUtils;
+import bot.util.SiteFunction;
+import bot.util.SiteUtils;
+
 import game.Direction;
 import game.GameMap;
 import game.Site;
 import game.Stats;
-import game.bot.model.Entity;
-import game.bot.util.FloodFunction;
-import game.bot.util.MoveUtils;
-import game.bot.util.SiteFunction;
-import game.bot.util.SiteUtils;
 
 public class AI extends Entity {
 
@@ -78,10 +78,21 @@ public class AI extends Entity {
 	    }
 	};
     
-    public void analyze() { 
+    public void analyze() {
+	float lowest = Float.MAX_VALUE;
+	float highest = 0;
+	for (Site s : map.unexplored)
+	    if ((s.units != 0) && (s.generator > 0)) {
+		s.explore = SiteUtils.scoreWeighted(s, map, scoreExplore.setInitial(s.getExploreValue()));
+		if ((s.explore != 0) && (s.explore < lowest))
+		    lowest = s.explore;
+		if (s.explore > highest)
+		    highest = s.explore;
+	    }
 	for (Site s : map.unexplored)
 	    if ((s.units != 0) && (s.generator > 0))
-		s.explore = SiteUtils.scoreWeighted(s, map, scoreExplore.setInitial(s.getExploreValue()));
+		if (((s.explore - lowest) / (highest - lowest)) < 0.25)
+		    s.explore = 0;
     }
 
     public void postAnalyze() {
@@ -96,40 +107,16 @@ public class AI extends Entity {
 		    highestDefense = neighbor.defense;
 	    }
 	    if (highestDefense > 0)
-	    	SiteUtils.flood(s, map, formDefense.setInitial(0.95f * highestDefense));
+		SiteUtils.flood(s, map, formDefense.setInitial(0.95f * highestDefense));
 	}
 
-	// Collections.sort(frontier,
-	// 		 new Comparator<Site>(){
-	// 		     @Override
-	// 		     public int compare(Site o1, Site o2) {
-	// 			 float v = o2.explore - o1.explore;
-	// 			 if (v==0)
-	// 			     return o1.id - o2.id;
-	// 			 return v > 0 ? 1 : -1;
-	// 		     }
-	// 		 });
-
-	// float totalExplore = 0f;
-	// for (Site s : frontier)
-	//     totalExplore += s.explore;
-
-	//	totalExplore *= 0.55f;
-	
 	for (Site s : frontier) {
-	    // if (totalExplore > 0) {
-	    // 	boolean valid = false;
-		for (Site neighbor : s.neighbors.values())
-		    if (neighbor.get(Site.State.MINE) && (neighbor.defense == 0)) {
-			float v = s.explore;
-			//			valid = true;
-			if (v > neighbor.strength)
-			    neighbor.strength = v;
-		    }
-		// if (valid)
-		//     totalExplore -= s.explore;
-	    // } else
-	    // 	break;
+	    for (Site neighbor : s.neighbors.values())
+		if (neighbor.get(Site.State.MINE) && (neighbor.defense == 0)) {
+		    float v = s.explore;
+		    if (v > neighbor.strength)
+			neighbor.strength = v;
+		}
 	}
 	
 	for (Site s : border)

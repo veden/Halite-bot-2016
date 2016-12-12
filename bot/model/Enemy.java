@@ -1,20 +1,16 @@
-package game.bot.model;
+package bot.model;
 
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map.Entry;
+
+import bot.util.FloodFunction;
+import bot.util.SiteFunction;
+import bot.util.SiteUtils;
 
 import game.GameMap;
-import game.Harness;
 import game.Site;
-import game.bot.util.FloodFunction;
-import game.bot.util.SiteFunction;
-import game.bot.util.SiteUtils;
 
 public class Enemy extends Entity {
-    public static HashMap<Byte, Enemy> enemies = new HashMap<Byte, Enemy>();
-
     private static FloodFunction spreadAttackTrigger = new FloodFunction() {  
 	    @Override
 	    public void scan(Site neighbor, Site center) {
@@ -101,41 +97,5 @@ public class Enemy extends Entity {
 	// 	    SiteUtils.flood(s, map, enemyAura.setInitial(s.explore));
 
 	// }
-    }
-    
-    public static void postAnalyze() {
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
-	    Enemy enemy = e.getValue();
-	    enemy.postProcess();
-	}
-    }
-
-    public static void analyze() {
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
-	    Enemy enemy = e.getValue();
-	    enemy.placeDamageRadius();
-	    enemy.placeDefense();
-	}
-    }
-    
-    public static Enemy get(byte id) {
-	if (!enemies.containsKey(id))
-	    enemies.put(id, new Enemy(id, Harness.map));
-	return enemies.get(id);
-    }
-
-    public static void resetAll() {
-	for (Entry<Byte, Enemy> e : enemies.entrySet())
-	    e.getValue().reset();
-    }
-
-    public static String toReplay() {
-	StringBuilder sb = new StringBuilder();
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
-	    if (sb.length() > 0)
-		sb.append("\n");
-	    sb.append(e.getValue().toString());
-	}
-	return sb.toString();
     }
 }

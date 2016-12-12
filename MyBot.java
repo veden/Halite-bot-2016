@@ -1,53 +1,53 @@
 import java.io.PrintWriter;
 import java.util.Random;
 
+import bot.AI;
+
 import game.GameMap;
 import game.Networking;
 import game.Stats;
-import game.bot.AI;
-import game.bot.model.Enemy;
 
 public class MyBot {
 
-    private boolean debug = true;
+    private static boolean debug = true;
           
-    private PrintWriter pw;
-    private PrintWriter r;
+    private static PrintWriter pw;
+    private static PrintWriter r;
 
-    private short round = 0;
+    private static short round = 0;
 
     public Random random = new Random(1233);
     
-    public void println(String s) {
+    public static void println(String s) {
 	pw.println(s);
     }
 
-    public void printReplay(String s) {
+    public static void printReplay(String s) {
 	r.println(s);
     }
 
-    public void flushReplay() {
+    public static void flushReplay() {
 	r.flush();
     }
     
-    public void flush() {
+    public static void flush() {
 	pw.flush();
     }
 
-    public void abort(String message) {
+    public static void abort(String message) {
 	println(message);
 	flush();
 	throw new RuntimeException();
     }
     
-    public void main(String[] args) throws java.io.IOException {
+    public static void main(String[] args) throws java.io.IOException {
 	if (debug) {
-	    pw = new PrintWriter("debug.txt");
-	    r = new PrintWriter("replay.txt");
+	    pw = new PrintWriter("/home/veden/haliteFiles/debug.txt");
+	    r = new PrintWriter("/home/veden/haliteFiles/replay.txt");
 	}
 	GameMap map = new GameMap();
-	AI ai = new AI();
-	Networking server = new Networking(map, ai);
+	Networking server = new Networking(map);
+        map.bot = new AI(server.myId, map);
 	    
 	if (debug) {
 	    println("starting AI");
@@ -68,13 +68,15 @@ public class MyBot {
 	    server.getFrame();
 	    map.commitChanges();
 
-	    Enemy.analyze();
-	    ai.analyze();
-	    Enemy.postAnalyze();
-	    ai.postAnalyze();
+	    map.analyzeEnemies();
+	    map.bot.analyze();
+	    map.postAnalyzeEnemies();
+	    map.bot.postAnalyze();
 	
-	    ai.move();
+	    map.bot.move();
 
+	    server.sendFrame();
+	    
 	    if (debug) {
 		map.collectStats();
 
@@ -86,15 +88,15 @@ public class MyBot {
 		printReplay("----");
 		printReplay(round + " " + Stats.minExplore + " " + Stats.maxExplore + " " + Stats.minStrength + " " + Stats.maxStrength + " " + Stats.minDamage + " " + Stats.maxDamage + " " + Stats.minDefense + " " + Stats.maxDefense + " " + Stats.minStrategy + " " + Stats.maxStrategy + " " + Stats.totalUnexploredGenerator);
 		printReplay("===");
-		printReplay(ai.toString());
-		printReplay(Enemy.toReplay());
+		printReplay(map.bot.toString());
+		printReplay(map.enemiesToReplay());
 		printReplay("===");
 		for (int x = 0; x < map.width; x++)
 		    for (int y = 0; y < map.height; y++)
 			printReplay(map.getSite(x, y).encodeString());
 		flushReplay();
 	    }
-	    //	abort("");
+	    //	    abort("");
 	}
     }
 }

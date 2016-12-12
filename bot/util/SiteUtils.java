@@ -1,7 +1,6 @@
-package game.bot.util;
+package bot.util;
 
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 

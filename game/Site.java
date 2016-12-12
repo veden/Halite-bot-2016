@@ -9,8 +9,11 @@ public class Site implements Comparable<Site> {
 	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
         FIELD, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY
     }
+
+    public static enum Property {
+	
+    }
     
-    public static final short MAX_CAPTURE_STRENGTH = 20;
     public static final short MAX_STRENGTH = 255;
     public static final short MAX_STRENGTH_LOSSY = 270;
 
@@ -22,6 +25,8 @@ public class Site implements Comparable<Site> {
 
     public byte owner;
     public EnumSet<State> status = EnumSet.noneOf(State.class);
+
+    public EnumMap<Property, Float> properties = new EnumMap<Property, Float>(Property.class);
     
     public short incoming;
     public short outgoing;
@@ -34,17 +39,17 @@ public class Site implements Comparable<Site> {
     public byte newOwner;
     
     public float accumulatorThreshold = 5f;
-    public float explore; //explore nav field
-    public float strength; // explore reinforcement field
-    public float damage; //attack nav field
-    public float defense; // defense nav field
-    public float strategy; //objectve level field
+    public float explore;
+    public float strength;
+    public float damage; 
+    public float defense; 
+    public float strategy;
     private float exploreValue = -Float.MAX_VALUE;
  
-    public Site(byte x, byte y) {
+    public Site(byte x, byte y, int height) {
 	this.x = x;
 	this.y = y;
-	this.id = (short)(x * Harness.map.height + y);
+	this.id = (short)(x * height + y);
     }
 
     public float getExploreValue() {
@@ -109,7 +114,7 @@ public class Site implements Comparable<Site> {
     }
 
     public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + strategy + " " + get(Site.State.BATTLE);
+	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + strategy + " " + get(Site.State.BATTLE) + " " + get(Site.State.FRONTIER) + " " + get(Site.State.UNEXPLORED) + " " + get(Site.State.INTERIOR) + " " + get(Site.State.BORDER) + " " + get(Site.State.FIELD) + " " + get(Site.State.READY);
     }
      
     @Override

@@ -1,4 +1,4 @@
-package game.bot.util;
+package bot.util;
 
 import game.Site;
 
