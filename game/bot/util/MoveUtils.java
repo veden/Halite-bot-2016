@@ -1,4 +1,4 @@
-package game.bot;
+package game.bot.util;
 
 import game.Site;
 
@@ -21,14 +21,20 @@ public class MoveUtils {
     }
 
     public static boolean validMove(Site a, Site b) {
-	if (!a.get(Site.State.USED) && b.get(Site.State.MINE))
+	if (!a.get(Site.State.USED) && b.get(Site.State.MINE)) {
+	    // if (b.get(Site.State.BATTLE) && (Harness.random.nextDouble() > 0.75f))
+	    // 	if (b.units == 0)
+	    // 	    return true;
+	    // 	else
+	    // 	    return false;
 	    return (a.units + b.incoming + b.units - b.outgoing + b.generator) < Site.MAX_STRENGTH_LOSSY;
-	else
+	} else
 	    return false;
     }
 
     public static boolean validExplore(Site a, Site b) {
-	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && (b.units != 0))
+	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && (b.units != 0) // && (b.get(Site.State.EXPLORE_CANDIDATE))
+										       )
 	    return ((a.units + b.incoming - b.units) > 0) && ((a.units + b.incoming - b.units) < Site.MAX_STRENGTH_LOSSY);
 	else
 	    return false;
@@ -36,6 +42,9 @@ public class MoveUtils {
 
     public static boolean validCapture(Site a, Site b) {
 	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && b.get(Site.State.FIELD)) {
+	    //	    for (Site n : b.neighbors.values())
+		// if (n.get(Site.State.BATTLE) && (n.incoming != 0))
+		//     return false;
 	    return ((a.units + b.incoming) > 0) && ((a.units + b.incoming) < Site.MAX_STRENGTH_LOSSY);
 	} else
 	    return false;	
@@ -44,11 +53,17 @@ public class MoveUtils {
     public static boolean validAttack(Site a, Site b) {
 	if (!a.get(Site.State.USED) && b.get(Site.State.NEUTRAL) && (b.get(Site.State.BATTLE) || b.get(Site.State.FRONTIER))) {
 	    float highestUnit = 0;
+	    boolean abort = false;
 	    for (Site neighbor : b.neighbors.values()) {
 		float v = neighbor.generator;
 		if (neighbor.get(Site.State.ENEMY) && (highestUnit < v))
 		    highestUnit = v;
+		// if (neighbor.incoming > 0)
+		//     abort = true;
 	    }
+	    // if (abort)
+	    // 	return false;
+	    
 	    if (b.units != 0)
 		highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit; 

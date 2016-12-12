@@ -2,16 +2,13 @@ package game;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashMap;
 
 public class Site implements Comparable<Site> {    
 
     public static enum State {
 	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
-        FIELD, MINE, NEUTRAL, ENEMY, EXPLORE_CANDIDATE, READY
+        FIELD, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY
     }
-
-    public static HashMap<Integer, Integer> siteGeneratorCounts = new HashMap<Integer, Integer>();
     
     public static final short MAX_CAPTURE_STRENGTH = 20;
     public static final short MAX_STRENGTH = 255;
@@ -29,15 +26,19 @@ public class Site implements Comparable<Site> {
     public short incoming;
     public short outgoing;
 
-    public Direction heading;
+    public Direction heading = Direction.STILL;
 
     public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
 
-    public float accumulatorThreshold = 4f;
-    public float explore;
-    public float strength;
-    public float defense;
-    public float damage;
+    public short newUnits;
+    public byte newOwner;
+    
+    public float accumulatorThreshold = 5f;
+    public float explore; //explore nav field
+    public float strength; // explore reinforcement field
+    public float damage; //attack nav field
+    public float defense; // defense nav field
+    public float strategy; //objectve level field
     private float exploreValue = -Float.MAX_VALUE;
  
     public Site(byte x, byte y) {
@@ -46,20 +47,12 @@ public class Site implements Comparable<Site> {
 	this.id = (short)(x * Harness.map.height + y);
     }
 
-    public void setGenerator(byte generator) {
-	this.generator = generator;
-	if (!siteGeneratorCounts.containsKey(generator))
-	    siteGeneratorCounts.put((int)generator, 0);
-	siteGeneratorCounts.put((int)generator, siteGeneratorCounts.get((int)generator)+1);
-    }
-
     public float getExploreValue() {
 	if (generator != 0) {
 	    if (exploreValue == -Float.MAX_VALUE) {
-		//		int count = siteGeneratorCounts.get((int)generator); 
-		// float v = 0;// (count / Harness.map.totalSites);
-		// v += (count * generator) / (float)Harness.map.totalGenerator;
-		exploreValue = (1f - (units / (float)MAX_STRENGTH)) * (generator / (float)Harness.map.maxGenerator) * (1f - ((units / (float)generator) / (float)MAX_STRENGTH));
+		exploreValue = ((1f - (units / (float)MAX_STRENGTH)) *
+				(generator / (float)Stats.maxGenerator) *
+				(1f - ((units / (float)generator) / (float)MAX_STRENGTH)));
 	    }
 	} else
 	    return 0;
@@ -71,7 +64,7 @@ public class Site implements Comparable<Site> {
     }
 
     public boolean aboveCombatThreshold() {
-	return generator * accumulatorThreshold * 0.75 < units;
+	return generator * (accumulatorThreshold * 0.75) < units;
     }
 
     public String encodeMove() {
@@ -102,6 +95,7 @@ public class Site implements Comparable<Site> {
     public void reset() {
 	status.clear();
 	explore = 0;
+	strategy = 0;
 	strength = 0;
 	defense = 0;
 	damage = 0;
@@ -115,7 +109,7 @@ public class Site implements Comparable<Site> {
     }
 
     public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + get(Site.State.BATTLE);
+	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + strength + " " + defense + " " + damage + " " + strategy + " " + get(Site.State.BATTLE);
     }
      
     @Override

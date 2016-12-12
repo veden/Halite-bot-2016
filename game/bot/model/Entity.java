@@ -1,6 +1,6 @@
 package game.bot.model;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 import game.GameMap;
 import game.Site;
@@ -11,18 +11,29 @@ abstract public class Entity {
     public short totalUnits = 0;
     public short totalSites = 0;
 
+    public int totalPotentialGeneration = 0;
+    public int totalGeneratedPotential = 0;
+    public int totalOverkill = 0;
+    public int totalDamage = 0;
+    public int totalCappedLoss = 0;
+    public int totalCaptured = 0;
+
     public GameMap map;
     
-    public ArrayList<Site> battles = new ArrayList<Site>();
-    public ArrayList<Site> interior = new ArrayList<Site>();
-    public ArrayList<Site> border = new ArrayList<Site>();
-    public ArrayList<Site> frontier = new ArrayList<Site>(); 
-
+    public HashSet<Site> battles = new HashSet<Site>();
+    public HashSet<Site> interior = new HashSet<Site>();
+    public HashSet<Site> border = new HashSet<Site>();
+    public HashSet<Site> frontier = new HashSet<Site>();
+    
     public Entity(byte id, GameMap map) {
 	this.id = id;
 	this.map = map;
     }
 
+    public String toString() {
+	return id + " " + totalGenerator + " " + totalUnits + " " + totalPotentialGeneration + " " + totalGeneratedPotential + " " + totalOverkill + " " + totalDamage + " " + totalCappedLoss + " " + totalCaptured + " " + totalSites;
+    }
+    
     private void addSite(Site s) {
 	totalGenerator += s.generator;
 	totalUnits += s.units;
@@ -67,6 +78,7 @@ abstract public class Entity {
 	interior.clear();
 	border.clear();
 	frontier.clear();
+	totalPotentialGeneration += totalGenerator;
 	totalGenerator = 0;
 	totalUnits = 0;
 	totalSites = 0;
