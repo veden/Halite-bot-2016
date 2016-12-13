@@ -96,7 +96,7 @@ public class MyBot {
 			printReplay(map.getSite(x, y).encodeString());
 		flushReplay();
 	    }
-	    //	    abort("");
+	    abort("");
 	}
     }
 }

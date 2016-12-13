@@ -29,7 +29,7 @@ public class AI extends Entity {
 		if (s.get(Site.State.NEUTRAL) && (s.units != 0)) {
 		    totalWeight += (1 - (0.30f * distance));
 		    total += s.getExploreValue();
-		    if ((distance+1<3) && (!used.get(s.id))) {
+		    if ((distance+1<2) && (!used.get(s.id))) {
 			next.add(s);
 			used.set(s.id);
 		    }
@@ -91,7 +91,7 @@ public class AI extends Entity {
 	    }
 	for (Site s : map.unexplored)
 	    if ((s.units != 0) && (s.generator > 0))
-		if (((s.explore - lowest) / (highest - lowest)) < 0.25)
+		if (((s.explore - lowest) / (highest - lowest)) < 0.27)
 		    s.explore = 0;
     }
 
