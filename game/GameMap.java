@@ -1,20 +1,26 @@
 package game;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import bot.AI;
 import bot.model.Enemy;
+import bot.model.Entity;
+import bot.util.RingIterator;
+
+import game.Site.State;
 
 public class GameMap{
-    public static final byte MAX_SIZE = 50;
-    public static final byte MIN_SIZE = 15;
-
-    private Site[] sites;
+    public Site[] sites;
     public int width;
     public int height;
+    public float scaler;
     public int totalSites;
 
     public AI bot;
@@ -22,13 +28,16 @@ public class GameMap{
     public HashMap<Byte, Enemy> enemies = new HashMap<Byte, Enemy>();
     
     public HashSet<Site> unexplored = new HashSet<Site>();
-    public ArrayList<Site> battles = new ArrayList<Site>();
-    public HashSet<Site> fields = new HashSet<Site>();
+
+    private Predicate<Site> p = new Predicate<Site>() {
+	    @Override
+	    public boolean test(Site s) {
+		return (s.get(State.MINE) && s.get(State.INTERIOR)) || s.get(State.BATTLE);
+	    }
+	};
     
-    private void reset() {
-	battles.clear();
+    public void reset() {
 	unexplored.clear();
-	fields.clear();
 	Stats.reset();
 	bot.reset();
 	for (Entry<Byte, Enemy> e : enemies.entrySet())
@@ -38,6 +47,7 @@ public class GameMap{
     public void buildSites(byte width, byte height) {
         this.width = width;
         this.height = height;
+	this.scaler = Math.min(width, height) * 0.5f;
 	this.totalSites = width * height;
         sites = new Site[width * height];
         for(byte x = 0; x < width; x++)
@@ -48,17 +58,7 @@ public class GameMap{
     public void addUnexplored(Site s) {
 	unexplored.add(s);
         Stats.totalUnexploredGenerator += s.generator;
-	s.set(Site.State.UNEXPLORED);
-    }
-
-    public void addBattle(Site s) {
-        battles.add(s);
-	s.set(Site.State.BATTLE);
-    }
-
-    public void addField(Site s) {
-        fields.add(s);
-	s.set(Site.State.FIELD);
+	s.set(State.UNEXPLORED);
     }
     
     public float manhattanDistance(Site s1, Site s2) {
@@ -70,13 +70,9 @@ public class GameMap{
 
         return dx + dy;
     }
-
+    
     public Site getSite(int x, int y) {
 	return sites[safeCoordinate(y, height) + (height * safeCoordinate(x, width))];
-    }
-
-    public Site getSite(int i) {
-	return sites[i];
     }
 
     public void collectStats() {
@@ -86,108 +82,191 @@ public class GameMap{
 		Stats.maxExplore = s.explore;
 	    if (s.explore < Stats.minExplore)
 		Stats.minExplore = s.explore;
-	    if (s.strength > Stats.maxStrength)
-		Stats.maxStrength = s.strength;
-	    if (s.strength < Stats.minStrength)
-		Stats.minStrength = s.strength;
+	    if (s.reinforce > Stats.maxReinforce)
+		Stats.maxReinforce = s.reinforce;
+	    if (s.reinforce < Stats.minReinforce)
+		Stats.minReinforce = s.reinforce;
 	    if (s.damage > Stats.maxDamage)
 		Stats.maxDamage = s.damage;
 	    if (s.damage < Stats.minDamage)
 		Stats.minDamage = s.damage;
-	    if (s.defense > Stats.maxDefense)
-		Stats.maxDefense = s.defense;
-	    if (s.defense < Stats.minDefense)
-		Stats.minDefense = s.defense;
-	    if (s.strategy > Stats.maxStrategy)
-		Stats.maxStrategy = s.strategy;
-	    if (s.strategy < Stats.minStrategy)
-		Stats.minStrategy = s.strategy;
 	}
     }
     
-    public void commitChanges() {
-	reset();
+    public void analyzeSites() {
 	for (int i = 0; i < sites.length; i++)
-	    analyzeSite(sites[i]);
+	    findSpearPoints(sites[i]);
     }
-
-    private void analyzeSite(Site site) {
-	site.owner = site.newOwner;
-	site.units = site.newUnits;
-	site.reset();
-	if (site.owner == 0)
-	    site.set(Site.State.NEUTRAL);
-	else if (site.owner == bot.id)
-	    site.set(Site.State.MINE);
-	else
-	    site.set(Site.State.ENEMY);
-	
-	if (site.get(Site.State.MINE) || site.get(Site.State.ENEMY)) {
-	    if (site.get(Site.State.MINE) && (site.units == 0))
-		site.set(Site.State.USED);
+    
+    private void findSpearPoints(Site site) {
+	if (site.get(State.MINE)) {
+	    RingIterator ri = new RingIterator(site, p);
+	    if (ri.next().size() == 0)
+		bot.addSpear(site);
+	}
+    }
+    
+    public void classifySite(Site site) {
+	if (site.get(State.MINE) || site.get(State.ENEMY)) {
+	    if (site.aboveActionThreshold())
+		site.set(State.READY);
+	    
+	    Entity e;
+	    if (site.get(State.MINE))
+		e = bot;
+	    else 
+	        e = getEnemy(site.owner);
 	    
 	    boolean border = false;
 	    for (Site neighbor : site.neighbors.values())
-		if (neighbor.get(Site.State.NEUTRAL)) {
+		if (neighbor.get(State.NEUTRAL)) {
 		    border = true;
 		    break;
-		}
-
-	    if (site.get(Site.State.MINE)) {
-		if (site.aboveActionThreshold())
-		    site.set(Site.State.READY);
-		if (!border)
-		    bot.addInterior(site);
-		else
-		    bot.addBorder(site);
-	    } else {
-		if (!border)
-		    getEnemy(site.owner).addInterior(site);
-		else
-		    getEnemy(site.owner).addBorder(site);
-	    }
-	} else if (site.get(Site.State.NEUTRAL)) {
+		} 
+	    
+	    if (!border)
+	        e.addInterior(site);
+	    else
+	        e.addBorder(site);
+	} else if (site.get(State.NEUTRAL)) {
 	    if (site.units == 0) {
-		boolean field = false;
-		boolean enemy = false;
-	    	for (Site neighbor : site.neighbors.values())
-	    	    if (neighbor.get(Site.State.MINE)) {
-	    		bot.addBattle(neighbor);
-			field = true;
-		    } else if (neighbor.get(Site.State.ENEMY)) {
-	    		getEnemy(neighbor.owner).addBattle(neighbor);
-			enemy = true;
+		HashMap<Byte, Boolean> neighborCheck = new HashMap<Byte, Boolean>();
+		for (Site neighbor : site.neighbors.values())
+		    if (neighbor.get(State.MINE)) {
+			bot.addBattle(neighbor);
+			neighborCheck.put(bot.id, true);
+		    } else if (neighbor.get(State.ENEMY)) {
+			getEnemy(neighbor.owner).addBattle(neighbor);
+			neighborCheck.put(neighbor.owner, true);
 		    }
-		if (field && !enemy)
-		    addField(site);
-		addBattle(site);
-	    } else {
-	    	boolean frontier = false;
-	    	boolean frontierEnemy = false;
-	    	for (Site neighbor : site.neighbors.values()) {
-	    	    if (neighbor.get(Site.State.MINE))
-	    		frontier = true;
-		    else if (neighbor.get(Site.State.ENEMY))
-	    		frontierEnemy = true;
-	    	}
-		if (frontier && frontierEnemy) {
+		if (neighborCheck.size() == 1) {
 		    for (Site neighbor : site.neighbors.values())
-			if (neighbor.get(Site.State.MINE))
+			if (neighbor.get(State.MINE))
+			    bot.addField(site);
+			else if (neighbor.get(State.ENEMY)) 
+			    getEnemy(neighbor.owner).addField(site);
+		}
+		site.set(State.BATTLE);
+	    } else {
+		boolean frontier = false;
+		boolean frontierEnemy = false;
+		boolean alreadyFighting = false;
+		for (Site neighbor : site.neighbors.values()) {
+		    if (neighbor.get(State.MINE))
+			frontier = true;
+		    else if (neighbor.get(State.ENEMY))
+			frontierEnemy = true;
+		    else if (neighbor.get(State.NEUTRAL) && (neighbor.units == 0))
+			alreadyFighting = true;
+		}
+		if (frontier && frontierEnemy && !alreadyFighting) {
+		    for (Site neighbor : site.neighbors.values())
+			if (neighbor.get(State.MINE))
 			    bot.addBattle(neighbor);
-			else if (neighbor.get(Site.State.ENEMY))
+			else if (neighbor.get(State.ENEMY))
 			    getEnemy(neighbor.owner).addBattle(neighbor);
-		    addBattle(site);
+		    site.set(State.BATTLE);
 		} else {
 		    for (Site neighbor : site.neighbors.values())
-			if (neighbor.get(Site.State.MINE))
+			if (neighbor.get(State.MINE))
 			    bot.addFrontier(site);
-			else if (neighbor.get(Site.State.ENEMY))
+			else if (neighbor.get(State.ENEMY))
 			    getEnemy(neighbor.owner).addFrontier(site);
 		    addUnexplored(site);
 		}
 	    }
 	}
     }
+
+    public void scoreUnexplored() {
+	float lowest = Float.MAX_VALUE;
+	float highest = 0;
+	Predicate<Site> p = new Predicate<Site>() {
+		@Override
+		public boolean test(Site t) {
+		    return t.get(State.NEUTRAL) && (t.units != 0);
+		}
+	    };
+	ArrayList<Site> sortedUnexplored = new ArrayList<Site>(unexplored.size());
+	for (Site s : unexplored) {
+	    if ((s.units != 0) && (s.generator > 0)) {
+		RingIterator ri = new RingIterator(s, p);
+		float totalWeight = 1f;
+		float total = s.getExploreValue();
+		for (int d = 0; d < 3 && ri.hasNext(); d++) {
+		    HashSet<Site> ring = ri.next();
+		    for (Site r : ring) 
+			total += r.getExploreValue();
+		    totalWeight += ring.size() * (1 - (0.3f * d));
+		}
+		s.explore = total / totalWeight;
+		sortedUnexplored.add(s);
+		if ((s.explore != 0) && (s.explore < lowest))
+		    lowest = s.explore;
+		if (s.explore > highest)
+		    highest = s.explore;
+	    }
+	}
+	Comparator<Site> c = new Comparator<Site>() {
+		@Override
+		public int compare(Site arg0, Site arg1) {
+		    float v = arg1.explore - arg0.explore;
+		    if (v == 0)
+			return arg0.id - arg1.id;
+		    return v > 0 ? 1 : -1;
+		}
+	    };
+	
+	Collections.sort(sortedUnexplored, c);
+	for (Iterator<Site> cursor = sortedUnexplored.iterator(); cursor.hasNext();) {
+	    Site s = cursor.next();
+	    if (((s.explore - lowest) / (highest - lowest)) < 0.30) {
+		s.explore = 0;
+		cursor.remove();
+	    }
+	}
+
+	lowest = Float.MAX_VALUE;
+	highest = 0;
+	for (Site s : sortedUnexplored) {
+	    RingIterator sri = new RingIterator(s, p);
+	    HashSet<Site> currentSet = new HashSet<Site>();
+	    currentSet.add(s);
+	    boolean changed = true;
+	    while (sri.hasNext() && changed) {
+		changed = false;
+		HashSet<Site> nextSet = sri.next();
+		for (Site r : nextSet) {
+		    highest = -Float.MAX_VALUE;
+		    RingIterator rri = new RingIterator(r, p);
+		    for (Site rr : rri.next()) 
+			if ((currentSet.contains(rr) || (rr == s)) && (highest < rr.explore))
+			    highest = rr.explore;
+		    float a = highest * (0.90f - (0.5f * (r.units / Site.MAX_STRENGTH)));
+
+		    if (a > r.explore) {
+			changed = true;
+			r.explore = a;
+		    }
+		}
+		currentSet = nextSet;
+	    }
+	}
+
+	for (Site s: unexplored) {
+	    if (s.explore < lowest)
+		lowest = s.explore;
+	    if (s.explore > highest)
+		highest = s.explore;		    
+	}
+	
+	for (Site s : unexplored) {
+	    if (((s.explore - lowest) / (highest - lowest)) > 0.75) {
+		s.set(State.OBJECTIVE);
+	    }
+	}
+    }
+
     
     public short safeCoordinate(int x, int limit) {
 	if (x < 0) 
@@ -196,18 +275,11 @@ public class GameMap{
 	    return (short)(x % limit);
     }
 
-    public void postAnalyzeEnemies() {
+    public void identifyEnemy() {
 	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
 	    Enemy enemy = e.getValue();
-	    enemy.postProcess();
-	}
-    }
-
-    public void analyzeEnemies() {
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
-	    Enemy enemy = e.getValue();
-	    enemy.placeDamageRadius();
 	    enemy.placeDefense();
+	    //enemy.placeDamageRadius();
 	}
     }
     

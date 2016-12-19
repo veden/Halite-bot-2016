@@ -1,13 +1,19 @@
 package game;
 
+import java.util.HashSet;
+
+import bot.AI;
+import bot.util.RingIterator;
+
+import game.Site.Direction;
+import game.Site.State;
+
 public class Networking {
     private GameMap map;
 
-    public final byte myId;
-    
     public Networking(GameMap map) {
 	this.map = map;
-	myId = Byte.parseByte(getString());
+	map.bot = new AI(Byte.parseByte(getString()), map);
         deserializeGameMapSize(getString());
         deserializeProductions(getString());
         deserializeGameMap(getString());
@@ -43,6 +49,20 @@ public class Networking {
 		else
 		    Stats.siteCounter.put(gen, Stats.siteCounter.get(gen)+1);
 	    }
+	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator; 
+	for (int i = 0; i < map.sites.length; i++) {
+	    Site s = map.sites[i];
+	    RingIterator ri = new RingIterator(s);
+	    float total = s.generator;
+	    for (int d = 0; d < 3 && ri.hasNext(); d++) {
+		HashSet<Site> ring = ri.next();
+		for (Site r : ring) 
+		    total += r.generator;
+	    }
+	    s.sitePotential = total / Stats.totalGenerator;
+	    if (s.sitePotential > Stats.maxSitePotential)
+		Stats.maxSitePotential = s.sitePotential;
+	}
     }
 
     private void deserializeGameMap(String inputString) {
@@ -60,7 +80,14 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
-		s.newOwner = owner;
+		s.reset();
+		s.owner = owner;
+		if (s.owner == 0)
+		    s.set(State.NEUTRAL);
+		else if (s.owner == map.bot.id)
+		    s.set(State.MINE);
+		else
+		    s.set(State.ENEMY);
 		++x;
 		if(x == map.width) {
 		    x = 0;
@@ -74,8 +101,10 @@ public class Networking {
 		Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
 		currentIndex++;
 		Site s = map.getSite(b, a);
-		s.newUnits = strengthInt;
+		s.units = strengthInt; 
 	    }
+	for (int i = 0; i < map.totalSites; i++)
+	    map.classifySite(map.sites[i]);
     }
 
     private void sendString(String sendString) {
@@ -112,8 +141,8 @@ public class Networking {
 
     public void sendFrame() {
 	StringBuilder sb = new StringBuilder();
-	for (int i = 0; i < map.totalSites; i++) {
-	    Site s = map.getSite(i);
+	for (int i = 0; i < map.sites.length; i++) {
+	    Site s = map.sites[i];
 	    if (s.heading != Direction.STILL)
 		sb.append(s.encodeMove());
 	}

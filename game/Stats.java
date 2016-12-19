@@ -10,10 +10,6 @@ public class Stats {
     public static float minGenerator = Float.MAX_VALUE;
     public static float maxGenerator = -Float.MAX_VALUE;
 
-    public static float defenseRange;
-    public static float enemyDistance;
-    public static float frontierRange;   
-
     //dynamic
     public static float minExplore = Float.MAX_VALUE;
     public static float maxExplore = -Float.MAX_VALUE;
@@ -21,18 +17,13 @@ public class Stats {
     public static float minDamage = Float.MAX_VALUE;
     public static float maxDamage = -Float.MAX_VALUE;
 
-    public static float minStrategy = Float.MAX_VALUE;
-    public static float maxStrategy = -Float.MAX_VALUE;
-
-    public static float minDefense = Float.MAX_VALUE;
-    public static float maxDefense = -Float.MAX_VALUE;
-
-    public static float minStrength = Float.MAX_VALUE;
-    public static float maxStrength = -Float.MAX_VALUE;
+    public static float minReinforce = Float.MAX_VALUE;
+    public static float maxReinforce = -Float.MAX_VALUE;
 
     public static float totalUnexploredGenerator = 0;
 
     public static HashMap<Byte, Integer> siteCounter = new HashMap<Byte, Integer>();
+	public static float maxSitePotential;
     
     public static String siteCounts() {
 	StringBuilder sb = new StringBuilder();
@@ -53,13 +44,7 @@ public class Stats {
 	minDamage = Float.MAX_VALUE;
 	maxDamage = -Float.MAX_VALUE;
 
-	minStrategy = Float.MAX_VALUE;
-	maxStrategy = -Float.MAX_VALUE;
-
-	minDefense = Float.MAX_VALUE;
-	maxDefense = -Float.MAX_VALUE;
-
-	minStrength = Float.MAX_VALUE;
-	maxStrength = -Float.MAX_VALUE;
+	minReinforce = Float.MAX_VALUE;
+	maxReinforce = -Float.MAX_VALUE;
     }
 }

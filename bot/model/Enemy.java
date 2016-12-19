@@ -1,101 +1,100 @@
 package bot.model;
 
-import java.util.BitSet;
-import java.util.HashSet;
+import java.util.function.Predicate;
 
-import bot.util.FloodFunction;
-import bot.util.SiteFunction;
-import bot.util.SiteUtils;
+import bot.util.RingIterator;
 
 import game.GameMap;
 import game.Site;
+import game.Site.State;
+import game.Stats;
 
 public class Enemy extends Entity {
-    private static FloodFunction spreadAttackTrigger = new FloodFunction() {  
-	    @Override
-	    public void scan(Site neighbor, Site center) {
-		if (best < neighbor.defense)
-		    best = neighbor.defense;
-	    }
-
-	    @Override
-	    public void process(Site s, BitSet used, Site center, float distance, HashSet<Site> current, HashSet<Site> next) {
-		float v = (1 - (0.04f * distance)) * best;
-		if (v > s.defense)
-		    s.defense = v;
-		for (Site neighbor : s.neighbors.values())
-		    if ((neighbor.owner == center.owner) && (neighbor.units == 0) && !used.get(neighbor.id))
-			next.add(neighbor);
-	    }
-	};
-
-    private static SiteFunction identifyEnemyProduction = new SiteFunction() {
-	    @Override
-	    public void process(Site s, BitSet used, HashSet<Site> current, HashSet<Site> next, Site center, float distance) {
-		if (s.get(Site.State.ENEMY)) {
-		    totalWeight += (1 - (0.2f * distance));
-		    total += s.generator;
-		    if ((distance+1<3) && (!used.get(s.id))) {
-			next.add(s);
-			used.set(s.id);
-		    }
-		}
-	    }
-	};
-
-    private static FloodFunction enemyAura = new FloodFunction() {
-
-	    @Override
-	    public void scan(Site neighbor, Site center) {
-		if (best < neighbor.explore)
-		    best = neighbor.explore;
-	    }
-
-	    @Override
-	    public void process(Site s, BitSet used, Site center, float distance, HashSet<Site> current, HashSet<Site> next) {		
-		float v = (1 - (0.04f * distance)) * best;
-		if (v > s.explore)
-		    s.explore = v;
-		if (v > 0)
-		    for (Site neighbor : s.neighbors.values())
-			if (neighbor.get(Site.State.NEUTRAL) && !used.get(neighbor.id))
-			    next.add(neighbor);
-	    }	    
-	};
-    
     public Enemy(byte id, GameMap map) {
 	super(id, map);
     }
-        
-    public void placeDamageRadius() {
-	for (Site b : border)
-	    SiteUtils.spreadDamage(b);
-	for (Site b : battles)
-	    SiteUtils.spreadDamage(b);
+
+    private Predicate<Site> pDamage = new Predicate<Site>() {
+	    @Override
+	    public boolean test(Site s) {
+		return (s.get(State.BATTLE) || s.get(State.ENEMY)) && !s.get(State.MINE);
+	    }
+	};
+    
+    public void spreadDamage(Site s, Predicate<Site> p) {
+	RingIterator ri = new RingIterator(s, p);
+	if (s.damage < s.units)
+	    s.damage = s.units;
+	for (int d = 0; d < 3; d++)
+	    for (Site neighbor : ri.next()) {
+		float v = s.damage * (0.9f - (0.05f * d));
+		if (v > neighbor.damage)
+		    neighbor.damage = v;
+	    }
     }
+    
+    public void placeDamageRadius() {
+	for (Site b : interior)
+	    spreadDamage(b, pDamage);
+	for (Site b : border)
+	    spreadDamage(b, pDamage);
+	for (Site b : battles)
+	    spreadDamage(b, pDamage);
+    }
+
+    // public float identifyEnemyProduction(Site center, Predicate<Site> p) {
+    // 	float total = (center.generator / (float)Stats.maxGenerator) + (center.units / Site.MAX_STRENGTH);
+    // 	float totalWeight = 1;
+
+    // 	// RingIterator ri = new RingIterator(center, p);
+    // 	// for (int d = 0; d < 4 && ri.hasNext(); d++) {
+    // 	//     HashSet<Site> ring = ri.next();
+    // 	//     for (Site site : ring)
+    // 	// 	total += (site.generator / (float)Stats.maxGenerator);
+    // 	//     totalWeight += ring.size() * (1 - (0.2f * d));
+    // 	// }
+    // 	return total / totalWeight;
+    // }
 
     public void placeDefense() {
+	// Predicate<Site> p = new Predicate<Site>() {
+	// 	@Override
+	// 	public boolean test(Site t) {
+	// 	    return t.get(State.ENEMY);
+	// 	}
+	//     };
+
+	Predicate<Site> np = new Predicate<Site>() {
+		@Override
+		public boolean test(Site t) {
+		    return (t.get(State.NEUTRAL) && (t.get(State.BATTLE))) || t.get(State.MINE);
+		}
+	    };
+
 	for (Site i : interior)
-	    i.defense = SiteUtils.scoreWeighted(i, map, identifyEnemyProduction.setInitial(i.generator));
+	    i.damage = 1f + (0.025f * ((float)i.generator / Stats.maxGenerator));
 	for (Site b : border)
-	    b.defense = SiteUtils.scoreWeighted(b, map, identifyEnemyProduction.setInitial(b.generator));
+	    b.damage = 1f + (0.025f * ((float)b.generator / Stats.maxGenerator));
 	for (Site c : battles) {
-	    c.defense = SiteUtils.scoreWeighted(c, map, identifyEnemyProduction.setInitial(c.generator));
+	    c.damage = 1f + (0.025f * ((float)c.generator / Stats.maxGenerator));
 	    for (Site neighbor : c.neighbors.values())
-		if (neighbor.get(Site.State.BATTLE) && neighbor.get(Site.State.NEUTRAL)) {
-		    neighbor.defense = 0.9f * c.defense;
+		if (neighbor.get(State.BATTLE) && neighbor.get(State.NEUTRAL)) {
 		    if (neighbor.units == 0)
-			SiteUtils.flood(neighbor, map, spreadAttackTrigger.setInitial(neighbor.defense));
+			neighbor.damage = 0.95f * c.damage;
+		    else
+			neighbor.damage = 0.65f * c.damage;
+		    if (neighbor.units == 0) {
+			RingIterator ri = new RingIterator(neighbor, np);
+			for (int d = 0; d < 8 && ri.hasNext(); d++) 
+			    for (Site r : ri.next()) {
+				for (Site n : r.neighbors.values()) {
+				    float v = 0.95f * n.damage;
+				    if (v > r.damage)
+					r.damage = v;
+				}
+			    }
+		    }
 		}
 	}    
-    }
-
-    public void postProcess() {
-	// for (Site b : border) {
-	//     for (Site s : b.neighbors.values())
-	// 	if (s.get(Site.State.NEUTRAL))
-	// 	    SiteUtils.flood(s, map, enemyAura.setInitial(s.explore));
-
-	// }
     }
 }
