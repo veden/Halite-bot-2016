@@ -42,28 +42,7 @@ public class Enemy extends Entity {
 	    spreadDamage(b, pDamage);
     }
 
-    // public float identifyEnemyProduction(Site center, Predicate<Site> p) {
-    // 	float total = (center.generator / (float)Stats.maxGenerator) + (center.units / Site.MAX_STRENGTH);
-    // 	float totalWeight = 1;
-
-    // 	// RingIterator ri = new RingIterator(center, p);
-    // 	// for (int d = 0; d < 4 && ri.hasNext(); d++) {
-    // 	//     HashSet<Site> ring = ri.next();
-    // 	//     for (Site site : ring)
-    // 	// 	total += (site.generator / (float)Stats.maxGenerator);
-    // 	//     totalWeight += ring.size() * (1 - (0.2f * d));
-    // 	// }
-    // 	return total / totalWeight;
-    // }
-
     public void placeDefense() {
-	// Predicate<Site> p = new Predicate<Site>() {
-	// 	@Override
-	// 	public boolean test(Site t) {
-	// 	    return t.get(State.ENEMY);
-	// 	}
-	//     };
-
 	Predicate<Site> np = new Predicate<Site>() {
 		@Override
 		public boolean test(Site t) {
@@ -72,11 +51,11 @@ public class Enemy extends Entity {
 	    };
 
 	for (Site i : interior)
-	    i.damage = 1f + (0.025f * ((float)i.generator / Stats.maxGenerator));
+	    i.damage = 1f + (0.05f * ((float)i.generator / Stats.maxGenerator));
 	for (Site b : border)
-	    b.damage = 1f + (0.025f * ((float)b.generator / Stats.maxGenerator));
+	    b.damage = 1f + (0.05f * ((float)b.generator / Stats.maxGenerator));
 	for (Site c : battles) {
-	    c.damage = 1f + (0.025f * ((float)c.generator / Stats.maxGenerator));
+	    c.damage = 1f + (0.05f * ((float)c.generator / Stats.maxGenerator));
 	    for (Site neighbor : c.neighbors.values())
 		if (neighbor.get(State.BATTLE) && neighbor.get(State.NEUTRAL)) {
 		    if (neighbor.units == 0)

@@ -7,7 +7,8 @@ public class Site implements Comparable<Site> {
 
     public static enum State {
 	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
-        FIELD, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY, SPEAR
+        OPEN, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY, SPEAR,
+	COMBAT_READY, GATE
     }
 
     public static enum Direction {
@@ -65,6 +66,10 @@ public class Site implements Comparable<Site> {
 	return generator * accumulatorThreshold < units;
     }
 
+    public boolean aboveCombatThreshold() {
+	return generator * (accumulatorThreshold * 0.75) < units;
+    }
+
     public String encodeMove() {
 	return x + " " + y + " " + encodeDirection(heading) + " ";
     }
@@ -82,20 +87,24 @@ public class Site implements Comparable<Site> {
 	}
     }
 
-    public void set(Site.State s) {
+    public void set(State s) {
 	status.add(s);
     }
 
-    public void remove(Site.State s) {
+    public void remove(State s) {
 	status.remove(s);
     }
     
-    public boolean get(Site.State s) {
+    public boolean get(State s) {
 	return status.contains(s);
     }
  
     public void reset() {
+	// boolean objective = get(State.OBJECTIVE);
+	// boolean neutral = get(State.NEUTRAL);
 	status.clear();
+	// if (neutral && objective)
+	//     set(State.OBJECTIVE);
 	explore = 0;
 	reinforce = 0;
 	damage = 0;
@@ -109,7 +118,7 @@ public class Site implements Comparable<Site> {
     }
 
     public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + get(Site.State.BATTLE) + " " + get(Site.State.FRONTIER) + " " + get(Site.State.UNEXPLORED) + " " + get(Site.State.INTERIOR) + " " + get(Site.State.BORDER) + " " + get(Site.State.FIELD) + " " + get(Site.State.READY) + " " + get(Site.State.SPEAR) + " " + get(Site.State.OBJECTIVE);
+	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + get(State.BATTLE) + " " + get(State.FRONTIER) + " " + get(State.UNEXPLORED) + " " + get(State.INTERIOR) + " " + get(State.BORDER) + " " + get(State.OPEN) + " " + get(State.READY) + " " + get(State.SPEAR) + " " + get(State.OBJECTIVE) + " " + get(State.COMBAT_READY) + " " + get(State.GATE);
     }
      
     @Override

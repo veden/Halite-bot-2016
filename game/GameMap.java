@@ -17,6 +17,8 @@ import bot.util.RingIterator;
 import game.Site.State;
 
 public class GameMap{
+    public static final float MAX_SIZE = 50f;
+    
     public Site[] sites;
     public int width;
     public int height;
@@ -32,7 +34,7 @@ public class GameMap{
     private Predicate<Site> p = new Predicate<Site>() {
 	    @Override
 	    public boolean test(Site s) {
-		return (s.get(State.MINE) && s.get(State.INTERIOR)) || s.get(State.BATTLE);
+		return s.get(State.INTERIOR) || s.get(State.BATTLE);
 	    }
 	};
     
@@ -99,7 +101,7 @@ public class GameMap{
     }
     
     private void findSpearPoints(Site site) {
-	if (site.get(State.MINE)) {
+	if (site.get(State.MINE) && !site.get(State.INTERIOR)) {
 	    RingIterator ri = new RingIterator(site, p);
 	    if (ri.next().size() == 0)
 		bot.addSpear(site);
@@ -110,6 +112,8 @@ public class GameMap{
 	if (site.get(State.MINE) || site.get(State.ENEMY)) {
 	    if (site.aboveActionThreshold())
 		site.set(State.READY);
+	    if (site.aboveCombatThreshold())
+		site.set(State.COMBAT_READY);
 	    
 	    Entity e;
 	    if (site.get(State.MINE))
@@ -142,30 +146,28 @@ public class GameMap{
 		if (neighborCheck.size() == 1) {
 		    for (Site neighbor : site.neighbors.values())
 			if (neighbor.get(State.MINE))
-			    bot.addField(site);
+			    bot.addOpen(site);
 			else if (neighbor.get(State.ENEMY)) 
-			    getEnemy(neighbor.owner).addField(site);
+			    getEnemy(neighbor.owner).addOpen(site);
+		    site.set(State.OPEN);
 		}
 		site.set(State.BATTLE);
 	    } else {
 		boolean frontier = false;
 		boolean frontierEnemy = false;
-		boolean alreadyFighting = false;
 		for (Site neighbor : site.neighbors.values()) {
 		    if (neighbor.get(State.MINE))
 			frontier = true;
 		    else if (neighbor.get(State.ENEMY))
 			frontierEnemy = true;
-		    else if (neighbor.get(State.NEUTRAL) && (neighbor.units == 0))
-			alreadyFighting = true;
 		}
-		if (frontier && frontierEnemy && !alreadyFighting) {
+		if (frontier && frontierEnemy) {
 		    for (Site neighbor : site.neighbors.values())
 			if (neighbor.get(State.MINE))
-			    bot.addBattle(neighbor);
+			    bot.addGate(neighbor);
 			else if (neighbor.get(State.ENEMY))
-			    getEnemy(neighbor.owner).addBattle(neighbor);
-		    site.set(State.BATTLE);
+			    getEnemy(neighbor.owner).addGate(neighbor);
+		    site.set(State.GATE);		
 		} else {
 		    for (Site neighbor : site.neighbors.values())
 			if (neighbor.get(State.MINE))
@@ -279,7 +281,6 @@ public class GameMap{
 	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
 	    Enemy enemy = e.getValue();
 	    enemy.placeDefense();
-	    //enemy.placeDamageRadius();
 	}
     }
     

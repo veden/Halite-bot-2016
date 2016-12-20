@@ -15,6 +15,14 @@ public class MoveUtils {
 	return false;
     }
 
+    public static float totalGenerator(Site a) {
+	float generator = 0f;
+	for (Site nn : a.neighbors.values())
+	    if (nn.get(State.ENEMY))
+	        generator += nn.generator;
+	return generator;
+    }
+    
     public static float totalDeath(Site a) {
 	float death = 0;
 	for (Site nn : a.neighbors.values())
@@ -50,17 +58,21 @@ public class MoveUtils {
 	return false;
     }
 
-    public static boolean validExplore(Site a, Site b) {
+    public static boolean validExplore(Site a, Site b, boolean joint) {
 	if (!a.get(State.USED) && b.get(State.NEUTRAL) && (b.units != 0)) {
-	    float remainingUnits = (a.units + b.incoming - b.units);
+	    float remainingUnits = a.units + b.incoming;
+	    if (!joint)
+		remainingUnits -= b.units;
 	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
 	}
 	return false;
     }
 
     public static boolean validCapture(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.FIELD) && (b.incoming == 0) && (b.units == 0))
-	    return a.units > 0;
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.OPEN)) {
+	    float units = (a.units + b.incoming);
+	    return (units > 0) && (units < Site.MAX_STRENGTH_LOSSY);
+	}
 	return false;	
     }
 
@@ -82,14 +94,17 @@ public class MoveUtils {
     }
 
     public static boolean validJoint(Site center, boolean explore) {
-	float total = 0f;
-	for (Site neighbor : center.neighbors.values())
-	    if (neighbor.get(State.MINE) && !neighbor.get(State.USED) && ((explore && neighbor.damage == 0) || !explore))
-		total += neighbor.units;
-	float v = total + center.incoming - center.units;
-	if (!explore)
-	    return (v > center.units) && (v <= Site.MAX_STRENGTH_LOSSY);
-	else
-	    return (v > center.units) && (v <= Site.MAX_STRENGTH);
+	if (center.get(State.NEUTRAL)) {
+	    float total = 0f;
+	    for (Site neighbor : center.neighbors.values())
+		if (neighbor.get(State.MINE) && !neighbor.get(State.USED) && ((explore && neighbor.damage == 0) || !explore))
+		    total += neighbor.units;
+	    float v = total + center.incoming - center.units;
+	    if (!explore)
+		return (v > center.units) && (v <= Site.MAX_STRENGTH_LOSSY);
+	    else
+		return (v > center.units) && (v <= Site.MAX_STRENGTH);
+	}
+	return false;
     }
 }

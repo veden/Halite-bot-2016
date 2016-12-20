@@ -27,7 +27,9 @@
                 open
                 ready
                 spear
-                objective))
+                objective
+                combatReady
+                gate))
 
   (struct SiteCount (value size))
   
@@ -78,27 +80,31 @@
                  (string=? "true" (list-ref chunks 13))
                  (string=? "true" (list-ref chunks 14))
                  (string=? "true" (list-ref chunks 15))
-                 (string=? "true" (list-ref chunks 16))))
+                 (string=? "true" (list-ref chunks 16))
+                 (string=? "true" (list-ref chunks 17))
+                 (string=? "true" (list-ref chunks 18))))
          sitesText))
 
 
   (define (site->string site)
     (string-append "x-" (~v (Site-x site)) "\n"
                    "y-" (~v (Site-y site)) "\n"
-                   "units-" (~v (Site-units site)) "\n"
-                   "generator-" (~v (Site-generator site)) "\n"
-                   "owner-" (~v (Site-owner site)) "\n"
-                   "explore-" (~v (Site-explore site)) "\n"
-                   "reinforce-" (~v (Site-reinforce site)) "\n"
-                   "damage-" (~v (Site-damage site)) "\n"
+                   "u-" (~v (Site-units site)) "\n"
+                   "gen-" (~v (Site-generator site)) "\n"
+                   "o-" (~v (Site-owner site)) "\n"
+                   "exp-" (~v (Site-explore site)) "\n"
+                   "r-" (~v (Site-reinforce site)) "\n"
+                   "dmg-" (~v (Site-damage site)) "\n"
                    "battle-" (~v (Site-battle site)) "\n"
-                   "frontier-" (~v (Site-frontier site)) "\n"
-                   "unexplored-" (~v (Site-unexplored site)) "\n"
-                   "internal-" (~v (Site-internal site)) "\n"
-                   "border-" (~v (Site-border site)) "\n"
+                   "front-" (~v (Site-frontier site)) "\n"
+                   "unexp-" (~v (Site-unexplored site)) "\n"
+                   "in-" (~v (Site-internal site)) "\n"
+                   "bor-" (~v (Site-border site)) "\n"
                    "open-" (~v (Site-open site)) "\n"
-                   "ready-" (~v (Site-ready site)) "\n"
-                   "objective-" (~v (Site-objective site)) "\n"
+                   "gate-" (~v (Site-gate site)) "\n"
+                   "rdy-" (~v (Site-ready site)) "\n"
+                   "cRdy-" (~v (Site-combatReady site)) "\n"
+                   "obj-" (~v (Site-objective site)) "\n"
                    "spear-" (~v (Site-spear site)) "\n"))
 
   (define (buildPlayers players)

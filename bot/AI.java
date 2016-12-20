@@ -17,8 +17,6 @@ import game.Stats;
 
 public class AI extends Entity {
 
-    private Random random = new Random(1234);
-    
     private Predicate<Site> pMine = new Predicate<Site>() {
 	    @Override
 	    public boolean test(Site t) {
@@ -65,7 +63,8 @@ public class AI extends Entity {
     }
                 
     public void planTroopMovements() {
-	float defenseRange = 1 + (map.scaler * (1 - ((float)map.unexplored.size() / map.totalSites)));
+	float mapScaling = (1 - ((float)map.unexplored.size() / map.totalSites));
+	float defenseRange = 1 + (map.scaler * (1 - mapScaling));
 	
 	for (Site s : battles) {
 	    float highest = -Float.MAX_VALUE;
@@ -96,23 +95,25 @@ public class AI extends Entity {
 		}
 	}
 
-	for (Site s : spear) {
+	float spearDiffusion = Math.max(0.90f - mapScaling, 0.5f);
+	for (Site s : spears) {
 	    RingIterator ri = new RingIterator(s, pMine);
-	    for (int d = 0; d < 8 && ri.hasNext(); d++) {
+	    for (int d = 0; d < 8  && ri.hasNext(); d++) {
 		for (Site r : ri.next()) {
 		    for (Site n : r.neighbors.values()) {
-			float v = 0.90f * n.reinforce;
+			float v = spearDiffusion * n.reinforce;
 			if (v > r.reinforce)
 			    r.reinforce = v;
 		    }
 		}
 	    }
 	}
+	float borderDiffusion = Math.min(0.5f + mapScaling, 0.90f);
 	for (Site s : border) {
 	    RingIterator ri = new RingIterator(s, pMine);
 	    for (int d = 0; d < 15 && ri.hasNext(); d++) {
 		RingIterator ro = new RingIterator(s, pObjective);
-		float scale = 0.70f;
+		float scale = borderDiffusion;
 		if (ro.next().size() != 0)
 		    scale = 0.99f;
 		for (Site r : ri.next()) {
@@ -124,12 +125,14 @@ public class AI extends Entity {
 		}
 	    }
 	}
+
+	
     }
 
     private boolean captureObjective(Site s) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (neighbor.get(State.OBJECTIVE) && MoveUtils.validExplore(s, neighbor) &&
+	    if (neighbor.get(State.OBJECTIVE) && MoveUtils.validExplore(s, neighbor, false) &&
 		(((s.moving() && (s.target().explore < neighbor.explore))) ||
 		 (!s.moving())))
 		s.heading = d;
@@ -152,7 +155,7 @@ public class AI extends Entity {
 	    if (s.target().explore < neighbor.explore)
 		s.heading = d;
 	}
-	if (!MoveUtils.validExplore(s, s.target()))
+	if (!MoveUtils.validExplore(s, s.target(), false))
 	    s.heading = Direction.STILL;
 
 	return s.moving();
@@ -169,12 +172,17 @@ public class AI extends Entity {
     }
 
     private boolean captureSite(Site s) {
+	float highestDamage = 0;
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
+	    if (neighbor.damage > highestDamage)
+		highestDamage = neighbor.damage;
 	    if (MoveUtils.validCapture(s, neighbor) && ((s.damage <= neighbor.damage) || 
 							(s.units <= Stats.maxGenerator)))
 		s.heading = d;
 	}
+	if ((s.units > Stats.maxGenerator) && (highestDamage != s.target().damage))
+	    s.heading = Direction.STILL;
 	return s.moving();
     }
     
@@ -182,26 +190,26 @@ public class AI extends Entity {
 	Collections.sort(battles, minUnitsCompare);
 	
 	for (Site s : battles) {
-	    if (!captureSite(s) && s.get(State.READY)) {
-		float mostDeath = s.units <= 70 ? Float.MAX_VALUE : -Float.MAX_VALUE;
+	    if (!captureSite(s) && s.get(State.COMBAT_READY)) {
+		float best = -Float.MAX_VALUE;
 		for (Direction d : Site.CARDINALS) {
 		    Site neighbor = s.neighbors.get(d);
-		    float tempDeath = MoveUtils.totalDeath(neighbor);
-		    if (MoveUtils.validAttack(s, neighbor) && (s.damage < neighbor.damage) && ((s.units>70 && (tempDeath >= mostDeath)) ||
-											       (s.units<=70 && (tempDeath <= mostDeath)))) {
-			mostDeath = tempDeath;
-			s.heading = d;
+		    if (MoveUtils.validAttack(s, neighbor)) {
+			float temp = s.units > 90 ? MoveUtils.totalGenerator(neighbor) : MoveUtils.totalDeath(neighbor);
+			if ((s.damage < neighbor.damage) && (best <= temp)) {
+			    best = temp;
+			    s.heading = d;
+			}
 		    }
 		}
 		
-		if (!s.moving())
-		    reinforceDefense(s);
-		else
+		if (s.moving()) {
 		    for (Site n : new RingIterator(s.target()).next())
-			n.damage = 0.0f;
-		
-		MoveUtils.moveSiteToSite(s, s.target());
+			    n.damage = 0.0f;
+		} else
+		    reinforceDefense(s);
 	    }
+	    MoveUtils.moveSiteToSite(s, s.target());
 	}
 
 	Collections.sort(frontier, maxExploreCompare);
@@ -209,15 +217,15 @@ public class AI extends Entity {
 	    if (MoveUtils.validJoint(s, true))
 		for (Direction d : Site.CARDINALS) {
 		    Site neighbor = s.neighbors.get(d);	
-		    if (neighbor.get(State.MINE) && MoveUtils.validExplore(neighbor, s)) {
+		    if (neighbor.get(State.MINE) && MoveUtils.validExplore(neighbor, s, true)) {
 			neighbor.heading = Site.reverse(d);
 			MoveUtils.moveSiteToSite(neighbor, s);
 		    }
 		}
 	}
 	
-	Collections.sort(spear, minUnitsCompare); 	
-	for (Site s : spear) {
+	Collections.sort(spears, minUnitsCompare); 	
+	for (Site s : spears) {
 	    if (s.damage == 0) {
 		if (!captureObjective(s))
 		    if (!s.get(State.READY) || !reinforceExplorer(s))
@@ -247,10 +255,11 @@ public class AI extends Entity {
 		if (s.damage != 0) {
 		    for (Direction d : Site.CARDINALS) {
 			Site neighbor = s.neighbors.get(d);
-			if (MoveUtils.validMove(s, neighbor) && (s.damage < neighbor.damage) &&
-			    (!s.moving() || (((s.units == 255) && (MoveUtils.totalUnits(s, s.target()) > MoveUtils.totalUnits(s, neighbor))) ||
-					     ((s.units != 255) && (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))
-					      )))) {
+			if (MoveUtils.validMove(s, neighbor) && (s.damage < neighbor.damage) // &&
+			    // (!s.moving() || (((s.units == 255) && (MoveUtils.totalUnits(s, s.target()) > MoveUtils.totalUnits(s, neighbor))) ||
+			    // 		     ((s.units != 255) && (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))
+			    // 		      )))
+			    ) {
 			    s.heading = d;
 			    bump = null;
 			}
@@ -265,10 +274,11 @@ public class AI extends Entity {
 		} else {
 		    for (Direction d : Site.CARDINALS) {
 			Site neighbor = s.neighbors.get(d);		
-			if (MoveUtils.validMove(s, neighbor) && (s.reinforce < neighbor.reinforce) &&
-			    (!s.moving() || (((s.units == 255) && (MoveUtils.totalUnits(s, s.target()) > MoveUtils.totalUnits(s, neighbor))) ||
-					     ((s.units != 255) && (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))
-					      )))) {
+			if (MoveUtils.validMove(s, neighbor) && (s.reinforce < neighbor.reinforce) // &&
+			    // (!s.moving() || (((s.units == 255) && (MoveUtils.totalUnits(s, s.target()) > MoveUtils.totalUnits(s, neighbor))) ||
+			    // 		     ((s.units != 255) && (MoveUtils.totalUnits(s, s.target()) < MoveUtils.totalUnits(s, neighbor))
+			    // 		      )))
+			    ) {
 			    s.heading = d;
 			    bump = null;
 			}
