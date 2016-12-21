@@ -222,7 +222,7 @@ public class GameMap{
 	Collections.sort(sortedUnexplored, c);
 	for (Iterator<Site> cursor = sortedUnexplored.iterator(); cursor.hasNext();) {
 	    Site s = cursor.next();
-	    if (((s.explore - lowest) / (highest - lowest)) < 0.5f) {
+	    if (((s.explore - lowest) / (highest - lowest)) < 0.35f) {
 		s.explore = 0;
 		cursor.remove();
 	    }
@@ -241,7 +241,7 @@ public class GameMap{
 		    for (Site rr : rri.next()) 
 			if (highest < rr.explore)
 			    highest = rr.explore;
-		    float a = highest * (0.90f - (0.50f * (r.units / Site.MAX_STRENGTH)));
+		    float a = highest * (0.90f - (0.65f * (r.units / Site.MAX_STRENGTH)));
 		    if (a > r.explore)
 			r.explore = a;
 		}

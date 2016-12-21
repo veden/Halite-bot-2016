@@ -49,13 +49,12 @@ public class Networking {
 		else
 		    Stats.siteCounter.put(gen, Stats.siteCounter.get(gen)+1);
 	    }
-	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator; 
+	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator;
 	for (int i = 0; i < map.sites.length; i++) {
 	    Site s = map.sites[i];
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.generator;
-	    for (int d = 0; d < 4//map.scaler * 0.5f
-		     && ri.hasNext(); d++) {
+	    for (int d = 0; d < map.scaler * 0.45f && ri.hasNext(); d++) {
 		HashSet<Site> ring = ri.next();
 		for (Site r : ring) 
 		    total += r.generator;
