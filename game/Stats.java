@@ -7,6 +7,7 @@ public class Stats {
 
     //static
     public static float totalGenerator = 0;
+    public static float totalSites = 0;
     public static float minGenerator = Float.MAX_VALUE;
     public static float maxGenerator = -Float.MAX_VALUE;
 
@@ -23,7 +24,7 @@ public class Stats {
     public static float totalUnexploredGenerator = 0;
 
     public static HashMap<Byte, Integer> siteCounter = new HashMap<Byte, Integer>();
-	public static float maxSitePotential;
+    public static float maxSitePotential;
     
     public static String siteCounts() {
 	StringBuilder sb = new StringBuilder();

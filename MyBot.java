@@ -23,6 +23,7 @@ public class MyBot {
 	    map.identifyEnemy();
 	    map.bot.planTroopMovements();
 	    map.bot.move();
+	    map.bot.finish();
 
 	    server.sendFrame();
 

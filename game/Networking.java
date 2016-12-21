@@ -103,7 +103,7 @@ public class Networking {
 		Site s = map.getSite(b, a);
 		s.units = strengthInt; 
 	    }
-	for (int i = 0; i < map.totalSites; i++)
+	for (int i = 0; i < Stats.totalSites; i++)
 	    map.classifySite(map.sites[i]);
     }
 

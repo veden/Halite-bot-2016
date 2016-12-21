@@ -59,7 +59,7 @@ public class MoveUtils {
     }
 
     public static boolean validExplore(Site a, Site b, boolean joint) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && (b.units != 0)) {
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED)) {
 	    float remainingUnits = a.units + b.incoming;
 	    if (!joint)
 		remainingUnits -= b.units;
@@ -69,7 +69,7 @@ public class MoveUtils {
     }
 
     public static boolean validCapture(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.OPEN)) {
+	if (!a.get(State.USED) && b.get(State.OPEN)) {
 	    float units = (a.units + b.incoming);
 	    return (units > 0) && (units < Site.MAX_STRENGTH_LOSSY);
 	}

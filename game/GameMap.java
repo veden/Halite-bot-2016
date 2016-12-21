@@ -23,7 +23,6 @@ public class GameMap{
     public int width;
     public int height;
     public float scaler;
-    public int totalSites;
 
     public AI bot;
 
@@ -50,7 +49,7 @@ public class GameMap{
         this.width = width;
         this.height = height;
 	this.scaler = Math.min(width, height) * 0.5f;
-	this.totalSites = width * height;
+        Stats.totalSites = width * height;
         sites = new Site[width * height];
         for(byte x = 0; x < width; x++)
             for(byte y = 0; y < height; y++)

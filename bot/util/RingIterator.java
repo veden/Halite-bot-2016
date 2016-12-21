@@ -1,5 +1,6 @@
 package bot.util;
 
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -10,9 +11,11 @@ public class RingIterator implements Iterator<HashSet<Site>> {
 
     private Predicate<Site> neighborPredicate = null;
     private HashSet<Site> currentSet = new HashSet<Site>();
+    private BitSet used = new BitSet();
 
     public RingIterator(Site center) {
-        currentSet.add(center);	
+        currentSet.add(center);
+	used.set(center.id);
     }
     
     public RingIterator(Site center, Predicate<Site> neighborPredicate) {
@@ -32,13 +35,17 @@ public class RingIterator implements Iterator<HashSet<Site>> {
 	if (usePredicate) {
 	    for (Site s : currentSet)
 		for (Site neighbor : s.neighbors.values())
-		    if (!currentSet.contains(neighbor) && neighborPredicate.test(neighbor))
+		    if (!used.get(neighbor.id) && neighborPredicate.test(neighbor)) {
 			ring.add(neighbor);
+			used.set(neighbor.id);
+		    }
 	} else {
 	    for (Site s : currentSet)
 		for (Site neighbor : s.neighbors.values())
-		    if (!currentSet.contains(neighbor))
+		    if (!used.get(neighbor.id)) {
 			ring.add(neighbor);
+			used.set(neighbor.id);
+		    }
 	}
 	currentSet = ring;
 	return ring;
