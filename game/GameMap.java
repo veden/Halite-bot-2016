@@ -18,7 +18,8 @@ import game.Site.State;
 
 public class GameMap{
     public static final float MAX_SIZE = 50f;
-    
+
+    private boolean foundObjectives = false;
     public Site[] sites;
     public int width;
     public int height;
@@ -48,10 +49,10 @@ public class GameMap{
     public void buildSites(byte width, byte height) {
         this.width = width;
         this.height = height;
-	this.scaler = Math.min(width, height) * 0.5f;
-        Stats.totalSites = width * height;
-        sites = new Site[width * height];
-        for(byte x = 0; x < width; x++)
+	this.scaler = (Math.min(width, height) - 1) * 0.5f;
+	Stats.totalSites = width * height;
+	sites = new Site[width * height];
+	for(byte x = 0; x < width; x++)
             for(byte y = 0; y < height; y++)
 		sites[y + (height * x)] = new Site(x, y, height);
     }
@@ -185,7 +186,7 @@ public class GameMap{
 	Predicate<Site> p = new Predicate<Site>() {
 		@Override
 		public boolean test(Site t) {
-		    return t.get(State.NEUTRAL) && (t.units != 0);
+		    return t.get(State.UNEXPLORED);
 		}
 	    };
 	ArrayList<Site> sortedUnexplored = new ArrayList<Site>(unexplored.size());
@@ -198,7 +199,7 @@ public class GameMap{
 		    HashSet<Site> ring = ri.next();
 		    for (Site r : ring) 
 			total += r.getExploreValue();
-		    totalWeight += ring.size() * (1 - (0.3f * d));
+		    totalWeight += ring.size() * (1 - (0.20f * d));
 		}
 		s.explore = total / totalWeight;
 		sortedUnexplored.add(s);
@@ -221,7 +222,7 @@ public class GameMap{
 	Collections.sort(sortedUnexplored, c);
 	for (Iterator<Site> cursor = sortedUnexplored.iterator(); cursor.hasNext();) {
 	    Site s = cursor.next();
-	    if (((s.explore - lowest) / (highest - lowest)) < 0.30) {
+	    if (((s.explore - lowest) / (highest - lowest)) < 0.5f) {
 		s.explore = 0;
 		cursor.remove();
 	    }
@@ -231,26 +232,19 @@ public class GameMap{
 	highest = 0;
 	for (Site s : sortedUnexplored) {
 	    RingIterator sri = new RingIterator(s, p);
-	    HashSet<Site> currentSet = new HashSet<Site>();
-	    currentSet.add(s);
-	    boolean changed = true;
-	    while (sri.hasNext() && changed) {
-		changed = false;
-		HashSet<Site> nextSet = sri.next();
-		for (Site r : nextSet) {
+	    int d = 0;
+	    while (sri.hasNext() && (d < scaler * 0.5f)) {
+		d++;
+		for (Site r : sri.next()) {
 		    highest = -Float.MAX_VALUE;
 		    RingIterator rri = new RingIterator(r, p);
 		    for (Site rr : rri.next()) 
-			if ((currentSet.contains(rr) || (rr == s)) && (highest < rr.explore))
+			if (highest < rr.explore)
 			    highest = rr.explore;
-		    float a = highest * (0.90f - (0.5f * (r.units / Site.MAX_STRENGTH)));
-
-		    if (a > r.explore) {
-			changed = true;
+		    float a = highest * (0.90f - (0.50f * (r.units / Site.MAX_STRENGTH)));
+		    if (a > r.explore)
 			r.explore = a;
-		    }
 		}
-		currentSet = nextSet;
 	    }
 	}
 
@@ -260,10 +254,13 @@ public class GameMap{
 	    if (s.explore > highest)
 		highest = s.explore;		    
 	}
-	
-	for (Site s : unexplored) {
-	    if (((s.explore - lowest) / (highest - lowest)) > 0.75) {
-		s.set(State.OBJECTIVE);
+
+	if (!foundObjectives) {
+	    foundObjectives = true;
+	    for (Site s : unexplored) {
+		if (((s.explore - lowest) / (highest - lowest)) > 0.90) {
+		    s.set(State.OBJECTIVE);
+		}
 	    }
 	}
     }

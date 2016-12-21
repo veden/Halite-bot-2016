@@ -12,7 +12,7 @@ public class MyBot {
 
 	Debug.startup(map);
 	server.sendInit("VedenV7");
-	
+
 	while(true) {
 	    start = Debug.startClock(turn);
 	    map.reset();
@@ -29,7 +29,7 @@ public class MyBot {
 
 	    Debug.stopClock(map, turn, start);
 	    // if (turn == 125)
-	    //	    Debug.abort("");
+	    //Debug.abort("");
 	    turn++;
 	}
     }

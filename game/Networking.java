@@ -54,7 +54,8 @@ public class Networking {
 	    Site s = map.sites[i];
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.generator;
-	    for (int d = 0; d < 6 && ri.hasNext(); d++) {
+	    for (int d = 0; d < 4//map.scaler * 0.5f
+		     && ri.hasNext(); d++) {
 		HashSet<Site> ring = ri.next();
 		for (Site r : ring) 
 		    total += r.generator;

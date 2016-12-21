@@ -17,7 +17,7 @@ public class Enemy extends Entity {
     private Predicate<Site> pDamage = new Predicate<Site>() {
 	    @Override
 	    public boolean test(Site s) {
-		return (s.get(State.BATTLE) || s.get(State.ENEMY)) && !s.get(State.MINE);
+		return (s.get(State.BATTLE) || s.get(State.ENEMY) || s.get(State.GATE)) && !s.get(State.MINE);
 	    }
 	};
     

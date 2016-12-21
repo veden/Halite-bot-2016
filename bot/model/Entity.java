@@ -1,9 +1,7 @@
 package bot.model;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
-import game.Debug;
 import game.GameMap;
 import game.Site;
 import game.Site.State;

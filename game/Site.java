@@ -53,14 +53,14 @@ public class Site implements Comparable<Site> {
     public float getExploreValue() {
 	if (generator != 0) {
 	    if (exploreValue == -Float.MAX_VALUE) {
-		exploreValue = ((1f - (units / (float)MAX_STRENGTH)) *
-				(1f - (((float)Stats.totalGenerator/(float)Stats.siteCounter.get(generator)) / (float)Stats.totalGenerator)) *
+		exploreValue = ((1 - (units / Site.MAX_STRENGTH)) * 
+				(1f - ((units / generator) / Site.MAX_STRENGTH)) *
 				(sitePotential / Stats.maxSitePotential));
 	    }
 	} else
 	    return 0;
 	return exploreValue;
-    }
+	}
  
     public boolean aboveActionThreshold() {
 	return generator * accumulatorThreshold < units;
@@ -100,11 +100,11 @@ public class Site implements Comparable<Site> {
     }
  
     public void reset() {
-	// boolean objective = get(State.OBJECTIVE);
-	// boolean neutral = get(State.NEUTRAL);
+	boolean objective = get(State.OBJECTIVE);
+	boolean neutral = get(State.NEUTRAL);
 	status.clear();
-	// if (neutral && objective)
-	//     set(State.OBJECTIVE);
+	if (neutral && objective)
+	    set(State.OBJECTIVE);
 	explore = 0;
 	reinforce = 0;
 	damage = 0;
