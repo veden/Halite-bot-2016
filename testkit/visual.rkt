@@ -165,7 +165,7 @@
       (send siteCountsBox set-label (string-append (~v (Replay-width activeReplay)) "x" (~v (Replay-height activeReplay))
                                                    "\n"
                                                    (replay->string activeReplay)
-                                                   "\ntotal Free generator-"
+                                                   "\tfg-"
                                                    (~v (Frame-totalFreeGenerator (list-ref (Replay-frames activeReplay)
                                                                                            (Replay-currentFrame activeReplay)))))))
     
@@ -231,15 +231,21 @@
             (map (lambda (dc)
                    (send dc set-pen (make-object color% 255 255 255) 1 'solid))
                  dcs)
-            (cond ((Site-battle site) (map (lambda (dc)
+            (cond ((Site-locked site) (map (lambda (dc)
+                                             (send dc set-pen (make-object color% 255 36 113) 1 'solid))
+                                           dcs))
+                  ((Site-battle site) (map (lambda (dc)
                                              (send dc set-pen (make-object color% 178 36 232) 1 'solid))
                                            dcs))
                   ((Site-objective site) (map (lambda (dc)
                                                 (send dc set-pen (make-object color% 255 0 162) 1 'solid))
-                                              dcs))
+                                              dcs)) 
                   ((Site-gate site) (map (lambda (dc)
                                            (send dc set-pen (make-object color% 36 113 255) 1 'solid))
                                          dcs))
+                  ((Site-exploreCandidate site) (map (lambda (dc)
+                                                       (send dc set-pen (make-object color% 36 255 113) 1 'solid))
+                                                     dcs))
                   (#t (map (lambda (dc)
                              (send dc set-pen (make-object color% 0 0 0) 1 'solid))
                            dcs))))
@@ -318,8 +324,8 @@
          (cons frame17 extendFrames))
     'starting)
 
-      (set! activeReplay (readReplay "/home/veden/haliteFiles/replay.txt"))
-      (set! scaleX (/ 500.0 (Replay-width activeReplay)))
-      (set! scaleY (/ 500.0 (Replay-height activeReplay)))
-      (showVisual))
+  (set! activeReplay (readReplay "/home/veden/haliteFiles/replay.txt"))
+  (set! scaleX (/ 500.0 (Replay-width activeReplay)))
+  (set! scaleY (/ 500.0 (Replay-height activeReplay)))
+  (showVisual))
 

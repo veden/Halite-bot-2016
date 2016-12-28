@@ -16,18 +16,18 @@ public class MoveUtils {
     }
 
     public static float totalGenerator(Site a) {
-	float generator = 0f;
+	float generator = (float)a.generator;
 	for (Site nn : a.neighbors.values())
 	    if (nn.get(State.ENEMY))
-	        generator += nn.generator;
+	        generator += (float)nn.generator;
 	return generator;
     }
     
     public static float totalDeath(Site a) {
-	float death = 0;
+	float death = 0f;
 	for (Site nn : a.neighbors.values())
 	    if (nn.get(State.ENEMY))
-	        death += nn.units;
+	        death += (float)nn.units;
 	return death;
     }
     
@@ -38,7 +38,7 @@ public class MoveUtils {
     }
 
     public static boolean validBump(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE) && (!b.moving()) && (a.units > b.units * 1.3)) {
+	if (!a.get(State.USED) && b.get(State.MINE) && (!b.moving()) && (a.units > b.units * 1.3) && (!b.get(State.LOCKED))) {
 	    float v = a.units + b.units + b.incoming;
 	    if (v <= Site.MAX_STRENGTH)
 		return false;
@@ -49,7 +49,7 @@ public class MoveUtils {
     }
     
     public static boolean validMove(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE)) {
+	if (!a.get(State.USED) && b.get(State.MINE) && (!b.get(State.LOCKED))) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
 	    if (!b.moving())
 		units += b.generator;
@@ -59,27 +59,30 @@ public class MoveUtils {
     }
 
     public static boolean validExplore(Site a, Site b, boolean joint) {
-	if (!a.get(State.USED) && b.get(State.UNEXPLORED)) {
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && !b.get(State.LOCKED)) {
 	    float remainingUnits = a.units + b.incoming;
-	    if (!joint)
+	    float cap = Site.MAX_STRENGTH;
+	    if (joint)
+		cap += b.units;
+	    else
 		remainingUnits -= b.units;
-	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
+	    return (remainingUnits > 0) && (remainingUnits < cap);
 	}
 	return false;
     }
 
     public static boolean validCapture(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.OPEN)) {
+	if (!a.get(State.USED) && b.get(State.OPEN) && (!b.get(State.LOCKED))) {
 	    float units = (a.units + b.incoming);
-	    return (units > 0) && (units < Site.MAX_STRENGTH_LOSSY);
+	    return (units > 0) && (units < Site.MAX_STRENGTH);
 	}
 	return false;	
     }
 
     public static boolean validAttack(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE)) {
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && (b.get(State.BATTLE) || b.get(State.GATE)) && (!b.get(State.LOCKED))) {
 	    float highestUnit = 0;
-	    if (b.units != 0) {
+	    if (b.get(State.GATE)) {
 		for (Site neighbor : b.neighbors.values()) {
 		    float v = neighbor.generator;
 		    if (neighbor.get(State.ENEMY) && (highestUnit < v))
@@ -94,7 +97,7 @@ public class MoveUtils {
     }
 
     public static boolean validJoint(Site center, boolean explore) {
-	if (center.get(State.NEUTRAL)) {
+	if (center.get(State.UNEXPLORED) && !center.get(State.LOCKED)) {
 	    float total = 0f;
 	    for (Site neighbor : center.neighbors.values())
 		if (neighbor.get(State.MINE) && !neighbor.get(State.USED) && ((explore && neighbor.damage == 0) || !explore))

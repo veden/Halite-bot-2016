@@ -1,11 +1,7 @@
 package game;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
@@ -95,19 +91,6 @@ public class GameMap{
 	}
     }
     
-    public void analyzeSites() {
-	for (int i = 0; i < sites.length; i++)
-	    findSpearPoints(sites[i]);
-    }
-    
-    private void findSpearPoints(Site site) {
-	if (site.get(State.MINE) && !site.get(State.INTERIOR)) {
-	    RingIterator ri = new RingIterator(site, p);
-	    if (ri.next().size() == 0)
-		bot.addSpear(site);
-	}
-    }
-    
     public void classifySite(Site site) {
 	if (site.get(State.MINE) || site.get(State.ENEMY)) {
 	    if (site.aboveActionThreshold())
@@ -180,92 +163,92 @@ public class GameMap{
 	}
     }
 
+    public float normalize(float x, float low, float high) {
+	return ((x - low) / (high - low));
+    }
+    
     public void scoreUnexplored() {
-	float lowest = Float.MAX_VALUE;
-	float highest = 0;
+	float minExplore = Float.MAX_VALUE;
+	float maxExplore = 0;
 	Predicate<Site> p = new Predicate<Site>() {
 		@Override
 		public boolean test(Site t) {
-		    return t.get(State.UNEXPLORED);
+		    return t.get(State.UNEXPLORED) || (t.get(State.MINE));
 		}
 	    };
-	ArrayList<Site> sortedUnexplored = new ArrayList<Site>(unexplored.size());
-	for (Site s : unexplored) {
-	    if ((s.units != 0) && (s.generator > 0)) {
-		RingIterator ri = new RingIterator(s, p);
-		float totalWeight = 1f;
-		float total = s.getExploreValue();
-		for (int d = 0; d < 3 && ri.hasNext(); d++) {
-		    HashSet<Site> ring = ri.next();
-		    for (Site r : ring) 
-			total += r.getExploreValue();
-		    totalWeight += ring.size() * (1 - (0.20f * d));
-		}
-		s.explore = total / totalWeight;
-		sortedUnexplored.add(s);
-		if ((s.explore != 0) && (s.explore < lowest))
-		    lowest = s.explore;
-		if (s.explore > highest)
-		    highest = s.explore;
-	    }
-	}
-	Comparator<Site> c = new Comparator<Site>() {
-		@Override
-		public int compare(Site arg0, Site arg1) {
-		    float v = arg1.explore - arg0.explore;
-		    if (v == 0)
-			return arg0.id - arg1.id;
-		    return v > 0 ? 1 : -1;
-		}
-	    };
+
+	// for (Site s: unexplored) {
+	//     if (s.explore < minExplore)
+	// 	minExplore = s.explore;
+	//     if (s.explore > maxExplore)
+	// 	maxExplore = s.explore;		    
+	// }	
+	// for (Site s : unexplored) 
+	//     if ((s.units != 0) && (s.generator > 0)) {
+	// 	RingIterator sri = new RingIterator(s, p);
+	// 	int d = 0;
+	// 	float value = s.getExploreValue();
+	// 	if (value > s.explore)
+	// 	    s.explore = value;
+	// 	float scale = 0.50f;
+	// 	float score = normalize(s.explore, minExplore, maxExplore);
+	// 	if (score > 0.65)
+	// 	    scale = 0.40f;
+	// 	else if (score <= 0.40f)
+	// 	    continue;
+	// 	float unitScale = scale * 0.5f;
+	// 	float generatorScale = scale * 0.5f;
+	// 	while (sri.hasNext() && (d < 10)) {
+	// 	    d++;
+	// 	    for (Site r : sri.next()) {
+	// 		float highest = -Float.MAX_VALUE;
+	// 		for (Site rr : r.neighbors.values()) 
+	// 		    if (rr.get(State.UNEXPLORED) && (highest < rr.explore)) 
+	// 			highest = rr.explore;
+	// 		float v = highest * (0.98f - (unitScale * (r.units / Site.MAX_STRENGTH)) - (generatorScale * (1 - (r.generator / Stats.maxGenerator))));
+	// 		if (v > r.explore)
+	// 		    r.explore = v;
+	// 	    }		
+	// 	}
+	//     } 
 	
-	Collections.sort(sortedUnexplored, c);
-	for (Iterator<Site> cursor = sortedUnexplored.iterator(); cursor.hasNext();) {
-	    Site s = cursor.next();
-	    if (((s.explore - lowest) / (highest - lowest)) < 0.35f) {
-		s.explore = 0;
-		cursor.remove();
-	    }
-	}
-
-	lowest = Float.MAX_VALUE;
-	highest = 0;
-	for (Site s : sortedUnexplored) {
-	    RingIterator sri = new RingIterator(s, p);
-	    int d = 0;
-	    while (sri.hasNext() && (d < scaler * 0.5f)) {
-		d++;
-		for (Site r : sri.next()) {
-		    highest = -Float.MAX_VALUE;
-		    RingIterator rri = new RingIterator(r, p);
-		    for (Site rr : rri.next()) 
-			if (highest < rr.explore)
-			    highest = rr.explore;
-		    float a = highest * (0.90f - (0.65f * (r.units / Site.MAX_STRENGTH)));
-		    if (a > r.explore)
-			r.explore = a;
-		}
-	    }
-	}
-
+	
 	for (Site s: unexplored) {
-	    if (s.explore < lowest)
-		lowest = s.explore;
-	    if (s.explore > highest)
-		highest = s.explore;		    
-	}
-
-	if (!foundObjectives) {
-	    foundObjectives = true;
-	    for (Site s : unexplored) {
-		if (((s.explore - lowest) / (highest - lowest)) > 0.90) {
-		    s.set(State.OBJECTIVE);
+	    if (s.explore < minExplore)
+		minExplore = s.explore;
+	    if (s.explore > maxExplore)
+		maxExplore = s.explore;		    
+	}	
+	for (Site s : unexplored) 
+	    if ((s.units != 0) && (s.generator > 0)) {
+		RingIterator sri = new RingIterator(s, p);
+		int d = 0;
+		float value = s.getExploreValue();
+		if (value > s.explore)
+		    s.explore = value;
+		float scale = 0.75f;
+		// float score = normalize(value, minExplore, maxExplore);
+		// if (score < 0.65)
+		//     continue;
+		float unitScale = scale * 0.75f;
+		float generatorScale = scale * 0.25f;
+		while (sri.hasNext() && (d < 15)) {
+		    d++;
+		    for (Site r : sri.next()) {
+			if (r.get(State.UNEXPLORED)) {
+			    float v = value * (0.95f - (0.04f * (d + 1)) - (unitScale * (r.units / Site.MAX_STRENGTH)) - (generatorScale * (1 - (r.generator / Stats.maxGenerator))));
+			    if (v > r.explore)
+				r.explore = v;
+			} else {
+			    float v = value * (0.95f - (0.04f * (d + 1)));
+			    if (v > r.reinforce)
+				r.reinforce = v;
+			}
+		    }		
 		}
 	    }
-	}
     }
 
-    
     public short safeCoordinate(int x, int limit) {
 	if (x < 0) 
 	    return (short)(limit + (x % limit));

@@ -54,10 +54,10 @@ public class Networking {
 	    Site s = map.sites[i];
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.generator;
-	    for (int d = 0; d < map.scaler * 0.45f && ri.hasNext(); d++) {
+	    for (int d = 0; d < 2 && ri.hasNext(); d++) {
 		HashSet<Site> ring = ri.next();
 		for (Site r : ring) 
-		    total += r.generator;
+		    total += r.generator * (1f - (0.30f * (1 + d)));
 	    }
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)

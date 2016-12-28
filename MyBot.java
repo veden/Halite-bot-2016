@@ -18,12 +18,10 @@ public class MyBot {
 	    map.reset();
 	    server.getFrame();
 	    
-	    map.analyzeSites();
 	    map.scoreUnexplored();
 	    map.identifyEnemy();
 	    map.bot.planTroopMovements();
 	    map.bot.move();
-	    map.bot.finish();
 
 	    server.sendFrame();
 

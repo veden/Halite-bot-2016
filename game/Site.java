@@ -8,7 +8,7 @@ public class Site implements Comparable<Site> {
     public static enum State {
 	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
         OPEN, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY, SPEAR,
-	COMBAT_READY, GATE
+	COMBAT_READY, GATE, EXPLORE_CANDIDATE, LOCKED
     }
 
     public static enum Direction {
@@ -36,8 +36,10 @@ public class Site implements Comparable<Site> {
     public Direction heading = Direction.STILL;
 
     public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
+
+    public float stagingValue = 0;
     
-    public float accumulatorThreshold = 4.5f;
+    public float accumulatorThreshold = 5f;
     public float sitePotential = 0f;
     public float explore;
     public float reinforce;
@@ -52,15 +54,18 @@ public class Site implements Comparable<Site> {
 
     public float getExploreValue() {
 	if (generator != 0) {
-	    if (exploreValue == -Float.MAX_VALUE) {
-		exploreValue = ((1 - (units / Site.MAX_STRENGTH)) * 
-				(1f - ((units / generator) / Site.MAX_STRENGTH)) *
-				(sitePotential / Stats.maxSitePotential));
-	    }
+	    if (exploreValue == -Float.MAX_VALUE)
+		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
+				((0.35f * ((generator / Stats.maxGenerator))) +
+				 (0.55f * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+				 (0.20f * (sitePotential / Stats.maxSitePotential)) +
+				 (0.25f * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
+				 (0.25f * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
+				 ));
 	} else
 	    return 0;
 	return exploreValue;
-	}
+    }
  
     public boolean aboveActionThreshold() {
 	return generator * accumulatorThreshold < units;
@@ -100,11 +105,12 @@ public class Site implements Comparable<Site> {
     }
  
     public void reset() {
-	boolean objective = get(State.OBJECTIVE);
-	boolean neutral = get(State.NEUTRAL);
+	// boolean objective = get(State.OBJECTIVE);
+	// boolean neutral = get(State.NEUTRAL);
 	status.clear();
-	if (neutral && objective)
-	    set(State.OBJECTIVE);
+	// if (neutral && objective)
+	//     set(State.OBJECTIVE);
+	stagingValue = 0;
 	explore = 0;
 	reinforce = 0;
 	damage = 0;
@@ -118,7 +124,7 @@ public class Site implements Comparable<Site> {
     }
 
     public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + get(State.BATTLE) + " " + get(State.FRONTIER) + " " + get(State.UNEXPLORED) + " " + get(State.INTERIOR) + " " + get(State.BORDER) + " " + get(State.OPEN) + " " + get(State.READY) + " " + get(State.SPEAR) + " " + get(State.OBJECTIVE) + " " + get(State.COMBAT_READY) + " " + get(State.GATE);
+	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + get(State.BATTLE) + " " + get(State.FRONTIER) + " " + get(State.UNEXPLORED) + " " + get(State.INTERIOR) + " " + get(State.BORDER) + " " + get(State.OPEN) + " " + get(State.READY) + " " + get(State.SPEAR) + " " + get(State.OBJECTIVE) + " " + get(State.COMBAT_READY) + " " + get(State.GATE) + " " + get(State.EXPLORE_CANDIDATE) + " " + get(State.LOCKED);
     }
      
     @Override
