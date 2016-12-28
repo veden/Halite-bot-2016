@@ -226,7 +226,7 @@ public class GameMap{
 		float value = s.getExploreValue();
 		if (value > s.explore)
 		    s.explore = value;
-		float scale = 0.75f;
+		float scale = 0.85f;
 		// float score = normalize(value, minExplore, maxExplore);
 		// if (score < 0.65)
 		//     continue;
