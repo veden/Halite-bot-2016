@@ -3,6 +3,7 @@ package bot;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.function.Predicate;
 
 import bot.model.Entity;
@@ -17,6 +18,8 @@ import game.Stats;
 
 public class AI extends Entity {
 
+    Random random = new Random(232);
+    
     private Predicate<Site> pMine = new Predicate<Site>() {
 	    @Override
 	    public boolean test(Site t) {

@@ -57,7 +57,7 @@ public class Site implements Comparable<Site> {
 	    if (exploreValue == -Float.MAX_VALUE)
 		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
 				((0.35f * ((generator / Stats.maxGenerator))) +
-				 (0.55f * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+				 (0.60f * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
 				 (0.20f * (sitePotential / Stats.maxSitePotential)) +
 				 (0.25f * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
 				 (0.25f * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
