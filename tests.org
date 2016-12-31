@@ -32,7 +32,7 @@
 unreleased
 * v8 vs v2 v3
 | version | bots | size | wins | total |  score | 
-| v8      | 2,3  | full |   74 |   110 | 360.45 | 
+| v8      | 2,3  | full |   79 |   110 | 360.78 | 
 |         |      |      |      |       |        | 
 |         |      |      |      |       |        | 
 

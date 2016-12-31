@@ -80,8 +80,7 @@ public class AI extends Entity {
 	for (Site neighbor : s.neighbors.values())
 		if (neighbor.get(State.NEUTRAL) && (neighbor.get(State.BATTLE) || neighbor.get(State.GATE)) && (neighbor.damage > highest) && (neighbor.damage != 0))
 		    highest = neighbor.damage;
-	    if (highest != -Float.MAX_VALUE) {
-		
+	    if (highest != -Float.MAX_VALUE) {		
 		s.damage = 0.90f * highest;
 		RingIterator ri = new RingIterator(s, pMine);
 		for (int d = 0; ((d < defenseRange) || allIn) && ri.hasNext(); d++) {
@@ -99,10 +98,7 @@ public class AI extends Entity {
     public void planTroopMovements() {
 	mapScaling = (1 - ((float)map.unexplored.size() / Stats.totalSites));
 	float defenseRange = (mapScaling * map.scaler) * (0.05f + (0.075f * (map.scaler / GameMap.MAX_SIZE)));
-	//	float exploreScaling = mapScaling > 0.15f ? 0.95f : 0.55f;
 	boolean allIn = false;
-	// if (mapScaling >= 0.95f)
-	//     allIn = true;
 	
 	for (Site s : battles)
 	    spreadDamage(s, allIn, defenseRange);

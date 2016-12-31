@@ -4,6 +4,7 @@
   (require threading)
   (require racket/list)
   (require "build.rkt")
+  (require "cuckoo.rkt")
   
   (current-directory "/home/veden/haliteFiles/")
 
@@ -39,7 +40,7 @@
 
   (define (pickBots solution)
     (define augmentedCurrentBot (if (null? solution) currentBot
-                                    (string-append currentBot solution)))
+                                    (string-append currentBot (string-join (map ~v solution)))))
     (define (h c botPos acc)
       (cond ((eq? c 0) acc)
             ((eq? c botPos) (h (- c 1) botPos (cons augmentedCurrentBot acc)))
@@ -112,7 +113,8 @@
                               "/home/veden/haliteFiles/halite"
                               (string-append "-d " (~v (Trial-size trial)) " " (~v (Trial-size trial)))
                               (string-append "-s " (~v (Trial-seed trial)))
-                              "-q")
+                              "-q"
+                              "-r")
                         (Trial-bots trial))))
       (let-values ([(sp i o e) (apply subprocess args)])
         (let ((report (port->string i)))
@@ -124,9 +126,9 @@
             (close-input-port e))
           (Outcome trial (scoreResult report))))))
   
-  (define (playGames cnt [solution null])
+  (define (playGames cnt)
     (~>> (stream-map (lambda (gameNumber)
-                       (runTrial (prepTrial solution)))
+                       (runTrial (prepTrial null)))
                      (in-range cnt))
          stream->list))
 
@@ -136,13 +138,57 @@
                            (1010 30)
                            (1050 50)))
 
-  (define (playTests seedRound)
+
+  (define currentBest '(0.35 0.6 0.2 0.25 0.25))
+  (define currentBestScore 0.8)
+  
+  (define (tuneParameters testSeed)
+    (let* ((gameCount (second testSeed))
+           (objFunc (lambda (solution)
+                      (define preppedTrials (make-list gameCount
+                                                       (lambda (x)
+                                                         (prepTrial solution))))
+                      (define totalScore (~>> preppedTrials
+                                              (map (compose length Trial-bots))
+                                              (apply +)))
+                      (/ (~>> preppedTrials
+                              (map (lambda (trail)
+                                     (let ((position (Outcome-position (runTrial trail))))
+                                       (if (= position 0) 0
+                                           )
+                                       ))
+                                   (apply ))
+                              totalScore)))
+           (alpha 1.5)
+           (maxEpoch 1)
+           (succFunc (lambda (fitness)
+                       (= fitness 1.0)))
+           (dropRate 0.3)
+           (rangePairs (list (RangePair 0.0 1.0)
+                             (RangePair 0.0 1.0)
+                             (RangePair 0.0 1.0)
+                             (RangePair 0.0 1.0)
+                             (RangePair 0.0 1.0))))
+      (cuckooSearch objFunc
+                    maxEpoch
+                    succFunc
+                    dropRate
+                    alpha
+                    (vector-append #((CuckooEgg currentBest currentBestScore))
+                                   (cuckooInitialize 9
+                                                     rangePairs
+                                                     objFunc)))))
+  
+  (define (playTests seedRound [solution null])
     (random-seed (car seedRound))
-    (playGames (cadr seedRound)))
+    (playGames (cadr seedRound)
+               solution))
   
   (define (playTestSuite cnt [drp 0])
     (~>> (take (drop testSeedRounds drp) cnt)
-         (map playTests)
+         (map (lambda (x)
+                (pretty-display x)
+                (time (playTests x))))
          flatten
          showResults))
 
@@ -155,6 +201,7 @@
             ((vector "test" r) (display (playTestSuite (string->number r))))
             ((vector "test" r d) (display (playTestSuite (string->number r)
                                                          (string->number d))))
+
             ((vector "single" c s) (begin (random-seed (string->number s))
                                           (display (showResults (playGames (string->number c))))))
             (_ (badCommand))))))

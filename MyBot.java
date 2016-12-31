@@ -2,6 +2,8 @@ import game.Debug;
 import game.GameMap;
 import game.Networking;
 
+import logic.Parameters;
+
 public class MyBot {
     private static int turn = 0;
    
@@ -12,6 +14,14 @@ public class MyBot {
 
 	Debug.startup(map);
 	server.sendInit("VedenV8");
+
+	if (args.length > 0) {
+	    Parameters.generatorWeight = Float.parseFloat(args[0]);
+	    Parameters.siteCountWeight = Float.parseFloat(args[1]);
+	    Parameters.sitePotentialWeight = Float.parseFloat(args[2]);
+	    Parameters.siteCountWeight = Float.parseFloat(args[3]);
+	    Parameters.generatorTotalWeight = Float.parseFloat(args[4]);
+	}
 
 	while(true) {
 	    start = Debug.startClock(turn);

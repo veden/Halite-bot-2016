@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 public class Debug {
 
-    public static boolean enabled = true;
+    public static boolean enabled = false;
           
     private static PrintWriter pw;
     private static PrintWriter r;

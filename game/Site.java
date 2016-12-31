@@ -3,6 +3,8 @@ package game;
 import java.util.EnumMap;
 import java.util.EnumSet;
 
+import logic.Parameters;
+
 public class Site implements Comparable<Site> {    
 
     public static enum State {
@@ -15,7 +17,7 @@ public class Site implements Comparable<Site> {
     public static enum Direction {
 	NORTH, EAST, SOUTH, WEST, STILL;
     }
-    
+
     public static final EnumSet<Direction> DIRECTIONS = EnumSet.of(Direction.STILL, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     public static final EnumSet<Direction> CARDINALS = EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
 
@@ -57,11 +59,11 @@ public class Site implements Comparable<Site> {
 	if (generator != 0) {
 	    if (exploreValue == -Float.MAX_VALUE)
 		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
-				((0.50f * ((generator / Stats.maxGenerator))) +
-				 (0.60f * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
-				 (0.20f * (sitePotential / Stats.maxSitePotential)) +
-				 (0.25f * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
-				 (0.25f * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
+				((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
+				 (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+				 (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
+				 (Parameters.siteCountWeight * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
+				 (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
 				 ));
 	} else
 	    return 0;

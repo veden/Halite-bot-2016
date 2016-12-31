@@ -1,7 +1,8 @@
 (module Cuckoo racket
   (provide cuckooSearch
            cuckooInitialize
-           (struct-out RangePair))
+           (struct-out RangePair)
+           (struct-out CuckooEgg))
   (random-seed 100)
 
   (require racket/gui/base)
@@ -69,7 +70,7 @@
   
   (define (cuckooSortSolutions solutions)
     (vector-sort solutions > #:key CuckooEgg-fitness))
-
+  
   
   (define (cuckooCullSolutions dropRate rangePairs objFunc solutions)
     (let* ((nestCount (vector-length solutions))
@@ -83,7 +84,16 @@
   (define (cuckooSearch objFunc maxEpoch succFunc dropRate rangePairs alpha solutions)
     (~>> (let cs ((epoch 0)
                   (nests solutions))
-           (if (or (= maxEpoch epoch) (succFunc nests)) nests
+           (when (= (modulo epoch (* maxEpoch 0.10)) 0)
+             (pretty-display (string-append (~v (exact->inexact (/ epoch maxEpoch)))
+                                            "% "
+                                            (~v (cuckooEgg->list (vector-ref nests 0)))
+                                            "\n")))
+           (if (or (= maxEpoch
+                      epoch)
+                   (succFunc (CuckooEgg-fitness (vector-ref nests
+                                                            0))))
+               nests
                (cs (+ epoch 1)
                    (~>> nests
                         (cuckooInjectSolution (cuckooCloneSolution nests alpha rangePairs objFunc))
@@ -95,7 +105,8 @@
   (define (cuckooInitialize nests rangePairs objFunc)
     (build-vector nests (lambda (x)
                           (cuckooGenerateSolution rangePairs objFunc))))
-
+  
+  
   (define (debugLevy) 
     (define (fly)
       (define p (list '(25 25)))
@@ -138,8 +149,8 @@
                                  0
                                  solution))))
           (alpha 1.5)
-          (maxEpochs 100)
-          (succFunc (lambda (nests)
+          (maxEpoch 100)
+          (succFunc (lambda (fitness)
                       #f))
           (dropRate 0.3)
           (rangePairs (list (RangePair -5.12 5.12)
@@ -147,7 +158,7 @@
                             (RangePair -5.12 5.12)
                             (RangePair -5.12 5.12))))
       (~>> (cuckooSearch objFunc
-                         maxEpochs
+                         maxEpoch
                          succFunc
                          dropRate
                          rangePairs
