@@ -6,9 +6,10 @@ import java.util.EnumSet;
 public class Site implements Comparable<Site> {    
 
     public static enum State {
-	USED, BATTLE, INTERIOR, FRONTIER, BORDER, UNEXPLORED,
-        OPEN, MINE, NEUTRAL, ENEMY, OBJECTIVE, READY, SPEAR,
-	COMBAT_READY, GATE, EXPLORE_CANDIDATE, LOCKED
+	BATTLE, FRONTIER, UNEXPLORED, INTERIOR, BORDER, OPEN,
+	READY, OBJECTIVE, COMBAT_READY, GATE, LOCKED, 
+	
+	USED, MINE, NEUTRAL, ENEMY
     }
 
     public static enum Direction {
@@ -56,7 +57,7 @@ public class Site implements Comparable<Site> {
 	if (generator != 0) {
 	    if (exploreValue == -Float.MAX_VALUE)
 		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
-				((0.35f * ((generator / Stats.maxGenerator))) +
+				((0.50f * ((generator / Stats.maxGenerator))) +
 				 (0.60f * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
 				 (0.20f * (sitePotential / Stats.maxSitePotential)) +
 				 (0.25f * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
@@ -123,8 +124,25 @@ public class Site implements Comparable<Site> {
 	return "x-" + x + " y-" + y + " gStr-" + units + " gProd-" + generator + " prod-" + explore + " def-" + reinforce;
     }
 
-    public String encodeString() {
-	return x + " " + y + " " + units + " " + generator + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + get(State.BATTLE) + " " + get(State.FRONTIER) + " " + get(State.UNEXPLORED) + " " + get(State.INTERIOR) + " " + get(State.BORDER) + " " + get(State.OPEN) + " " + get(State.READY) + " " + get(State.SPEAR) + " " + get(State.OBJECTIVE) + " " + get(State.COMBAT_READY) + " " + get(State.GATE) + " " + get(State.EXPLORE_CANDIDATE) + " " + get(State.LOCKED);
+    public int compressAttributes() {
+	int result = 0;
+	int highest = 0;
+	for (Enum<State> p : State.values()) {
+	    if (p.ordinal() > State.LOCKED.ordinal())
+		break;
+	    result = result | (status.contains(p) ? 1 : 0) << p.ordinal();
+	    if (p.ordinal() > highest)
+		highest = p.ordinal();
+	}
+	return result | 1 << (State.USED.ordinal());
+    }
+    
+    public String encodeAttributes() {
+	return units + " " + owner + " " + explore + " " + reinforce + " " + damage + " " + compressAttributes();
+    }
+
+    public String encodeSite() {
+	return x + " " + y + " " + generator;
     }
      
     @Override

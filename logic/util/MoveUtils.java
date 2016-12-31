@@ -1,4 +1,4 @@
-package bot.util;
+package logic.util;
 
 import game.Site;
 import game.Site.State;

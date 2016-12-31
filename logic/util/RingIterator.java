@@ -1,4 +1,4 @@
-package bot.util;
+package logic.util;
 
 import java.util.BitSet;
 import java.util.HashSet;

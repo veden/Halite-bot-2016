@@ -11,7 +11,7 @@ public class MyBot {
 	Networking server = new Networking(map); 
 
 	Debug.startup(map);
-	server.sendInit("VedenV7");
+	server.sendInit("VedenV8");
 
 	while(true) {
 	    start = Debug.startClock(turn);

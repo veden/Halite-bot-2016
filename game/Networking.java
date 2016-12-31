@@ -2,11 +2,11 @@ package game;
 
 import java.util.HashSet;
 
-import bot.AI;
-import bot.util.RingIterator;
-
 import game.Site.Direction;
 import game.Site.State;
+
+import logic.AI;
+import logic.util.RingIterator;
 
 public class Networking {
     private GameMap map;

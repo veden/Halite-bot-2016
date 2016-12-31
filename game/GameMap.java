@@ -5,12 +5,12 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
-import bot.AI;
-import bot.model.Enemy;
-import bot.model.Entity;
-import bot.util.RingIterator;
-
 import game.Site.State;
+
+import logic.AI;
+import logic.model.Enemy;
+import logic.model.Entity;
+import logic.util.RingIterator;
 
 public class GameMap{
     public static final float MAX_SIZE = 50f;
@@ -163,13 +163,11 @@ public class GameMap{
 	}
     }
 
-    public float normalize(float x, float low, float high) {
-	return ((x - low) / (high - low));
-    }
+    // public float normalize(float x, float low, float high) {
+    // 	return ((x - low) / (high - low));
+    // }
     
     public void scoreUnexplored() {
-	float minExplore = Float.MAX_VALUE;
-	float maxExplore = 0;
 	Predicate<Site> p = new Predicate<Site>() {
 		@Override
 		public boolean test(Site t) {
@@ -177,48 +175,6 @@ public class GameMap{
 		}
 	    };
 
-	// for (Site s: unexplored) {
-	//     if (s.explore < minExplore)
-	// 	minExplore = s.explore;
-	//     if (s.explore > maxExplore)
-	// 	maxExplore = s.explore;		    
-	// }	
-	// for (Site s : unexplored) 
-	//     if ((s.units != 0) && (s.generator > 0)) {
-	// 	RingIterator sri = new RingIterator(s, p);
-	// 	int d = 0;
-	// 	float value = s.getExploreValue();
-	// 	if (value > s.explore)
-	// 	    s.explore = value;
-	// 	float scale = 0.50f;
-	// 	float score = normalize(s.explore, minExplore, maxExplore);
-	// 	if (score > 0.65)
-	// 	    scale = 0.40f;
-	// 	else if (score <= 0.40f)
-	// 	    continue;
-	// 	float unitScale = scale * 0.5f;
-	// 	float generatorScale = scale * 0.5f;
-	// 	while (sri.hasNext() && (d < 10)) {
-	// 	    d++;
-	// 	    for (Site r : sri.next()) {
-	// 		float highest = -Float.MAX_VALUE;
-	// 		for (Site rr : r.neighbors.values()) 
-	// 		    if (rr.get(State.UNEXPLORED) && (highest < rr.explore)) 
-	// 			highest = rr.explore;
-	// 		float v = highest * (0.98f - (unitScale * (r.units / Site.MAX_STRENGTH)) - (generatorScale * (1 - (r.generator / Stats.maxGenerator))));
-	// 		if (v > r.explore)
-	// 		    r.explore = v;
-	// 	    }		
-	// 	}
-	//     } 
-	
-	
-	for (Site s: unexplored) {
-	    if (s.explore < minExplore)
-		minExplore = s.explore;
-	    if (s.explore > maxExplore)
-		maxExplore = s.explore;		    
-	}	
 	for (Site s : unexplored) 
 	    if ((s.units != 0) && (s.generator > 0)) {
 		RingIterator sri = new RingIterator(s, p);
@@ -226,21 +182,16 @@ public class GameMap{
 		float value = s.getExploreValue();
 		if (value > s.explore)
 		    s.explore = value;
-		float scale = 0.85f;
-		// float score = normalize(value, minExplore, maxExplore);
-		// if (score < 0.65)
-		//     continue;
-		float unitScale = scale * 0.75f;
-		float generatorScale = scale * 0.25f;
 		while (sri.hasNext() && (d < 15)) {
 		    d++;
+		    float decay = 0.95f - (0.04f * (d + 1));
 		    for (Site r : sri.next()) {
 			if (r.get(State.UNEXPLORED)) {
-			    float v = value * (0.95f - (0.04f * (d + 1)) - (unitScale * (r.units / Site.MAX_STRENGTH)) - (generatorScale * (1 - (r.generator / Stats.maxGenerator))));
+			    float v = value * (decay - (0.64f * (r.units / Site.MAX_STRENGTH)) - (0.21f * (1 - (r.generator / Stats.maxGenerator))));
 			    if (v > r.explore)
 				r.explore = v;
 			} else {
-			    float v = value * (0.95f - (0.04f * (d + 1)));
+			    float v = value * decay;
 			    if (v > r.reinforce)
 				r.reinforce = v;
 			}

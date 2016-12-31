@@ -1,4 +1,4 @@
-package bot;
+package logic;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -6,15 +6,15 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.function.Predicate;
 
-import bot.model.Entity;
-import bot.util.MoveUtils;
-import bot.util.RingIterator;
-
 import game.GameMap;
 import game.Site;
 import game.Site.Direction;
 import game.Site.State;
 import game.Stats;
+
+import logic.model.Entity;
+import logic.util.MoveUtils;
+import logic.util.RingIterator;
 
 public class AI extends Entity {
 
@@ -78,21 +78,22 @@ public class AI extends Entity {
     public void spreadDamage(Site s, boolean allIn, float defenseRange) {
 	float highest = -Float.MAX_VALUE;
 	for (Site neighbor : s.neighbors.values())
-	    if (neighbor.get(State.NEUTRAL) && (neighbor.get(State.BATTLE) || neighbor.get(State.GATE)) && (neighbor.damage > highest) && (neighbor.damage != 0))
-		highest = neighbor.damage;
-	if (highest != -Float.MAX_VALUE) {
-	    s.damage = 0.95f * highest;
-	    RingIterator ri = new RingIterator(s, pMine);
-	    for (int d = 0; ((d < defenseRange) || allIn) && ri.hasNext(); d++) {
-		for (Site r : ri.next()) {
-		    for (Site n : r.neighbors.values()) {
-			float v = 0.90f * n.damage;
-			if (v > r.damage)
-			    r.damage = v;
+		if (neighbor.get(State.NEUTRAL) && (neighbor.get(State.BATTLE) || neighbor.get(State.GATE)) && (neighbor.damage > highest) && (neighbor.damage != 0))
+		    highest = neighbor.damage;
+	    if (highest != -Float.MAX_VALUE) {
+		
+		s.damage = 0.90f * highest;
+		RingIterator ri = new RingIterator(s, pMine);
+		for (int d = 0; ((d < defenseRange) || allIn) && ri.hasNext(); d++) {
+		    for (Site r : ri.next()) {
+			for (Site n : r.neighbors.values()) {
+			    float v = 0.90f * n.damage;
+			    if (v > r.damage)
+				r.damage = v;
+			}
 		    }
 		}
 	    }
-	}
     }
     
     public void planTroopMovements() {
@@ -100,77 +101,13 @@ public class AI extends Entity {
 	float defenseRange = (mapScaling * map.scaler) * (0.05f + (0.075f * (map.scaler / GameMap.MAX_SIZE)));
 	//	float exploreScaling = mapScaling > 0.15f ? 0.95f : 0.55f;
 	boolean allIn = false;
-	if (mapScaling >= 0.95f)
-	    allIn = true;
+	// if (mapScaling >= 0.95f)
+	//     allIn = true;
 	
 	for (Site s : battles)
 	    spreadDamage(s, allIn, defenseRange);
 	for (Site s : gates)
 	    spreadDamage(s, allIn, defenseRange);
-
-	if (!allIn) {
-	    // Predicate<Site> pFrontier = new Predicate<Site>() {
-	    // 	    @Override
-	    // 	    public boolean test(Site s) {
-	    // 		return !s.get(State.FRONTIER) && s.get(State.UNEXPLORED);
-	    // 	    }
-	    // 	};
-
-	    // float totalFrontierExplore = 0f;
-	    // for (Site s : frontier)
-	    // 	totalFrontierExplore += s.explore;
-	    // totalFrontierExplore *= exploreScaling;
-
-	    // Collections.sort(frontier, maxExploreCompare);
-	    // for (Site s : frontier) {
-	    // 	boolean skip = false;
- 	    // 	// for (Site n : s.neighbors.values())
-	    // 	//     if (n.get(State.MINE) // && (n.damage != 0)
-	    // 	// 	) {
-	    // 	// 	skip = true;
-	    // 	// 	break;
-	    // 	//     }
-		    
-	    // 	if (!skip)
-	    // 	    if (totalFrontierExplore > 0) {
-	    // 		//if (s.explore > totalFrontierExplore) {
-	    // 		//	    		totalFrontierExplore -= s.explore;
-	    // 		s.set(State.EXPLORE_CANDIDATE);
-	    // 	    }  else
-	    // 		break;
-	    // }
-
-	    // for (Site s : frontier) {
-	    // 	if (s.get(State.EXPLORE_CANDIDATE)) {
-	    // 	    // float totalExplore = 0f;
-	    // 	    // RingIterator ri = new RingIterator(s, pFrontier);
-	    // 	    // for (int d = 0; d < 0 && ri.hasNext(); d++)
-	    // 	    // 	for (Site n : ri.next())
-	    // 	    // 	totalExplore += n.explore * (0.35f * (1 + d));
-	    // 	    for (Site n : s.neighbors.values())
-	    // 		if (n.get(State.MINE) && (n.damage == 0))
-	    // 		    if (s.explore > n.reinforce)
-	    // 			n.reinforce = s.explore;
-	    // 	}
-	    // }
-
-	    // Collections.sort(border, maxReinforceCompare);
-	    // for (Site s : border) {
-	    // 	RingIterator ri = new RingIterator(s, pMine);
-	    // 	while (ri.hasNext()) {
-	    // 	    float scale = 0.98f;
-	    // 	    // if (new RingIterator(s, pObjective).next().size() != 0)
-	    // 	    // 	scale = 0.95f;
-	    // 	    for (Site r : ri.next()) {
-	    // 		for (Site n : r.neighbors.values()) {
-	    // 		    float v = n.reinforce * (scale - (0.2f * (r.generator / Site.MAX_STRENGTH)));
-	    // 		    if (v > r.reinforce)
-	    // 			r.reinforce = v;
-	    // 		}
-	    // 	    }
-	    // 	}
-	    // }
-	}
     }
 
     private boolean captureObjective(Site s) {

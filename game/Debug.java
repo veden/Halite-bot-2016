@@ -5,15 +5,15 @@ import java.io.PrintWriter;
 
 public class Debug {
 
-    private static boolean debug = false;
+    public static boolean enabled = true;
           
     private static PrintWriter pw;
     private static PrintWriter r;
 
     static {
 	try {
-	    if (debug) {
-		pw = new PrintWriter("/home/veden/haliteFiles/debug.txt");
+	    if (enabled) {
+		pw = new PrintWriter("/home/veden/haliteFiles/enabled.txt");
 		r = new PrintWriter("/home/veden/haliteFiles/replay.txt");
 	    }
 	} catch (FileNotFoundException e) {}
@@ -42,10 +42,12 @@ public class Debug {
     }
 
     public static void startup(GameMap map) {
-	if (debug) {
+	if (enabled) {
 	    println("starting AI");
 	    long start = System.currentTimeMillis();
 	    printReplay(map.width + " " + map.height + " " + Stats.minGenerator + " " + Stats.maxGenerator + "--" + Stats.siteCounts());
+	    for (int x = 0; x < map.sites.length; x++)
+		printReplay(map.sites[x].encodeSite());
 	    println((System.currentTimeMillis() - start) + "-start up");
 	    println(((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024)) + "MB-used memory");
 	    flush();
@@ -53,7 +55,7 @@ public class Debug {
     }
 
     public static long startClock(int turn) {
-	if (debug) {
+	if (enabled) {
 	    println("Frame-" + turn);
 	    return System.currentTimeMillis();
 	}
@@ -61,7 +63,7 @@ public class Debug {
     }
 
     public static void stopClock(GameMap map, int turn, long start) {
-	if (debug) {
+	if (enabled) {
 	    map.collectStats();
 
 	    println((System.currentTimeMillis() - start) + "-duration");
@@ -76,7 +78,7 @@ public class Debug {
 	    printReplay(map.enemiesToReplay());
 	    printReplay("===");
 	    for (int x = 0; x < map.sites.length; x++)
-		printReplay(map.sites[x].encodeString());
+		printReplay(map.sites[x].encodeAttributes());
 	    flushReplay();
 	}
     }

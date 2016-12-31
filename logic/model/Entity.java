@@ -1,8 +1,9 @@
-package bot.model;
+package logic.model;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import game.Debug;
 import game.GameMap;
 import game.Site;
 import game.Site.State;
@@ -27,7 +28,6 @@ abstract public class Entity {
     public ArrayList<Site> interior = new ArrayList<Site>();
     public ArrayList<Site> border = new ArrayList<Site>();
     public ArrayList<Site> frontier = new ArrayList<Site>();
-    //    public ArrayList<Site> spears = new ArrayList<Site>();
     public ArrayList<Site> open = new ArrayList<Site>();
     public ArrayList<Site> gates = new ArrayList<Site>();
     
@@ -44,40 +44,36 @@ abstract public class Entity {
 	totalGenerator += s.generator;
 	totalUnits += s.units;
 	totalSites += 1;
-	// if (allSites.contains(s))
-	//     Debug.abort(s.encodeString());
-	//allSites.add(s);
+	if (Debug.enabled) {
+	    if (allSites.contains(s))
+		Debug.abort(s.encodeSite() + " " + s.encodeAttributes());
+	    allSites.add(s);
+	}
     }
 
     public void addGate(Site s) {
 	if (s.get(State.BORDER)) {
 	    border.remove(s);
 	    s.remove(State.BORDER);
+	    gates.add(s);
+	    s.set(State.GATE);
 	} else if (s.get(State.BATTLE)) {
 	    battles.remove(s);
-	    s.remove(State.BATTLE);	    
-	} else
+	    s.remove(State.BATTLE);
+	    gates.add(s);
+	    s.set(State.GATE);
+	}
+	if (!s.get(State.GATE)) {
 	    addSite(s);
-	gates.add(s);
-	s.set(State.GATE);
+	    gates.add(s);
+	    s.set(State.GATE);
+	} 
     }
     
     public void addOpen(Site s) {
 	open.add(s);
 	s.set(State.OPEN);
     }
-
-    // public void addSpear(Site s) {
-    // 	if (!s.get(State.BATTLE)) {
-    // 	    if (s.get(State.BORDER)) {
-    // 		border.remove(s);
-    // 		s.remove(State.BORDER);
-    // 	    } else
-    // 		addSite(s);
-    // 	    s.set(State.SPEAR);
-    // 	    spears.add(s);
-    // 	}
-    // }
     
     public void addFrontier(Site s) {
 	frontier.add(s);
@@ -85,7 +81,7 @@ abstract public class Entity {
     }
 
     public void addBorder(Site s) {
-	if (!s.get(State.BATTLE) && !s.get(State.GATE)) {
+	if (!s.get(State.BATTLE) && !s.get(State.GATE) && !s.get(State.BORDER)) {
 	    addSite(s);
 	    border.add(s);
 	    s.set(State.BORDER);
@@ -97,11 +93,7 @@ abstract public class Entity {
 	    if (s.get(State.BORDER)) {
 		border.remove(s);
 		s.remove(State.BORDER);
-	    } // else if (s.get(State.SPEAR)) {
-	    // 	spears.remove(s);
-	    // 	s.remove(State.SPEAR);
-	    // }
-	    else 
+	    } else 
 		addSite(s);
 	    battles.add(s);
 	    s.set(State.BATTLE);
@@ -115,14 +107,14 @@ abstract public class Entity {
     }
 
     public void reset() {
-	allSites.clear();
+	if (Debug.enabled)
+	    allSites.clear();
 	gates.clear();
 	open.clear();
 	battles.clear();
 	interior.clear();
 	border.clear();
 	frontier.clear();
-	//	spears.clear();
 	totalPotentialGeneration += totalGenerator;
 	totalGenerator = 0;
 	totalUnits = 0;

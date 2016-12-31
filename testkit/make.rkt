@@ -1,35 +1,29 @@
-(module BuildScript racket
+(module Trainer racket
   (provide (all-defined-out))
 
-  (current-directory "/home/veden/haliteFiles/")
+  (require threading)
+  (require racket/list)
+  (require "build.rkt")
   
-  (struct Proc
-    (report
-     size
+  (current-directory "/home/veden/haliteFiles/")
+
+  (struct Outcome
+    (trial
+     position))
+  
+  (struct Trial
+    (size
      bots
-     seed))
-
-  (struct Results
-    ([size20 #:mutable]
-     [size25 #:mutable]
-     [size30 #:mutable]
-     [size35 #:mutable]
-     [size40 #:mutable]
-     [size45 #:mutable]
-     [size50 #:mutable]))
-
-  (struct ResultRecord ([wins #:mutable]
-                        [loss #:mutable]
-                        [tossed #:mutable]))
+     seed
+     solution))
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src; java -Xmx250m MyBot") 
-  ;; (define currentBot "cd /data/factory/repo/wkJava/halite/src/target; java -Xmx250m -cp MyBot.jar MyBot")
 
   (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v2/; java MyBot"
-                    ;;"cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
-                    ;;                    "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v3/; java MyBot"
-                    ;;"cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
+                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
+                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
+                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
                     ))
 
   (define sizePool '(20
@@ -43,26 +37,83 @@
   (define (pickSize)
     (list-ref sizePool (random (length sizePool))))
 
-  (define (pickBots)
+  (define (pickBots solution)
+    (define augmentedCurrentBot (if (null? solution) currentBot
+                                    (string-append currentBot solution)))
     (define (h c botPos acc)
       (cond ((eq? c 0) acc)
-            ((eq? c botPos) (h (- c 1) botPos (cons currentBot acc)))
+            ((eq? c botPos) (h (- c 1) botPos (cons augmentedCurrentBot acc)))
             (#t (h (- c 1) botPos (cons (list-ref botPool (random (length botPool))) acc)))))
     (let ((bots (random 2 7)))
       (h bots (random 1 (+ 1 bots)) null)))
 
-  (define (runInstance)
-    (let* ((size (pickSize))
-           (seed (random 4294967087))
-           (bots (pickBots))
-           (args (append (list #f
-                               #f
-                               #f
-                               "/home/veden/haliteFiles/halite"
-                               (string-append "-d " (~v size) " " (~v size))
-                               (string-append "-s " (~v seed))
-                               "-q")
-                         bots)))
+  (define (prepTrial solution)
+    (Trial (pickSize)
+           (pickBots solution)
+           (random 4294967087)
+           solution))
+
+  (define (cloneTrial solution newSolution)
+    (Trial (Trial-size solution)
+           (Trial-bots solution)
+           (Trial-seed solution)
+           newSolution))
+  
+  (define (scoreResult report)
+    (define chunks (string-split report "\n"))
+    
+    (define (findBotIndex p c)
+      (if (string=? (car p) currentBot) c
+          (findBotIndex (cdr p) (+ 1 c))))
+    
+    (define botStanding (string-append (~v (findBotIndex chunks 1)) " "))
+
+    (define (getPosition p)
+      (string->number (second (string-split (car p) " "))))
+
+    (if (not (eq? (string-length (string-trim (last chunks))) 0)) 0
+        (~>> chunks
+             (filter (lambda (x)
+                       (string-prefix? x botStanding)))
+             getPosition)))
+
+  (define (showResults results)
+    (string-append "Winning Score - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 0) acc
+                                         (+ acc (/ (length (Trial-bots (Outcome-trial o)))
+                                                   (Outcome-position o)))))
+                                   0)
+                            exact->inexact))
+                   "\n"
+                   "Won games - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 1) (+ 1 acc)
+                                         acc))
+                                   0)))
+                   "\n"
+                   "tossed games - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 0) (+ 1 acc)
+                                         acc))
+                                   0)))
+                   "\n"
+                   "total games - "
+                   (~v (length results))
+                   "\n"))
+
+  (define (runTrial trial)
+    (let ((args (append (list #f
+                              #f
+                              #f
+                              "/home/veden/haliteFiles/halite"
+                              (string-append "-d " (~v (Trial-size trial)) " " (~v (Trial-size trial)))
+                              (string-append "-s " (~v (Trial-seed trial)))
+                              "-q")
+                        (Trial-bots trial))))
       (let-values ([(sp i o e) (apply subprocess args)])
         (let ((report (port->string i)))
           (unless (eq? i #f)
@@ -71,129 +122,40 @@
             (close-output-port o))
           (unless (eq? e #f)
             (close-input-port e))
-          (Proc report size bots seed)))))
-
-  (define (cleanClasses folder recurse)
-    (map (lambda (f)
-           (when (path-has-extension? f "class")
-             (delete-file f))
-           (when (and recurse (directory-exists? f))
-             (cleanClasses f recurse)))
-         (directory-list folder #:build? #t)))
+          (Outcome trial (scoreResult report))))))
   
-  (define (compileCurrent)
-    (cleanClasses (string->path "/data/factory/repo/wkJava/halite/src/") #f)
-    (cleanClasses (string->path "/data/factory/repo/wkJava/halite/src/game") #t)
-    (cleanClasses (string->path "/data/factory/repo/wkJava/halite/src/bot") #t)
-    (system "cd ~/haliteFiles/; rm *.log")
-    (system "cd ~/haliteFiles/; rm *.hlt")
-    (system/exit-code "cd /data/factory/repo/wkJava/halite/src/; javac MyBot.java"))
+  (define (playGames cnt [solution null])
+    (~>> (stream-map (lambda (gameNumber)
+                       (runTrial (prepTrial solution)))
+                     (in-range cnt))
+         stream->list))
 
-  (define (scoreResult report results)
-    (define chunks (string-split report "\n"))
-    
-    (define (findBotIndex p c)
-      (if (string=? (car p) currentBot) c
-          (findBotIndex (cdr p) (+ 1 c))))
-    
-    (define botStanding (string-append (~v (findBotIndex chunks 1)) " "))
-    
-    (define (didWin? p)
-      (if (string-prefix? (car p) botStanding) (string=? (second (string-split (car p) " ")) "1")
-          (didWin? (cdr p))))
+  (define testSeedRounds '((2010 5)
+                           (2000 10)
+                           (1007 15)
+                           (1010 30)
+                           (1050 50)))
 
-    (define (isTossed? p)
-      (if (null? (cdr p)) (not (eq? (string-length (string-trim (car p))) 0))
-          (isTossed? (cdr p))))
-
-    (cond ((isTossed? chunks) (set-ResultRecord-tossed! results (+ 1 (ResultRecord-tossed results))))
-          ((didWin? chunks) (set-ResultRecord-wins! results (+ 1 (ResultRecord-wins results))))
-          (#t (set-ResultRecord-loss! results (+ 1 (ResultRecord-loss results)))))
-
-    results)
-
-  (define (totalRecord record)
-    (+ (ResultRecord-wins record)
-       (ResultRecord-loss record)
-       (ResultRecord-tossed record)))
-
-  (define (showRecord record)
-    (define total (totalRecord record))
-    (define winPercent (if (> total 0) (/ (ResultRecord-wins record) total)
-                           0))
-    
-    (list (list "wins-" (ResultRecord-wins record))
-          (list "loss-" (ResultRecord-loss record))
-          (list "tossed-" (ResultRecord-tossed record))
-          (list (exact->inexact winPercent) "%")))
-
-  (define resultsSizes '(Results-size20
-                         Results-size25
-                         Results-size30
-                         Results-size35
-                         Results-size40
-                         Results-size45
-                         Results-size50))
+  (define (playTests seedRound)
+    (random-seed (car seedRound))
+    (playGames (cadr seedRound)))
   
-  (define (showPlays results)
-    (define total (+ (totalRecord (Results-size20 results))
-                     (totalRecord (Results-size25 results))
-                     (totalRecord (Results-size30 results))
-                     (totalRecord (Results-size35 results))
-                     (totalRecord (Results-size40 results))
-                     (totalRecord (Results-size45 results))
-                     (totalRecord (Results-size50 results))))
-    (define totalWins (+ (ResultRecord-wins (Results-size20 results))
-                         (ResultRecord-wins (Results-size25 results))
-                         (ResultRecord-wins (Results-size30 results))
-                         (ResultRecord-wins (Results-size35 results))
-                         (ResultRecord-wins (Results-size40 results))
-                         (ResultRecord-wins (Results-size45 results))
-                         (ResultRecord-wins (Results-size50 results))))
+  (define (playTestSuite cnt [drp 0])
+    (~>> (take (drop testSeedRounds drp) cnt)
+         (map playTests)
+         flatten
+         showResults))
 
-    (define winPercent (if (> total 0) (/ totalWins total)
-                           0))
-    
-    (list (list "size20" (showRecord (Results-size20 results)))
-          (list "size25" (showRecord (Results-size25 results)))
-          (list "size30" (showRecord (Results-size30 results)))
-          (list "size35" (showRecord (Results-size35 results)))
-          (list "size40" (showRecord (Results-size40 results)))
-          (list "size45" (showRecord (Results-size45 results)))
-          (list "size50" (showRecord (Results-size50 results)))
-          (list (exact->inexact winPercent) "%")))
-
-  (define (recordGame results game)      
-    (cond ((eq? (Proc-size game) 20) (set-Results-size20! results (scoreResult (Proc-report game) (Results-size20 results))))
-          ((eq? (Proc-size game) 25) (set-Results-size25! results (scoreResult (Proc-report game) (Results-size25 results))))
-          ((eq? (Proc-size game) 30) (set-Results-size30! results (scoreResult (Proc-report game) (Results-size30 results))))
-          ((eq? (Proc-size game) 35) (set-Results-size35! results (scoreResult (Proc-report game) (Results-size35 results))))
-          ((eq? (Proc-size game) 40) (set-Results-size40! results (scoreResult (Proc-report game) (Results-size40 results))))
-          ((eq? (Proc-size game) 45) (set-Results-size45! results (scoreResult (Proc-report game) (Results-size45 results))))
-          ((eq? (Proc-size game) 50) (set-Results-size50! results (scoreResult (Proc-report game) (Results-size50 results)))))
-    results)
-
-  (define (playGames count)
-    (define (h c results)
-      (cond ((eq? c 0) results)
-            (#t (h (- c 1) (recordGame results (runInstance))))))
-    (showPlays (h count (Results (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)
-                                 (ResultRecord 0 0 0)))))
-
-  (if (eq? (vector-length (current-command-line-arguments)) 0) "need commandline argument - <int games> <int seed (-1 is random))>"
-      (let ((arg (vector-ref (current-command-line-arguments) 0)))
-        (if (not (eq? 0 (compileCurrent))) "bad compile"
-            (begin
-              (if (> (vector-length (current-command-line-arguments)) 1) 
-                  (let ((arg1 (vector-ref (current-command-line-arguments) 0))
-                        (arg2 (vector-ref (current-command-line-arguments) 1)))
-                    (unless (eq? (string->number arg2) -1)
-                      (random-seed (string->number arg2)))
-                    (pretty-display (playGames (string->number arg1))))
-                  "you need a number of rounds"))))))
+  (define (badCommand)
+    (error "need commandline argument:\nsingle <int games> <int seed (-1 is random))>\ntest <int number of rounds> <?int drop first k suites>\n"))
+  
+  (if (<= (vector-length (current-command-line-arguments)) 1) (badCommand)
+      (if (not (eq? 0 (compileCurrent))) "bad compile"
+          (match (current-command-line-arguments)
+            ((vector "test" r) (display (playTestSuite (string->number r))))
+            ((vector "test" r d) (display (playTestSuite (string->number r)
+                                                         (string->number d))))
+            ((vector "single" c s) (begin (random-seed (string->number s))
+                                          (display (showResults (playGames (string->number c))))))
+            (_ (badCommand))))))
 

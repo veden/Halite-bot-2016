@@ -1,0 +1,38 @@
+* v4 vs v2 v3
+2010 5 rounds 0.8 wins
+2000 10 rounds 0.7 wins
+1007 15 rounds 0.6 wins
+1010 30 rounds 0.53 wins
+1050 50 rounds 0.38 wins
+
+* v5 vs v2 v3
+2010 5 0.8 wins
+2000 10 0.8 wins
+1007 15 0.53 wins
+1010 30 0.63 wins
+1050 50 0.46 wins
+62
+
+* v6 vs v2 v3
+2010 0.8
+2000 10 0.8  
+1007 15 0.6
+1010 30 0.63
+1050 50 0.5
+65
+
+* v7 vs v2 v3
+2010 5 1.0
+2000 10 0.8
+1007 15 0.73
+1010 30 0.63
+1050 50 0.70
+78
+
+unreleased
+* v8 vs v2 v3
+| version | bots | size | wins | total |  score | 
+| v8      | 2,3  | full |   74 |   110 | 360.45 | 
+|         |      |      |      |       |        | 
+|         |      |      |      |       |        | 
+

@@ -1,11 +1,11 @@
-package bot.model;
+package logic.model;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
-import bot.util.RingIterator;
-
 import game.Site;
+
+import logic.util.RingIterator;
 
 public class Objective {
 

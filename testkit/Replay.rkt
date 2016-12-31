@@ -11,12 +11,13 @@
            (struct-out Player)
            (struct-out SiteCount))
 
-  (require 'threading)
-
+  (require threading)
+  (require racket/function)
+  
   (struct Site (x
-                y 
-                units
+                y
                 generator
+                units
                 owner
                 explore
                 reinforce
@@ -28,11 +29,9 @@
                 border
                 open
                 ready
-                spear
                 objective
                 combatReady
                 gate
-                exploreCandidate
                 locked))
 
   (struct SiteCount (value size))
@@ -50,40 +49,62 @@
   (struct Player (id
                   totalGenerator
                   totalUnits
-                  totalOverkill
-                  totalDamage
                   totalPotential
                   totalGenerated
+                  totalOverkill
+                  totalDamage
                   totalCappedLoss
                   totalCaptured
                   totalSites))
 
-  (define (convertToSiteValue lst n)
-    (let ((item (list-ref lst n)))
-      (if (or (string=? "true" item)
-              (string=? "false" item))
-          (string=? "true" item)
-          (let ((val (string->number ))
-                (if (eq? a #f) (begin
-                     (print (list 'fuck 'nans lst n))
-                     0.0)
-          a)))
+  (struct Replay ([currentFrame #:mutable]
+                  width
+                  height
+                  frames
+                  lastFrame
+                  generator
+                  siteCounts))
   
-  (define (buildSites sitesText)
-    (map (lambda (siteText)
-           (->> (string-split siteText " ")
-                (map convertToSiteValue)
-                (apply Site)))
+  (define (convertToSiteValue item)
+    (if (or (string=? "true" item)
+            (string=? "false" item))
+        (string=? "true" item)
+        (let ((val (string->number item)))
+          (if (eq? val #f) (begin
+                             (error item))
+              0.0)
+          val)))
+
+  (define (makeSite generator siteText)
+    (match-let (((list x y generator) (~> (string-trim generator)
+                                          (string-split " ")
+                                          (map convertToSiteValue _))))
+      (let* ((rawValues (~>> (string-trim siteText)
+                             (string-split _ " ")
+                             (map convertToSiteValue)))
+             (flags (let procFlags ((remaining (last rawValues))
+                                    (acc null))
+                      (if (= remaining 1)
+                          (reverse acc)
+                          (procFlags (arithmetic-shift remaining -1)
+                                     (cons (bitwise-bit-set? remaining 0)
+                                           acc))))))
+        (~>> (drop-right rawValues 1)
+             (append (list x y generator) _ flags)
+             (apply Site)))))
+  
+  (define (buildSites generators sitesText)
+    (map makeSite
+         generators
          sitesText))
 
   (define (site->string site)
     (string-append "x-" (~v (Site-x site)) "\n"
                    "y-" (~v (Site-y site)) "\n"
-                   "u-" (~v (Site-units site)) "\n"
                    "gen-" (~v (Site-generator site)) "\n"
+                   "u-" (~v (Site-units site)) "\n"
                    "o-" (~v (Site-owner site)) "\n"
                    "exp-" (~v (Site-explore site)) "\n"
-                   "eC-" (~v (Site-exploreCandidate site)) "\n"
                    "r-" (~v (Site-reinforce site)) "\n"
                    "dmg-" (~v (Site-damage site)) "\n"
                    "b-" (~v (Site-battle site)) "\n"
@@ -96,38 +117,33 @@
                    "rdy-" (~v (Site-ready site)) "\n"
                    "cRdy-" (~v (Site-combatReady site)) "\n"
                    "obj-" (~v (Site-objective site)) "\n"
-                   "spear-" (~v (Site-spear site)) "\n"
                    "lk-" (~v (Site-locked site)) "\n"))
 
   (define (buildPlayers players)
     (~> (string-trim players)
         (string-split "\n")
         (map (lambda (x)
-                (apply Player (~> (string-trim x)
-                                  (string-split " ")
-                                  (map string->number _))))
+               (apply Player (~> (string-trim x)
+                                 (string-split " ")
+                                 (map string->number _))))
              _)))
-  
-  (define (createFrame text)
+
+  (define (createFrame generators text)
     (match-let* (((list stats players sites) (string-split (string-trim text) "==="))
-                 ((list id minExplore maxExplore minDamage maxDamage minReinforce maxReinforce totalFreeGenerator) (-> (string-trim stats)
-                                                                                                                       (string-split " ")
-                                                                                                                       (map string->number _))))
+                 ((list id
+                        minExplore maxExplore
+                        minDamage maxDamage
+                        minReinforce maxReinforce
+                        totalFreeGenerator) (~> (string-trim stats)
+                                                (string-split " ")
+                                                (map string->number _))))
       (Frame id
-             (buildSites (string-split (string-trim sites) "\n"))
+             (buildSites generators (string-split (string-trim sites) "\n"))
              (buildPlayers players)
              (LayerRange minExplore maxExplore)
              (LayerRange minReinforce maxReinforce)
              (LayerRange minDamage maxDamage)
              totalFreeGenerator)))
-
-  (struct Replay ([currentFrame #:mutable]
-                  width
-                  height
-                  frames
-                  lastFrame
-                  generator
-                  siteCounts))
 
   (define (replay->string replay)
     (~>> (Replay-siteCounts replay)
@@ -160,23 +176,27 @@
         (buildList null)))
 
   (define (readReplay filePath)
-    (match-let* (((list replayChunks) (~> (call-with-input-file filePath
-                                            (lambda (port)
-                                              (port->string port)))
-                                          (string-split "----")))
-                 ((list settings siteCounts) (~> (first replayChunks)
-                                                 (string-trim)
-                                                 (string-split "--")))
-                 ((list width height minGenerator maxGenerator) (~> (string-trim settings)
-                                                                    (string-split " ")
-                                                                    (map string->number)))
-                 ((list frameData) (map createFrame
-                                        (cdr replayChunks))))
-      (Replay 0
-              width
-              height
-              frameData
-              (Frame-id (last frameData))
-              (LayerRange 0 maxGenerator)
-              (buildSiteCounts siteCounts)))))
+    (let* ((replayChunks (~> (call-with-input-file filePath
+                               (lambda (port)
+                                 (port->string port)))
+                             (string-split "----")))
+           (header (~> (first replayChunks)
+                       (string-split "\n")))
+           (siteFixedAttributes (cdr header)))
+      (match-let* (((list settings siteCounts) (~> (first header)
+                                                   string-trim
+                                                   (string-split "--")))
+                   ((list width height minGenerator maxGenerator) (~> (string-trim settings)
+                                                                      (string-split " ")
+                                                                      (map string->number _))))
+        (let ((frameData (map (curry createFrame
+                                     siteFixedAttributes)
+                              (cdr replayChunks))))
+          (Replay 0
+                  width
+                  height
+                  frameData
+                  (Frame-id (last frameData))
+                  (LayerRange 0 maxGenerator)
+                  (buildSiteCounts siteCounts)))))))
 
