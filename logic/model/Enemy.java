@@ -59,7 +59,7 @@ public class Enemy extends Entity {
 		}
 	    };
 
-		for (Site i : interior)
+	for (Site i : interior)
 	    i.damage = 1f + (0.2f * (i.generator / Stats.maxGenerator));
 	for (Site b : border)
 	    b.damage = 1f + (0.2f * (b.generator / Stats.maxGenerator));

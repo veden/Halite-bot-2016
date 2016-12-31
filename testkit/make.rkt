@@ -2,6 +2,7 @@
   (provide (all-defined-out))
 
   (require threading)
+  (require racket/function)
   (require racket/list)
   (require "build.rkt")
   (require "cuckoo.rkt")
@@ -54,7 +55,7 @@
            (random 4294967087)
            solution))
 
-  (define (cloneTrial solution newSolution)
+  (define (cloneTrial newSolution solution)
     (Trial (Trial-size solution)
            (Trial-bots solution)
            (Trial-seed solution)
@@ -87,6 +88,11 @@
                                                    (Outcome-position o)))))
                                    0)
                             exact->inexact))
+                   "\n"
+                   "Max Score - "
+                   (~v (~>> results
+                            (map (compose length Trial-bots Outcome-trial))
+                            (apply +)))
                    "\n"
                    "Won games - "
                    (~v (~>> results
@@ -138,27 +144,22 @@
                            (1010 30)
                            (1050 50)))
 
-
   (define currentBest '(0.35 0.6 0.2 0.25 0.25))
   (define currentBestScore 0.8)
   
   (define (tuneParameters testSeed)
     (let* ((gameCount (second testSeed))
+           (trials (make-list gameCount
+                              (lambda (x)
+                                (prepTrial null))))
            (objFunc (lambda (solution)
-                      (define preppedTrials (make-list gameCount
-                                                       (lambda (x)
-                                                         (prepTrial solution))))
-                      (define totalScore (~>> preppedTrials
+                      (define totalScore (~>> trials
                                               (map (compose length Trial-bots))
                                               (apply +)))
-                      (/ (~>> preppedTrials
-                              (map (lambda (trail)
-                                     (let ((position (Outcome-position (runTrial trail))))
-                                       (if (= position 0) 0
-                                           )
-                                       ))
-                                   (apply ))
-                              totalScore)))
+                      (~>> trials
+                           (map (compose Outcome-position runTrial (curry cloneTrial solution)))
+                           (apply +)
+                           (/ _ totalScore))))
            (alpha 1.5)
            (maxEpoch 1)
            (succFunc (lambda (fitness)
@@ -178,17 +179,19 @@
                                    (cuckooInitialize 9
                                                      rangePairs
                                                      objFunc)))))
+
   
   (define (playTests seedRound [solution null])
     (random-seed (car seedRound))
-    (playGames (cadr seedRound)
-               solution))
+    (playGames (cadr seedRound)))
   
   (define (playTestSuite cnt [drp 0])
     (~>> (take (drop testSeedRounds drp) cnt)
          (map (lambda (x)
                 (pretty-display x)
-                (time (playTests x))))
+                (let ((result (time (playTests x))))
+                  (pretty-display (showResults result))
+                  result)))
          flatten
          showResults))
 

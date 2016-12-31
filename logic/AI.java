@@ -75,35 +75,36 @@ public class AI extends Entity {
 	super(id, map);
     }
 
-    public void spreadDamage(Site s, boolean allIn, float defenseRange) {
+    public void spreadDamage(Site s, float defenseRange) {
 	float highest = -Float.MAX_VALUE;
 	for (Site neighbor : s.neighbors.values())
-		if (neighbor.get(State.NEUTRAL) && (neighbor.get(State.BATTLE) || neighbor.get(State.GATE)) && (neighbor.damage > highest) && (neighbor.damage != 0))
-		    highest = neighbor.damage;
-	    if (highest != -Float.MAX_VALUE) {		
-		s.damage = 0.90f * highest;
-		RingIterator ri = new RingIterator(s, pMine);
-		for (int d = 0; ((d < defenseRange) || allIn) && ri.hasNext(); d++) {
-		    for (Site r : ri.next()) {
-			for (Site n : r.neighbors.values()) {
-			    float v = 0.90f * n.damage;
-			    if (v > r.damage)
-				r.damage = v;
-			}
+	    if (neighbor.get(State.NEUTRAL) && (neighbor.get(State.BATTLE) || neighbor.get(State.GATE)) && (neighbor.damage > highest) && (neighbor.damage != 0))
+		highest = neighbor.damage;
+	if (highest != -Float.MAX_VALUE) {
+	    float sv = 0.90f * highest;
+	    if (sv > s.damage)
+		s.damage = sv;
+	    RingIterator ri = new RingIterator(s, pMine);
+	    for (int d = 0; (d < defenseRange) && ri.hasNext(); d++) {
+		for (Site r : ri.next()) {
+		    for (Site n : r.neighbors.values()) {
+			float v = 0.90f * n.damage;
+			if (v > r.damage)
+			    r.damage = v;
 		    }
 		}
 	    }
+	}
     }
     
     public void planTroopMovements() {
 	mapScaling = (1 - ((float)map.unexplored.size() / Stats.totalSites));
 	float defenseRange = (mapScaling * map.scaler) * (0.05f + (0.075f * (map.scaler / GameMap.MAX_SIZE)));
-	boolean allIn = false;
 	
 	for (Site s : battles)
-	    spreadDamage(s, allIn, defenseRange);
+	    spreadDamage(s, defenseRange);
 	for (Site s : gates)
-	    spreadDamage(s, allIn, defenseRange);
+	    spreadDamage(s, defenseRange);
     }
 
     private boolean captureObjective(Site s) {

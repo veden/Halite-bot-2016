@@ -182,18 +182,24 @@ public class GameMap{
 		float value = s.getExploreValue();
 		if (value > s.explore)
 		    s.explore = value;
-		while (sri.hasNext() && (d < 15)) {
+		boolean changed = true;
+		while (sri.hasNext() && (d < 15) && changed) {
+		    changed = false;
 		    d++;
 		    float decay = 0.95f - (0.04f * (d + 1));
 		    for (Site r : sri.next()) {
 			if (r.get(State.UNEXPLORED)) {
 			    float v = value * (decay - (0.64f * (r.units / Site.MAX_STRENGTH)) - (0.21f * (1 - (r.generator / Stats.maxGenerator))));
-			    if (v > r.explore)
+			    if (v > r.explore) {
 				r.explore = v;
+				changed = true;
+			    }
 			} else {
 			    float v = value * decay;
-			    if (v > r.reinforce)
+			    if (v > r.reinforce) {
 				r.reinforce = v;
+				changed = true;
+			    }
 			}
 		    }		
 		}
