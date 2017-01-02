@@ -24,23 +24,23 @@ public class Site implements Comparable<Site> {
     public static final float MAX_STRENGTH = 255f;
     public static float MAX_STRENGTH_LOSSY = 0f; //set during network init
 
-    public short id;
-    public short units; // originally 
-    public byte generator; // originally production
-    public final byte x;
-    public final byte y;
+    public int id;
+    public int units; // originally 
+    public int generator; // originally production
+    public final int x;
+    public final int y;
 
-    public byte owner;
+    public int owner;
     public EnumSet<State> status = EnumSet.noneOf(State.class);
    
-    public short incoming;
-    public short outgoing;
+    public int incoming;
+    public int outgoing;
 
     public Direction heading = Direction.STILL;
 
     public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
 
-    public float stagingValue = 0;
+    public float stagingValue = 0f;
     
     public float accumulatorThreshold = 5f;
     public float sitePotential = 0f;
@@ -49,24 +49,21 @@ public class Site implements Comparable<Site> {
     public float damage; 
     private float exploreValue = -Float.MAX_VALUE;
  
-    public Site(byte x, byte y, int height) {
+    public Site(int x, int y, int height) {
 	this.x = x;
 	this.y = y;
-	this.id = (short)(x * height + y);
+	this.id = (int)(x * height + y);
     }
 
     public float getExploreValue() {
-	if (generator != 0) {
-	    if (exploreValue == -Float.MAX_VALUE)
-		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
-				((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
-				 (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
-				 (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
-				 (Parameters.siteCountWeight * (1 - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
-				 (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
-				 ));
-	} else
-	    return 0;
+	if (exploreValue == -Float.MAX_VALUE)
+	    exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
+			    ((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
+			     (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+			     (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
+			     (Parameters.siteCountWeight * (1f - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
+			     (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
+			     ));
 	return exploreValue;
     }
  
@@ -75,7 +72,7 @@ public class Site implements Comparable<Site> {
     }
 
     public boolean aboveCombatThreshold() {
-	return generator * (accumulatorThreshold * 0.75) < units;
+	return generator * (accumulatorThreshold * 0.5) < units;
     }
 
     public String encodeMove() {
@@ -108,11 +105,7 @@ public class Site implements Comparable<Site> {
     }
  
     public void reset() {
-	// boolean objective = get(State.OBJECTIVE);
-	// boolean neutral = get(State.NEUTRAL);
 	status.clear();
-	// if (neutral && objective)
-	//     set(State.OBJECTIVE);
 	stagingValue = 0;
 	explore = 0;
 	reinforce = 0;
@@ -120,10 +113,6 @@ public class Site implements Comparable<Site> {
 	incoming = 0;
 	outgoing = 0;
 	heading = Direction.STILL;
-    }
-
-    public String toString() {
-	return "x-" + x + " y-" + y + " gStr-" + units + " gProd-" + generator + " prod-" + explore + " def-" + reinforce;
     }
 
     public int compressAttributes() {

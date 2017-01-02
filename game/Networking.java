@@ -1,6 +1,6 @@
 package game;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 import game.Site.Direction;
 import game.Site.State;
@@ -13,7 +13,7 @@ public class Networking {
 
     public Networking(GameMap map) {
 	this.map = map;
-	map.bot = new AI(Byte.parseByte(getString()), map);
+	map.bot = new AI(Integer.parseInt(getString()), map);
         deserializeGameMapSize(getString());
         deserializeProductions(getString());
         deserializeGameMap(getString());
@@ -21,8 +21,8 @@ public class Networking {
     
     private void deserializeGameMapSize(String inputString) {
         String[] inputStringComponents = inputString.split(" ");
-	map.buildSites(Byte.parseByte(inputStringComponents[0]),
-		       Byte.parseByte(inputStringComponents[1]));
+	map.buildSites(Integer.parseInt(inputStringComponents[0]),
+		       Integer.parseInt(inputStringComponents[1]));
     }
 
 
@@ -32,9 +32,9 @@ public class Networking {
         int index = 0;
         for(int a = 0; a < map.height; a++)
             for(int b = 0; b < map.width; b++) {
-		byte gen = Byte.parseByte(inputStringComponents[index++]);
+	        int gen = Integer.parseInt(inputStringComponents[index++]) + 1;
 		Site center = map.getSite(b, a);
-                center.generator = gen;
+		center.generator = gen;
 		Stats.totalGenerator += center.generator;
 		center.neighbors.put(Direction.NORTH, map.getSite(b, a - 1));
 		center.neighbors.put(Direction.EAST, map.getSite(b + 1, a));
@@ -55,9 +55,9 @@ public class Networking {
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.generator;
 	    for (int d = 0; d < 2 && ri.hasNext(); d++) {
-		HashSet<Site> ring = ri.next();
+		ArrayList<Site> ring = ri.next();
 		for (Site r : ring) 
-		    total += r.generator * (1f - (0.30f * (1 + d)));
+		    total += r.generator * (1f - (0.20f * (1 + d)));
 	    }
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)
@@ -72,11 +72,11 @@ public class Networking {
 	int y = 0;
 	int x = 0;
 	int counter = 0;
-	byte owner = 0;
+        int owner = 0;
 	int currentIndex = 0;
 	while(y != map.height) {
 	    counter = Integer.parseInt(inputStringComponents[currentIndex]);
-	    owner = Byte.parseByte(inputStringComponents[currentIndex + 1]);
+	    owner = Integer.parseInt(inputStringComponents[currentIndex + 1]);
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
@@ -96,9 +96,9 @@ public class Networking {
 	    }
 	}
 	
-	for (int a = 0; a < map.height; ++a)
+	 for (int a = 0; a < map.height; ++a)
 	    for (int b = 0; b < map.width; ++b) {
-		Short strengthInt = Short.parseShort(inputStringComponents[currentIndex]);
+	        int strengthInt = Integer.parseInt(inputStringComponents[currentIndex]);
 		currentIndex++;
 		Site s = map.getSite(b, a);
 		s.units = strengthInt; 

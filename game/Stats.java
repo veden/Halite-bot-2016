@@ -23,12 +23,12 @@ public class Stats {
 
     public static float totalUnexploredGenerator = 0;
 
-    public static HashMap<Byte, Integer> siteCounter = new HashMap<Byte, Integer>();
+    public static HashMap<Integer, Integer> siteCounter = new HashMap<Integer, Integer>();
     public static float maxSitePotential;
     
     public static String siteCounts() {
 	StringBuilder sb = new StringBuilder();
-	for (Entry<Byte, Integer> count : siteCounter.entrySet()) {
+	for (Entry<Integer, Integer> count : siteCounter.entrySet()) {
 	    if (sb.length() > 0)
 		sb.append(" ");
 	    sb.append(count.getKey() + " " + count.getValue());

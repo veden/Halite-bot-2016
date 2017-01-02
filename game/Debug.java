@@ -13,7 +13,7 @@ public class Debug {
     static {
 	try {
 	    if (enabled) {
-		pw = new PrintWriter("/home/veden/haliteFiles/enabled.txt");
+		pw = new PrintWriter("/home/veden/haliteFiles/debug.txt");
 		r = new PrintWriter("/home/veden/haliteFiles/replay.txt");
 	    }
 	} catch (FileNotFoundException e) {}

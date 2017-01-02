@@ -1,5 +1,6 @@
 package logic.model;
 
+import java.util.Comparator;
 import java.util.function.Predicate;
 
 import game.GameMap;
@@ -10,16 +11,15 @@ import game.Stats;
 import logic.util.RingIterator;
 
 public class Enemy extends Entity {
-    public Enemy(byte id, GameMap map) {
+    public Comparator<Site> maxDamage;
+
+    public Enemy(int id, GameMap map) {
 	super(id, map);
     }
 
     public void spreadDamage(Site s, Predicate<Site> p, boolean isGate) {
 	float svalue;
-	if (s.get(State.GATE))
-	    svalue = 0.45f + (0.2f * (s.generator / Stats.maxGenerator));
-	else
-	    svalue = 1f + (0.2f * (s.generator / Stats.maxGenerator));
+	svalue = 1f + (0.2f * (s.generator / Stats.maxGenerator));
 	if (svalue > s.damage)
 	    s.damage = svalue;
 	for (Site neighbor : s.neighbors.values())
@@ -48,7 +48,7 @@ public class Enemy extends Entity {
 		}
 	    }
     }
-        
+
     public void placeDefense() {
 	Predicate<Site> np = new Predicate<Site>() {
 		@Override
@@ -59,6 +59,7 @@ public class Enemy extends Entity {
 		}
 	    };
 
+	
 	for (Site i : interior)
 	    i.damage = 1f + (0.2f * (i.generator / Stats.maxGenerator));
 	for (Site b : border)

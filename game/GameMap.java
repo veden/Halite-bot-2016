@@ -1,7 +1,9 @@
 package game;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
@@ -15,7 +17,6 @@ import logic.util.RingIterator;
 public class GameMap{
     public static final float MAX_SIZE = 50f;
 
-    private boolean foundObjectives = false;
     public Site[] sites;
     public int width;
     public int height;
@@ -23,33 +24,26 @@ public class GameMap{
 
     public AI bot;
 
-    public HashMap<Byte, Enemy> enemies = new HashMap<Byte, Enemy>();
+    public HashMap<Integer, Enemy> enemies = new HashMap<Integer, Enemy>();
     
-    public HashSet<Site> unexplored = new HashSet<Site>();
-
-    private Predicate<Site> p = new Predicate<Site>() {
-	    @Override
-	    public boolean test(Site s) {
-		return s.get(State.INTERIOR) || s.get(State.BATTLE);
-	    }
-	};
+    public ArrayList<Site> unexplored = new ArrayList<Site>();
     
     public void reset() {
 	unexplored.clear();
 	Stats.reset();
 	bot.reset();
-	for (Entry<Byte, Enemy> e : enemies.entrySet())
+	for (Entry<Integer, Enemy> e : enemies.entrySet())
 	    e.getValue().reset();
     }
 
-    public void buildSites(byte width, byte height) {
+    public void buildSites(int width, int height) {
         this.width = width;
         this.height = height;
 	this.scaler = (Math.min(width, height) - 1) * 0.5f;
 	Stats.totalSites = width * height;
 	sites = new Site[width * height];
-	for(byte x = 0; x < width; x++)
-            for(byte y = 0; y < height; y++)
+	for(int x = 0; x < width; x++)
+            for(int y = 0; y < height; y++)
 		sites[y + (height * x)] = new Site(x, y, height);
     }
 
@@ -93,6 +87,8 @@ public class GameMap{
     
     public void classifySite(Site site) {
 	if (site.get(State.MINE) || site.get(State.ENEMY)) {
+	    if (site.units == 0)
+		site.set(State.USED);
 	    if (site.aboveActionThreshold())
 		site.set(State.READY);
 	    if (site.aboveCombatThreshold())
@@ -117,7 +113,7 @@ public class GameMap{
 	        e.addBorder(site);
 	} else if (site.get(State.NEUTRAL)) {
 	    if (site.units == 0) {
-		HashMap<Byte, Boolean> neighborCheck = new HashMap<Byte, Boolean>();
+		HashMap<Integer, Boolean> neighborCheck = new HashMap<Integer, Boolean>();
 		for (Site neighbor : site.neighbors.values())
 		    if (neighbor.get(State.MINE)) {
 			bot.addBattle(neighbor);
@@ -163,64 +159,92 @@ public class GameMap{
 	}
     }
 
-    // public float normalize(float x, float low, float high) {
-    // 	return ((x - low) / (high - low));
-    // }
+    public float normalize(float x, float low, float high) {
+    	return ((x - low) / (high - low));
+    }
     
     public void scoreUnexplored() {
+	if (unexplored.size() == 0)
+	    return;
+	
 	Predicate<Site> p = new Predicate<Site>() {
 		@Override
 		public boolean test(Site t) {
-		    return t.get(State.UNEXPLORED) || (t.get(State.MINE));
+		    return t.get(State.UNEXPLORED) && (t.explore != 0);
 		}
 	    };
 
-	for (Site s : unexplored) 
-	    if ((s.units != 0) && (s.generator > 0)) {
-		RingIterator sri = new RingIterator(s, p);
-		int d = 0;
-		float value = s.getExploreValue();
-		if (value > s.explore)
-		    s.explore = value;
-		boolean changed = true;
-		while (sri.hasNext() && (d < 15) && changed) {
-		    changed = false;
-		    d++;
-		    float decay = 0.95f - (0.04f * (d + 1));
-		    for (Site r : sri.next()) {
-			if (r.get(State.UNEXPLORED)) {
-			    float v = value * (decay - (0.64f * (r.units / Site.MAX_STRENGTH)) - (0.21f * (1 - (r.generator / Stats.maxGenerator))));
-			    if (v > r.explore) {
-				r.explore = v;
-				changed = true;
-			    }
-			} else {
-			    float v = value * decay;
-			    if (v > r.reinforce) {
-				r.reinforce = v;
-				changed = true;
-			    }
-			}
-		    }		
+	Collections.sort(unexplored,
+			 new Comparator<Site>() {
+			     @Override
+			     public int compare(Site arg0, Site arg1) {
+				 float v = arg1.getExploreValue() - arg0.getExploreValue();
+				 if (v == 0)
+				     return arg0.id - arg1.id;
+				 return v > 0 ? 1 : -1;
+			     }
+			 });
+
+	ArrayList<Site> objectivePoints = new ArrayList<Site>();
+
+	float minExplore = unexplored.get(unexplored.size() - 1).getExploreValue();
+	float maxExplore = unexplored.get(0).getExploreValue();
+	
+	for (Site s : unexplored) {
+	    if (normalize(s.getExploreValue(), minExplore, maxExplore) > 0.60) {
+		if (s.explore < s.getExploreValue())
+		    s.explore = s.getExploreValue();
+		for (Site n : s.neighbors.values())
+		    if (n.get(State.UNEXPLORED) && (s.explore >= n.explore))
+			n.explore = s.explore * 0.98f;
+		objectivePoints.add(s);
+	    }
+	}
+
+	RingIterator riop = new RingIterator(objectivePoints, p);
+
+	while (riop.hasNext()) {
+	    boolean changed = false;
+	    ArrayList<Site> sortedNeighbors = riop.next();
+	    Collections.sort(sortedNeighbors,
+	    		     new Comparator<Site>() {
+	    			 @Override
+	    			 public int compare(Site arg0, Site arg1) {
+	    			     float v = arg1.explore - arg0.explore;
+				     if (v == 0)
+	    				 return arg0.id - arg1.id;
+	    			     return v > 0 ? 1 : -1;
+	    			 }
+	    		     });
+	    for (Site s : sortedNeighbors) {
+		float absorb = s.explore * (0.98f - (0.45f * (s.units / Site.MAX_STRENGTH)) - (0.125f * (1 - (s.generator / Stats.maxGenerator))));
+		for (Site sn : s.neighbors.values()) {
+		    if (sn.get(State.UNEXPLORED) && (absorb > sn.explore)) {
+			sn.explore = absorb;
+			changed = true;
+		    }
 		}
 	    }
+	    if (!changed)
+	    	break;
+	}
     }
 
-    public short safeCoordinate(int x, int limit) {
+    public int safeCoordinate(int x, int limit) {
 	if (x < 0) 
-	    return (short)(limit + (x % limit));
+	    return limit + (x % limit);
 	else
-	    return (short)(x % limit);
+	    return x % limit;
     }
 
     public void identifyEnemy() {
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
+	for (Entry<Integer, Enemy> e : enemies.entrySet()) {
 	    Enemy enemy = e.getValue();
 	    enemy.placeDefense();
 	}
     }
     
-    public Enemy getEnemy(byte id) {
+    public Enemy getEnemy(int id) {
 	if (!enemies.containsKey(id))
 	    enemies.put(id, new Enemy(id, this));
 	return enemies.get(id);
@@ -228,7 +252,7 @@ public class GameMap{
 
     public String enemiesToReplay() {
 	StringBuilder sb = new StringBuilder();
-	for (Entry<Byte, Enemy> e : enemies.entrySet()) {
+	for (Entry<Integer, Enemy> e : enemies.entrySet()) {
 	    if (sb.length() > 0)
 		sb.append("\n");
 	    sb.append(e.getValue().toString());

@@ -1,9 +1,10 @@
 (module Cuckoo racket
   (provide cuckooSearch
            cuckooInitialize
+           cuckooEgg->list
            (struct-out RangePair)
            (struct-out CuckooEgg))
-  (random-seed 100)
+  ;;  (random-seed 100)
 
   (require racket/gui/base)
   (require threading)
@@ -84,11 +85,12 @@
   (define (cuckooSearch objFunc maxEpoch succFunc dropRate rangePairs alpha solutions)
     (~>> (let cs ((epoch 0)
                   (nests solutions))
-           (when (= (modulo epoch (* maxEpoch 0.10)) 0)
-             (pretty-display (string-append (~v (exact->inexact (/ epoch maxEpoch)))
-                                            "% "
-                                            (~v (cuckooEgg->list (vector-ref nests 0)))
-                                            "\n")))
+           (let ((epochInterval (inexact->exact (floor (* maxEpoch 0.10)))))
+             (when (and (not (= epochInterval 0)) (= (modulo epoch epochInterval) 0))
+               (pretty-display (string-append (~v (exact->inexact (/ epoch maxEpoch)))
+                                              "% "
+                                              (~v (cuckooEgg->list (vector-ref nests 0)))
+                                              "\n"))))
            (if (or (= maxEpoch
                       epoch)
                    (succFunc (CuckooEgg-fitness (vector-ref nests

@@ -1,27 +1,41 @@
 package logic.util;
 
+import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
 import game.Site;
 
-public class RingIterator implements Iterator<HashSet<Site>> {
+public class RingIterator implements Iterator<ArrayList<Site>> {
 
     private Predicate<Site> neighborPredicate = null;
-    private HashSet<Site> currentSet = new HashSet<Site>();
+    private ArrayList<Site> currentSet = new ArrayList<Site>();
     private BitSet used = new BitSet();
 
     public RingIterator(Site center) {
-        currentSet.add(center);
-	used.set(center.id);
+        addCenter(center);
     }
-    
+
+    public RingIterator(ArrayList<Site> centers) {
+	for (Site s : centers)
+	    addCenter(s);
+    }
+
     public RingIterator(Site center, Predicate<Site> neighborPredicate) {
 	this(center);
 	this.neighborPredicate = neighborPredicate;
     }
+
+    public RingIterator(ArrayList<Site> centers, Predicate<Site> neighborPredicate) {
+	this(centers);
+	this.neighborPredicate = neighborPredicate;
+    }
+
+    public void addCenter(Site center) {
+	currentSet.add(center);
+	used.set(center.id);
+    } 
 
     @Override
     public boolean hasNext() {
@@ -29,8 +43,8 @@ public class RingIterator implements Iterator<HashSet<Site>> {
     }
 
     @Override
-    public HashSet<Site> next() {
-	HashSet<Site> ring = new HashSet<Site>();
+    public ArrayList<Site> next() {
+        ArrayList<Site> ring = new ArrayList<Site>();
 	boolean usePredicate = neighborPredicate != null;
 	if (usePredicate) {
 	    for (Site s : currentSet)

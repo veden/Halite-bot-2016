@@ -3,18 +3,7 @@ package logic.util;
 import game.Site;
 import game.Site.State;
 
-public class MoveUtils {
-
-    public static boolean moveSiteToSite(Site a, Site b) {
-	if (!a.get(State.USED) && (a != b)) {
-	    a.outgoing += a.units;
-	    b.incoming += a.units;
-	    a.set(State.USED);
-	    return true;
-	}
-	return false;
-    }
-
+public class ValidateAction {
     public static float totalGenerator(Site a) {
 	float generator = (float)a.generator;
 	for (Site nn : a.neighbors.values())
@@ -37,7 +26,7 @@ public class MoveUtils {
 	return b.incoming + b.units + a.units - b.outgoing;
     }
 
-    public static boolean validBump(Site a, Site b) {
+    public static boolean bump(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.MINE) && (!b.moving()) && (a.units > b.units * 1.3) && (!b.get(State.LOCKED))) {
 	    float v = a.units + b.units + b.incoming;
 	    if (v <= Site.MAX_STRENGTH)
@@ -48,7 +37,7 @@ public class MoveUtils {
 	return false;
     }
     
-    public static boolean validMove(Site a, Site b) {
+    public static boolean move(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.MINE) && (!b.get(State.LOCKED))) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
 	    if (!b.moving())
@@ -58,8 +47,8 @@ public class MoveUtils {
 	return false;
     }
 
-    public static boolean validExplore(Site a, Site b, boolean joint) {
-	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && !b.get(State.LOCKED)) {
+    public static boolean explore(Site a, Site b, boolean joint) {
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (!b.get(State.LOCKED))) {
 	    float remainingUnits = a.units + b.incoming;
 	    float cap = Site.MAX_STRENGTH;
 	    if (joint)
@@ -71,7 +60,7 @@ public class MoveUtils {
 	return false;
     }
 
-    public static boolean validCapture(Site a, Site b) {
+    public static boolean capture(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.OPEN) && (!b.get(State.LOCKED))) {
 	    float units = (a.units + b.incoming);
 	    return (units > 0) && (units < Site.MAX_STRENGTH);
@@ -79,16 +68,28 @@ public class MoveUtils {
 	return false;	
     }
 
-    public static boolean validAttack(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && (b.get(State.BATTLE) || b.get(State.GATE)) && (!b.get(State.LOCKED))) {
+    public static boolean breach(Site a, Site b) {
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.GATE) && (!b.get(State.LOCKED))) {
 	    float highestUnit = 0;
-	    if (b.get(State.GATE)) {
-		for (Site neighbor : b.neighbors.values()) {
-		    float v = neighbor.generator;
-		    if (neighbor.get(State.ENEMY) && (highestUnit < v))
-			highestUnit = v;
-		}
-		highestUnit = highestUnit > b.units ? highestUnit : b.units;
+	    for (Site neighbor : b.neighbors.values()) {
+		float v = neighbor.generator;
+		if (neighbor.get(State.ENEMY) && (highestUnit < v))
+		    highestUnit = v;
+	    }
+	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
+	    float v = a.units + b.incoming - highestUnit;
+	    return (v > 0) && (v <= Site.MAX_STRENGTH_LOSSY);
+	} else
+	    return false;
+    }
+    
+    public static boolean attack(Site a, Site b) {
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && (!b.get(State.LOCKED))) {
+	    float highestUnit = 0;
+	    for (Site neighbor : b.neighbors.values()) {
+		float v = neighbor.generator;
+		if (neighbor.get(State.ENEMY) && (highestUnit < v))
+		    highestUnit = v;
 	    }
 	    float v = a.units + b.incoming - highestUnit;
 	    return (v > 0) && (v <= Site.MAX_STRENGTH_LOSSY);
@@ -96,11 +97,11 @@ public class MoveUtils {
 	    return false;
     }
 
-    public static boolean validJoint(Site center, boolean explore) {
+    public static boolean joint(Site center, boolean explore) {
 	if (center.get(State.UNEXPLORED) && !center.get(State.LOCKED)) {
 	    float total = 0f;
 	    for (Site neighbor : center.neighbors.values())
-		if (neighbor.get(State.MINE) && !neighbor.get(State.USED) && ((explore && neighbor.damage == 0) || !explore))
+		if (neighbor.get(State.MINE) && !neighbor.get(State.USED) && (neighbor.reinforce <= center.explore) && ((explore && neighbor.damage == 0) || !explore))
 		    total += neighbor.units;
 	    float v = total + center.incoming - center.units;
 	    if (!explore)

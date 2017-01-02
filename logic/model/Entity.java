@@ -9,7 +9,7 @@ import game.Site;
 import game.Site.State;
 
 abstract public class Entity {
-    public byte id;
+    public int id;
     public int totalGenerator = 0;
     public int totalUnits = 0;
     public int totalSites = 0;
@@ -31,7 +31,7 @@ abstract public class Entity {
     public ArrayList<Site> open = new ArrayList<Site>();
     public ArrayList<Site> gates = new ArrayList<Site>();
     
-    public Entity(byte id, GameMap map) {
+    public Entity(int id, GameMap map) {
 	this.id = id;
 	this.map = map;
     }
