@@ -32,7 +32,7 @@ public class Networking {
         int index = 0;
         for(int a = 0; a < map.height; a++)
             for(int b = 0; b < map.width; b++) {
-	        int gen = Integer.parseInt(inputStringComponents[index++]) + 1;
+	        int gen = Integer.parseInt(inputStringComponents[index++]);
 		Site center = map.getSite(b, a);
 		center.generator = gen;
 		Stats.totalGenerator += center.generator;

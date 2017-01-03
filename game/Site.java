@@ -56,14 +56,17 @@ public class Site implements Comparable<Site> {
     }
 
     public float getExploreValue() {
-	if (exploreValue == -Float.MAX_VALUE)
-	    exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
-			    ((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
-			     (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
-			     (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
-			     (Parameters.siteCountWeight * (1f - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
-			     (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
-			     ));
+	if (generator != 0) {
+	    if (exploreValue == -Float.MAX_VALUE)
+		exploreValue = ((1f - (units/Site.MAX_STRENGTH)) *
+				((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
+				 (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+				 (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
+				 (Parameters.siteCountWeight * (1f - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
+				 (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
+				 ));
+	} else
+	    return 0;
 	return exploreValue;
     }
  

@@ -13,7 +13,7 @@ public class MyBot {
 	Networking server = new Networking(map); 
 
 	Debug.startup(map);
-	server.sendInit("VedenV10");
+	server.sendInit("VedenV11");
 
 	if (args.length > 0) {
 	    Parameters.generatorWeight = Float.parseFloat(args[0]);

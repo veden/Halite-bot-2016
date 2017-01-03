@@ -1,5 +1,7 @@
 package logic.util;
 
+import java.util.ArrayList;
+
 import game.Site;
 import game.Site.Direction;
 import game.Site.State;
@@ -39,7 +41,44 @@ public class Actions {
 	    commitMove(target, s);
 	}	
     }
-
+    
+    public static void joint(Site s) {
+	ArrayList<Direction> ambushers = new ArrayList<Direction>();
+	for (Direction d : Site.CARDINALS) {
+	    Site n = s.neighbors.get(d);
+	    if (n.get(State.MINE) && !n.get(State.USED) && (n.explore < s.explore) && (n.reinforce <= s.explore) && (n.damage == 0))
+		ambushers.add(d);
+	}
+	int setSize = 1 << ambushers.size();
+	float lowest = Float.MAX_VALUE;
+	ArrayList<Direction> lowestAmbushers = new ArrayList<Direction>();
+	for (int selection = 1; selection < setSize; selection++) {
+	    int cursor = selection;
+	    ArrayList<Direction> temp = new ArrayList<Direction>();
+	    if ((cursor & 1) == 1) 
+		temp.add(ambushers.get(0));
+	    if ((cursor & 2) == 1)
+		temp.add(ambushers.get(1));
+	    if ((cursor & 4) == 1)
+		temp.add(ambushers.get(2));
+	    if ((cursor & 8) == 1)
+		temp.add(ambushers.get(3));
+	    float tempTotal = 0;
+	    for (Direction d : temp)
+		tempTotal += s.neighbors.get(d).units;
+	    tempTotal += s.incoming - s.units;
+	    if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+		lowestAmbushers = temp;
+		lowest = tempTotal;
+	    }
+	}
+	for (Direction d : lowestAmbushers) {
+	    Site neighbor = s.neighbors.get(d);	
+	    neighbor.heading = Site.reverse(d);
+	    Actions.commitMove(neighbor, s);
+	}
+    }
+    
     public static void explore(Site s) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
@@ -82,7 +121,7 @@ public class Actions {
 		    count++;
 		else if (n.get(State.ENEMY))
 		    count--;
-	    if (ValidateAction.attack(s, neighbor) && (s.damage < neighbor.damage) && (count <= lowestCount) && (s.target().damage <= neighbor.damage)) {
+	    if (ValidateAction.attack(s, neighbor) && (count <= lowestCount) && (s.target().damage <= neighbor.damage)) {
 		lowestCount = count;
 		s.heading = d;
 	    }
@@ -109,7 +148,7 @@ public class Actions {
     public static void capture(Site s) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.capture(s, neighbor) && ((s.damage <= neighbor.damage) || (s.units <= Stats.maxGenerator)))
+	    if (ValidateAction.capture(s, neighbor) && ((s.damage <= neighbor.damage) || ((s.units <= Stats.maxGenerator) && (neighbor.incoming == 0))))
 		s.heading = d;
 	}
     }

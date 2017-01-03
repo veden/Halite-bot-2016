@@ -42,7 +42,7 @@ public class ValidateAction {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
 	    if (!b.moving())
 		units += b.generator;
-	    return units <= Site.MAX_STRENGTH_LOSSY;
+	    return units <= Site.MAX_STRENGTH;
 	}
 	return false;
     }
@@ -78,7 +78,7 @@ public class ValidateAction {
 	    }
 	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit;
-	    return (v > 0) && (v <= Site.MAX_STRENGTH_LOSSY);
+	    return (v > 0) && (v <= Site.MAX_STRENGTH);
 	} else
 	    return false;
     }
@@ -92,7 +92,7 @@ public class ValidateAction {
 		    highestUnit = v;
 	    }
 	    float v = a.units + b.incoming - highestUnit;
-	    return (v > 0) && (v <= Site.MAX_STRENGTH_LOSSY);
+	    return (v > 0) && (v <= Site.MAX_STRENGTH);
 	} else
 	    return false;
     }
@@ -105,7 +105,7 @@ public class ValidateAction {
 		    total += neighbor.units;
 	    float v = total + center.incoming - center.units;
 	    if (!explore)
-		return (v > center.units) && (v <= Site.MAX_STRENGTH_LOSSY);
+		return (v > center.units) && (v <= Site.MAX_STRENGTH);
 	    else
 		return (v > center.units) && (v <= Site.MAX_STRENGTH);
 	}

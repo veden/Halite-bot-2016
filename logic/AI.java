@@ -161,16 +161,8 @@ public class AI extends Entity {
 	}
 
 	Collections.sort(frontier, maxExploreCompare);
-	for (Site s : frontier) {
-	    if (ValidateAction.joint(s, true))
-		for (Direction d : Site.CARDINALS) {
-		    Site neighbor = s.neighbors.get(d);	
-		    if (neighbor.get(State.MINE) && ValidateAction.explore(neighbor, s, true)) {
-			neighbor.heading = Site.reverse(d);
-			Actions.commitMove(neighbor, s);
-		    }
-		}
-	}
+	for (Site s : frontier)
+	    Actions.joint(s);
 	
 	Collections.sort(border, maxUnitsCompare);	
 	for (Site s : border) {
