@@ -4,6 +4,7 @@
   (require threading)
   (require racket/function)
   (require racket/list)
+  (require racket/async-channel)
   (require "build.rkt")
   (require "cuckoo.rkt")
   
@@ -23,11 +24,10 @@
 
   (define botPool '(;; "cd /data/factory/repo/wkJava/halite/src/release/s1/; java MyBot"
                     ;; "cd /data/factory/repo/wkJava/halite/src/release/s2/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v2/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v3/; java MyBot"
-                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
-                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
-                    ;; "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
                     ))
 
   (define sizePool '(20
@@ -142,36 +142,43 @@
             (Outcome trial (scoreResult report))))))
 
   (define (playThreaded trials)
-    (define result-channel (make-channel))
-    (define work-channel (make-channel))
+    (define result-channel (make-async-channel))
+    (define work-channel (make-async-channel))
     (define (trialThread)
       (thread (lambda ()
                 (let loop ()
-                  (define trial (channel-get work-channel))
-                  (if (equal? trial 'done) 'quitting
-                      (begin 
-                        (channel-put result-channel (runTrial trial))
-                        (loop)))))))
-    ()
-    (for ((trial trials))
-      ))
-  )
+                  (define trial (async-channel-get work-channel))
+                  (case trial
+                    ((done) 'quitting)
+                    (else (async-channel-put result-channel (runTrial trial))
+                          (loop)))))))
+    (define threadCount 5)
+    (define threads (build-list threadCount (lambda (x)
+                                              (trialThread))))
+    (define work-queue (append trials (make-list threadCount 'done)))
+    (for ((work work-queue))
+      (async-channel-put work-channel work))
+    (for/list ((trial trials))
+      (async-channel-get result-channel)))
   
   (define (playGames cnt)
-    (~>> (stream-map (lambda (gameNumber)
-                       (runTrial (prepTrial null)))
-                     (in-range cnt))
-         stream->list))
+    (playThreaded (build-list cnt (lambda (x)
+                                    (prepTrial null)))))
 
   (define testSeedRounds '((2010 5)
                            (2000 10)
                            (1007 15)
                            (1010 30)
                            (1050 50)
-                           (2060 20)))
+                           (2060 20)
+                           (2070 35)))
 
-  (define currentBest '(0.42 0.63 0.33 0.46 0.05))
-    
+  (define currentBest '(0.77 0.43 0.02 0.46 0.85
+                             0.69 0.70 0.27 0.64 0.34
+                             0.55 0.45 0.125 0.05 0.5
+                             0.3 0.2 0.1 1.3 0.12 0.2
+                             2))
+
   (define (tuneParameters testSeed)
     (random-seed (first testSeed))
     (let* ((gameCount (second testSeed))
@@ -184,7 +191,7 @@
                                               (apply +)))
                       (~>> trials
                            (map (curry cloneTrial solution))
-                           (map runTrial)
+                           playThreaded
                            (foldl (lambda (o acc)
                                     (if (= (Outcome-position o) 0) acc
                                         (+ acc (/ (length (Trial-bots (Outcome-trial o)))
@@ -196,11 +203,9 @@
            (succFunc (lambda (fitness)
                        (= fitness 1.0)))
            (dropRate 0.3)
-           (rangePairs (list (RangePair 0.0 1.0)
-                             (RangePair 0.0 1.0)
-                             (RangePair 0.0 1.0)
-                             (RangePair 0.0 1.0)
-                             (RangePair 0.0 1.0))))
+           (rangePairs (append (build-list 21 (lambda (x)
+                                                (RangePair 0.0 1.0)))
+                               (list (RangePair 0.0 8)))))
       (vector-map cuckooEgg->list (cuckooSearch objFunc
                                                 maxEpoch
                                                 succFunc
@@ -237,7 +242,8 @@
             ((vector "test" r d) (display (playTestSuite (string->number r)
                                                          (string->number d))))
             ((vector "tune" s) (pretty-display (tuneParameters (list-ref testSeedRounds (- (string->number s) 1)))))
-            ((vector "single" c s) (begin (random-seed (string->number s))
+            ((vector "single" c s) (begin (when (not (= (string->number s) -1))
+                                            (random-seed (string->number s)))
                                           (display (showResults (time (playGames (string->number c)))))))
             (_ (badCommand))))))
 

@@ -148,12 +148,12 @@
   (define (replay->string replay)
     (~>> (Replay-siteCounts replay)
          (map (lambda (x)
-                (string-append (~v (SiteCount-value x))
+                (string-append (~v (inexact->exact (SiteCount-value x)))
                                "-"
-                               (~v (SiteCount-size x))
-                               " / "
-                               (~v (* (SiteCount-value x)
-                                      (SiteCount-size x))))))
+                               (~v (inexact->exact (SiteCount-size x)))
+                               "/"
+                               (~v (inexact->exact (* (SiteCount-value x)
+                                                      (SiteCount-size x)))))))
          (string-join _ "\n")))
 
   (define (jumpTo replay offset)

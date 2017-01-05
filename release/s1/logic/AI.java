@@ -82,32 +82,21 @@ public class AI extends Entity {
 	
 	Collections.sort(warfare, maxUnitsCompare);
 	for (Site s : warfare) {
-	    Actions.capture(s);
-	    if (!s.moving()) {
-		Actions.attack(s);
-		if (s.moving())
-		    Actions.lock(s, map.scaling);
-	    }
+	    Actions.attack(s);
 	    if (!s.moving() && s.get(State.COMBAT_READY))
 		Actions.reinforce(s, P.DAMAGE);
-
+	    if (!s.moving())
+		Actions.capture(s);
 	    if (s.get(State.GATE) && !s.moving())
 		Actions.breach(s);
+	    Actions.evade(s, map.mapScaling);
 	    
 	    Actions.commitMove(s, s.target());
 	}
 
 	Collections.sort(frontier, maxExploreCompare);
-	float totalExplore = 0f;
-	for (Site f : frontier)
-	    totalExplore += f.value(P.EXPLORE);
-	totalExplore *= 0.75f;
 	for (Site s : frontier)
-	    if (totalExplore > 0) {
-		totalExplore -= s.value(P.EXPLORE);
-		Actions.joint(s);
-	    } else
-		break;
+	    Actions.joint(s);
 
 	ArrayList<Site> body = new ArrayList<Site>(border.size() + interior.size());
 	body.addAll(border);
@@ -116,9 +105,9 @@ public class AI extends Entity {
 	Collections.sort(body, maxUnitsCompare);	
 	for (Site s : body) {
 	    if (s.get(State.READY)) {
-		if (s.value(P.DAMAGE) == 0) {
+		if (s.value(P.DAMAGE) == 0)
 		    Actions.reinforce(s, P.REINFORCE);
-		} else
+		else
 		    Actions.reinforce(s, P.DAMAGE);
 	    }
 

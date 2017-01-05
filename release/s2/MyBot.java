@@ -13,7 +13,7 @@ public class MyBot {
 	Networking server = new Networking(map); 
 
 	Debug.startup(map);
-	server.sendInit("VedenV12");
+	server.sendInit("VedenV12b");
 
 	if (args.length > 0) {
 	    Parameters.generatorWeight = Float.parseFloat(args[0]);
@@ -53,8 +53,8 @@ public class MyBot {
 	    server.sendFrame();
 
 	    Debug.stopClock(map, turn, start);
-	    // if (turn == 40)
-	    // 	Debug.abort("");
+	    // if (turn == 125)
+	    //Debug.abort("");
 	    turn++;
 	}
     }

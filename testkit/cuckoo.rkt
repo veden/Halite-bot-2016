@@ -99,6 +99,8 @@
                (cs (+ epoch 1)
                    (~>> nests
                         (cuckooInjectSolution (cuckooCloneSolution nests alpha rangePairs objFunc))
+                        (cuckooInjectSolution (cuckooCloneSolution nests alpha rangePairs objFunc))
+                        (cuckooInjectSolution (cuckooCloneSolution nests alpha rangePairs objFunc))
                         cuckooSortSolutions
                         (cuckooCullSolutions dropRate rangePairs objFunc)))))
          cuckooSortSolutions))

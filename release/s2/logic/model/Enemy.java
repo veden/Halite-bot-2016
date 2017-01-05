@@ -22,17 +22,18 @@ public class Enemy extends Entity {
 
     private void identifyTargets(Site s) {
 	float svalue;
-	svalue = 1f + (Parameters.enemyGeneratorWeight * (s.value(P.GENERATOR) / Stats.maxGenerator));
-	s.stagingValue += svalue;
+	svalue = 1f + (Parameters.enemyGeneratorWeight * (s.generator / Stats.maxGenerator)) + (Parameters.enemyUnitWeight * (s.units / Site.MAX_STRENGTH));
+	if (svalue > s.value(P.DAMAGE))
+	    s.set(P.DAMAGE, svalue);
 	for (Site n : s.neighbors.values()) {
-	    float absorb = svalue * (0.98f - (Parameters.enemyGeneratorSpread * (1 - (n.value(P.GENERATOR) / Stats.maxGenerator))));
-	    if (n.get(State.ENEMY))
-		n.stagingValue += absorb;
+	    float absorb = s.value(P.DAMAGE) * (0.98f - (Parameters.enemyGeneratorSpread * (1 - (n.generator / Stats.maxGenerator)) - (Parameters.enemyUnitSpread * (1 - (n.units / Site.MAX_STRENGTH)))));
+	    if (n.get(State.ENEMY) && (absorb > n.value(P.DAMAGE)))
+		n.set(P.DAMAGE, absorb);
 	}
     }
 
     public void spreadDamage(Site s, Predicate<Site> p, float defenseRange) {	
-	float svalue = 1f + (Parameters.enemyGeneratorWeight * (s.value(P.GENERATOR) / Stats.maxGenerator)) + (Parameters.enemyUnitWeight * (s.units / Site.MAX_STRENGTH));
+	float svalue = 1f + (Parameters.enemyGeneratorWeight * (s.generator / Stats.maxGenerator)) + (Parameters.enemyUnitWeight * (s.units / Site.MAX_STRENGTH));
 	if (svalue > s.value(P.DAMAGE))
 	    s.set(P.DAMAGE, svalue);
 	RingIterator ri = new RingIterator(s, p);
@@ -51,7 +52,7 @@ public class Enemy extends Entity {
 	Comparator<Site> maxGeneratorUnits = new Comparator<Site>() {
 		@Override
 		public int compare(Site arg0, Site arg1) {
-		    float v = arg1.value(P.GENERATOR) - arg0.value(P.GENERATOR);
+		    float v = arg1.generator - arg0.generator;
 		    if (v == 0) {
 			v = arg1.units - arg0.units;
 			if (v == 0)
@@ -68,8 +69,6 @@ public class Enemy extends Entity {
 	
 	for (Site b : body)
 	    identifyTargets(b);
-	for (Site b : body)
-	    b.commit(P.DAMAGE);
 
 	ArrayList<Site> warfare = new ArrayList<Site>(gates.size() + battles.size());
 	warfare.addAll(gates);
@@ -84,7 +83,12 @@ public class Enemy extends Entity {
 	    };
 
 	float defenseRange;
-	defenseRange = Math.max(map.scaling * map.scale, 8f);
+	if (map.mapScaling <= Parameters.phaseLevel2)
+	    defenseRange = map.scaler * Parameters.level1Defense;
+	else if (map.mapScaling <= Parameters.phaseLevel3)
+	    defenseRange = map.scaler * Parameters.level2Defense;
+	else
+	    defenseRange = map.scaler * Parameters.level3Defense;
 	
 	Collections.sort(warfare, maxGeneratorUnits);
 	for (Site w : warfare)

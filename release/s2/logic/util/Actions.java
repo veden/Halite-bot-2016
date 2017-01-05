@@ -28,7 +28,7 @@ public class Actions {
 	    Site n = s.neighbors.get(d);
 	    if (n.get(State.MINE) &&
 		!n.get(State.USED) &&
-		(n.value(P.EXPLORE) <= s.value(P.EXPLORE)) &&
+		(n.value(P.EXPLORE) < s.value(P.EXPLORE)) &&
 		(n.value(P.REINFORCE) <= s.value(P.EXPLORE)) &&
 		(n.value(P.DAMAGE) == 0))
 		
@@ -67,7 +67,7 @@ public class Actions {
     public static void explore(Site s) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.explore(s, neighbor) &&
+	    if (ValidateAction.explore(s, neighbor, false) &&
 		(s.target().value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) &&
 		(s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)) &&
 		((s.moving() && (s.target().units > neighbor.units)) || !s.moving())) {
@@ -82,12 +82,12 @@ public class Actions {
 	
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.move(s, neighbor) && (s.target().value(siteProperty) < neighbor.value(siteProperty))) {
+	    if (ValidateAction.move(s, neighbor) && (s.target().value(siteProperty) <= neighbor.value(siteProperty))) {
 		s.heading = d;
 		bump = null;
 	    }
 
-	    if (ValidateAction.bump(s, neighbor) && (s.target().value(siteProperty) < neighbor.value(siteProperty))) {
+	    if (ValidateAction.bump(s, neighbor) && (s.target().value(siteProperty) <= neighbor.value(siteProperty))) {
 		s.heading = d;
 		bump = d;
 	    }
@@ -106,10 +106,10 @@ public class Actions {
 	    Site neighbor = s.neighbors.get(d);
 	    int count = 0;
 	    for (Site n : neighbor.neighbors.values())
-	    	if (n.get(State.MINE))
-	    	    count++;
-	    	else if (n.get(State.ENEMY))
-	    	    count--;
+		if (n.get(State.MINE))
+		    count++;
+		else if (n.get(State.ENEMY))
+		    count--;
 	    if (ValidateAction.attack(s, neighbor) &&
 		(count <= lowestCount) &&
 		(s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE))) {
@@ -141,49 +141,28 @@ public class Actions {
     }
     
     public static void capture(Site s) {
-	int lowestCount = Integer.MAX_VALUE;
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    int count = 0;
-	    for (Site n : neighbor.neighbors.values())
-		if (n.get(State.MINE))
-		    count++;
-		else if (n.get(State.ENEMY))
-		    count--;
 	    if (ValidateAction.capture(s, neighbor) &&
-		(count <= lowestCount) &&
-		((s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE)) || (s.units <= Stats.maxGenerator))) {
+		((s.value(P.DAMAGE) <= neighbor.value(P.DAMAGE)) || ((s.units <= Stats.maxGenerator) && (neighbor.incoming == 0))))
 
-		lowestCount = count;
 		s.heading = d;
-	    }
 	}
     }
 
-    public static void evade(Site s) {
-	
-    }
-
-    public static void lock(Site s, float mapScaling) {
+    public static void evade(Site s, float mapScaling) {
 	if (s.moving() && (s.units > Stats.maxGenerator) && (mapScaling > Parameters.evadeThreshold)) {
-	    float unitBuildUp = 0;
-	    for (Site n : s.target().neighbors.values())
-	    	if (n.get(State.ENEMY) && (n.units > unitBuildUp))
-	    	    unitBuildUp = n.units;
-	    if (unitBuildUp < s.units * 1.2f)
-		for (Site n : s.target().neighbors.values()) {
-		    n.set(State.LOCKED);
-		    // boolean enemyAdj = s.get(State.ENEMY);
-		    // if (!enemyAdj)
-		    //     for (Site en : n.neighbors.values()) {
-		    // 	    enemyAdj = en.get(State.ENEMY);
-		    // 	if (enemyAdj)
-		    // 	    break;
-		    //     }
-		    // if (enemyAdj)
-		    //     for (Site en : n.neighbors.values())
-		    // 	    en.set(State.LOCKED);
-		}
+	    // float unitBuildUp = 0;
+	    // for (Site n : s.target().neighbors.values())
+	    // 	if (n.get(State.ENEMY))
+	    // 	    unitBuildUp += n.units;
+	    // if (unitBuildUp > s.units)
+	    for (Site n : s.target().neighbors.values()) {
+		n.set(State.LOCKED);
+		// if (n.get(State.ENEMY))
+		//     for (Site en : n.neighbors.values())
+		// 	en.set(State.LOCKED);
+	    }
 	}
     }
 }

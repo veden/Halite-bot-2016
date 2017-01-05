@@ -15,7 +15,7 @@ public class Site {
     }
 
     public static enum P {
-	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR
+	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE
     }
 
     public static enum Direction {
@@ -30,6 +30,7 @@ public class Site {
 
     public int id;
     public int units; // originally 
+    public int generator; // originally production
     public final int x;
     public final int y;
 
@@ -46,7 +47,7 @@ public class Site {
 
     public float stagingValue = 0f;
     
-    public float accumulatorThreshold = 4.5f;
+    public float accumulatorThreshold = 5f;
     public float sitePotential = 0f;
  
     public Site(int x, int y, int height) {
@@ -58,26 +59,25 @@ public class Site {
 	set(P.EXPLORE_VALUE, -Float.MAX_VALUE);
     }
 
-    public float generateExploreValue() {
+    public void setExploreValue() {
 	float v = 0;
-	if (value(P.GENERATOR) != 0)
+	if (generator != 0)
 	    v = ((1f - (units/Site.MAX_STRENGTH)) *
-	    	 ((Parameters.generatorWeight * ((value(P.GENERATOR) / Stats.maxGenerator))) *
-		  (Parameters.siteCostWeight * ((1f / ((float)units / value(P.GENERATOR))) / Stats.maxGenerator)) +
-		  (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
-		  (Parameters.siteCountWeight * (1f - ((Stats.siteCounter.get(value(P.GENERATOR)) / Stats.totalSites)))) +
-		  (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(value(P.GENERATOR)) * value(P.GENERATOR)) / Stats.totalGenerator))
-		  ));
+		 (((Parameters.generatorWeight * ((generator / Stats.maxGenerator))) +
+		   (Parameters.siteCostWeight * ((1f / ((float)units / generator)) / Stats.maxGenerator)) +
+		   (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
+		   (Parameters.siteCountWeight * (1f - (Stats.siteCounter.get(generator) / Stats.totalSites))) +
+		   (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(generator) * generator) / Stats.totalGenerator))
+		   )));
 	set(P.EXPLORE_VALUE, v);
-	return v;
     }
      
     public boolean aboveActionThreshold() {
-	return value(P.GENERATOR) * accumulatorThreshold < units;
+	return generator * accumulatorThreshold < units;
     }
 
     public boolean aboveCombatThreshold() {
-	return value(P.GENERATOR) * (accumulatorThreshold * 0.70) < units;
+	return generator * (accumulatorThreshold * 0.5) < units;
     }
 
     public String encodeMove() {
@@ -95,15 +95,6 @@ public class Site {
 	default:
 	    return neighbors.get(heading);
 	}
-    }
-
-    // public void scaleCommit(P property) {
-    // 	set(property, value())
-    // 	    }
-    
-    public void commit(P property) {
-	set(property, stagingValue);
-	stagingValue = 0;
     }
 
     public void set(State s) {
@@ -159,7 +150,7 @@ public class Site {
     }
 
     public String encodeSite() {
-	return x + " " + y + " " + value(P.GENERATOR);
+	return x + " " + y + " " + generator;
     }
      
     @Override

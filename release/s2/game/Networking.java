@@ -3,12 +3,10 @@ package game;
 import java.util.ArrayList;
 
 import game.Site.Direction;
-import game.Site.P;
 import game.Site.State;
 
 import logic.AI;
 import logic.Parameters;
-import logic.util.MathUtil;
 import logic.util.RingIterator;
 
 public class Networking {
@@ -35,32 +33,32 @@ public class Networking {
         int index = 0;
         for(int a = 0; a < map.height; a++)
             for(int b = 0; b < map.width; b++) {
-	        float gen = Float.parseFloat(inputStringComponents[index++]);
+	        int gen = Integer.parseInt(inputStringComponents[index++]);
 		Site center = map.getSite(b, a);
-		center.set(P.GENERATOR, (float)gen);
-		Stats.totalGenerator += center.value(P.GENERATOR);
+		center.generator = gen;
+		Stats.totalGenerator += center.generator;
 		center.neighbors.put(Direction.NORTH, map.getSite(b, a - 1));
 		center.neighbors.put(Direction.EAST, map.getSite(b + 1, a));
 		center.neighbors.put(Direction.SOUTH, map.getSite(b, a + 1));
 		center.neighbors.put(Direction.WEST,  map.getSite(b - 1, a));
-		if (center.value(P.GENERATOR) > Stats.maxGenerator)
-		    Stats.maxGenerator = center.value(P.GENERATOR);
-		if (center.value(P.GENERATOR) < Stats.minGenerator)
-		    Stats.minGenerator = center.value(P.GENERATOR);
+		if (center.generator > Stats.maxGenerator)
+		    Stats.maxGenerator = center.generator;
+		if (center.generator < Stats.minGenerator)
+		    Stats.minGenerator = center.generator;
 		if (!Stats.siteCounter.containsKey(gen))
-		    Stats.siteCounter.put((float)gen, 1.0f);
+		    Stats.siteCounter.put(gen, 1);
 		else
-		    Stats.siteCounter.put((float)gen, Stats.siteCounter.get(gen)+1f);
+		    Stats.siteCounter.put(gen, Stats.siteCounter.get(gen)+1);
 	    }
 	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator;
 	for (int i = 0; i < map.sites.length; i++) {
 	    Site s = map.sites[i];
 	    RingIterator ri = new RingIterator(s);
-	    float total = s.value(P.GENERATOR);
+	    float total = s.generator;
 	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) {
 		ArrayList<Site> ring = ri.next();
 		for (Site r : ring) 
-		    total += r.value(P.GENERATOR) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
+		    total += r.generator * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
 	    }
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)
@@ -104,13 +102,11 @@ public class Networking {
 	        int strengthInt = Integer.parseInt(inputStringComponents[currentIndex]);
 		currentIndex++;
 		Site s = map.getSite(b, a);
-		s.units = strengthInt;
-		map.classifySite(s);
+		s.units = strengthInt; 
 	    }
-	 if (!map.processedExploreValues)
-	     for (Site s : map.sites)
-		 s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
-	 map.processedExploreValues = true;
+	for (int i = 0; i < Stats.totalSites; i++)
+	    map.classifySite(map.sites[i]);
+	map.processedExploreValues = true;
     }
 
     private void sendString(String sendString) {

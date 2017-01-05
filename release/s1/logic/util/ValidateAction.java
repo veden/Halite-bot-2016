@@ -1,18 +1,17 @@
 package logic.util;
 
 import game.Site;
-import game.Site.P;
 import game.Site.State;
 
 import logic.Parameters;
 
 public class ValidateAction {
     public static float totalGenerator(Site a) {
-	float gen = (float)a.value(P.GENERATOR);
+	float generator = (float)a.generator;
 	for (Site nn : a.neighbors.values())
 	    if (nn.get(State.ENEMY))
-	        gen += (float)nn.value(P.GENERATOR);
-	return gen;
+	        generator += (float)nn.generator;
+	return generator;
     }
     
     public static float totalDeath(Site a) {
@@ -30,7 +29,7 @@ public class ValidateAction {
     }
 
     public static boolean bump(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE) && !b.moving() && (a.units > b.units * Parameters.bumpMultiplerThreshold) && (!b.get(State.LOCKED))) {
+	if (!a.get(State.USED) && b.get(State.MINE) && (!b.moving()) && (a.units > b.units * Parameters.bumpMultiplerThreshold) && (!b.get(State.LOCKED))) {
 	    float v = a.units + b.units + b.incoming;
 	    if (v <= Site.MAX_STRENGTH)
 		return false;
@@ -43,30 +42,39 @@ public class ValidateAction {
     public static boolean move(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.MINE) && (!b.get(State.LOCKED))) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
-	    // if (!b.moving())
-	    // 	units += b.value(P.GENERATOR);
+	    if (!b.moving())
+		units += b.generator;
 	    return units <= Site.MAX_STRENGTH;
 	}
 	return false;
     }
 
-    public static boolean explore(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (!b.get(State.LOCKED)) && (b.incoming == 0)) {
-	    float remainingUnits = a.units - b.units;
-	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
+    public static boolean explore(Site a, Site b, boolean joint) {
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (!b.get(State.LOCKED))) {
+	    float remainingUnits = a.units + b.incoming;
+	    float cap = Site.MAX_STRENGTH;
+	    if (joint)
+		cap += b.units;
+	    else
+		remainingUnits -= b.units;
+	    return (remainingUnits > 0) && (remainingUnits < cap);
 	}
 	return false;
     }
 
     public static boolean capture(Site a, Site b) {
-	return !a.get(State.USED) && b.get(State.OPEN) && (!b.get(State.LOCKED)) && (b.incoming == 0);	
+	if (!a.get(State.USED) && b.get(State.OPEN) && (!b.get(State.LOCKED))) {
+	    float units = (a.units + b.incoming);
+	    return (units > 0) && (units < Site.MAX_STRENGTH);
+	}
+	return false;	
     }
 
     public static boolean breach(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.GATE) && (!b.get(State.LOCKED))) {
 	    float highestUnit = 0;
 	    for (Site neighbor : b.neighbors.values()) {
-		float v = neighbor.value(P.GENERATOR);
+		float v = neighbor.generator;
 		if (neighbor.get(State.ENEMY) && (highestUnit < v))
 		    highestUnit = v;
 	    }
@@ -78,16 +86,15 @@ public class ValidateAction {
     }
     
     public static boolean attack(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && !b.get(State.GATE) && !b.get(State.OPEN) && (!b.get(State.LOCKED))) {
-	    float enemyUnits = 0;
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && (!b.get(State.LOCKED))) {
+	    float highestUnit = 0;
 	    for (Site neighbor : b.neighbors.values()) {
-	    	float v = neighbor.value(P.GENERATOR);
-	    	if (neighbor.get(State.ENEMY) && (enemyUnits < v))
-	    	    enemyUnits += v;
+		float v = neighbor.generator;
+		if (neighbor.get(State.ENEMY) && (highestUnit < v))
+		    highestUnit = v;
 	    }
-	    enemyUnits /= 2.0;
-	    float v = a.units + b.incoming - enemyUnits;
-	    return (v <= Site.MAX_STRENGTH);
+	    float v = a.units + b.incoming - highestUnit;
+	    return (v > 0) && (v <= Site.MAX_STRENGTH);
 	} else
 	    return false;
     }

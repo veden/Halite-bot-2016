@@ -6,7 +6,6 @@ import java.util.HashSet;
 import game.Debug;
 import game.GameMap;
 import game.Site;
-import game.Site.P;
 import game.Site.State;
 
 abstract public class Entity {
@@ -42,7 +41,7 @@ abstract public class Entity {
     }
     
     private void addSite(Site s) {
-	totalGenerator += s.value(P.GENERATOR);
+	totalGenerator += s.generator;
 	totalUnits += s.units;
 	totalSites += 1;
 	if (Debug.enabled) {

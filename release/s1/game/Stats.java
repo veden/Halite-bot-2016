@@ -11,9 +11,6 @@ public class Stats {
     public static float minGenerator = Float.MAX_VALUE;
     public static float maxGenerator = -Float.MAX_VALUE;
 
-    public static float minExploreValue = Float.MAX_VALUE;
-    public static float maxExploreValue = -Float.MAX_VALUE;
-    
     //dynamic
     public static float minExplore = Float.MAX_VALUE;
     public static float maxExplore = -Float.MAX_VALUE;
@@ -26,12 +23,12 @@ public class Stats {
 
     public static float totalUnexploredGenerator = 0;
 
-    public static HashMap<Float, Float> siteCounter = new HashMap<Float, Float>();
+    public static HashMap<Integer, Integer> siteCounter = new HashMap<Integer, Integer>();
     public static float maxSitePotential;
     
     public static String siteCounts() {
 	StringBuilder sb = new StringBuilder();
-	for (Entry<Float, Float> count : siteCounter.entrySet()) {
+	for (Entry<Integer, Integer> count : siteCounter.entrySet()) {
 	    if (sb.length() > 0)
 		sb.append(" ");
 	    sb.append(count.getKey() + " " + count.getValue());
