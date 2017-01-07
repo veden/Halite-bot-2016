@@ -139,8 +139,8 @@ public class Site {
 
     public void age() {
 	float currentAge = value(P.AGE)+1;
-	if (currentAge == 15) {
-	    float v = Math.min(value(P.ACCUMULATOR)+1f, 90.0f / value(P.GENERATOR));
+	if (currentAge == 17) {
+	    float v = Math.min(value(P.ACCUMULATOR)+1f, 110.0f / value(P.GENERATOR));
 	    set(P.ACCUMULATOR, v);
 	    set(P.AGE, 0);
 	} else
