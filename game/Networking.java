@@ -83,8 +83,13 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
+		int prevO = s.owner;
 		s.reset();
 		s.owner = owner;
+		if (owner == prevO)
+		    s.age();
+		else
+		    s.set(P.AGE, 0);
 		if (s.owner == 0)
 		    s.set(State.NEUTRAL);
 		else if (s.owner == map.bot.id)
@@ -99,7 +104,7 @@ public class Networking {
 	    }
 	}
 	
-	 for (int a = 0; a < map.height; ++a)
+	for (int a = 0; a < map.height; ++a)
 	    for (int b = 0; b < map.width; ++b) {
 	        int strengthInt = Integer.parseInt(inputStringComponents[currentIndex]);
 		currentIndex++;
@@ -107,10 +112,10 @@ public class Networking {
 		s.units = strengthInt;
 		map.classifySite(s);
 	    }
-	 if (!map.processedExploreValues)
-	     for (Site s : map.sites)
-		 s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
-	 map.processedExploreValues = true;
+	if (!map.processedExploreValues)
+	    for (Site s : map.sites)
+		s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
+	map.processedExploreValues = true;
     }
 
     private void sendString(String sendString) {

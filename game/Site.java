@@ -15,7 +15,7 @@ public class Site {
     }
 
     public static enum P {
-	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR
+	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR
     }
 
     public static enum Direction {
@@ -46,7 +46,6 @@ public class Site {
 
     public float stagingValue = 0f;
     
-    public float accumulatorThreshold = 4.5f;
     public float sitePotential = 0f;
  
     public Site(int x, int y, int height) {
@@ -56,6 +55,7 @@ public class Site {
 	for (P p : P.values())
 	    set(p, 0f);
 	set(P.EXPLORE_VALUE, -Float.MAX_VALUE);
+	set(P.ACCUMULATOR, 4f);
     }
 
     public float generateExploreValue() {
@@ -73,11 +73,11 @@ public class Site {
     }
      
     public boolean aboveActionThreshold() {
-	return value(P.GENERATOR) * accumulatorThreshold < units;
+	return value(P.GENERATOR) * value(P.ACCUMULATOR) < units;
     }
 
     public boolean aboveCombatThreshold() {
-	return value(P.GENERATOR) * (accumulatorThreshold * 0.70) < units;
+	return value(P.GENERATOR) * (value(P.ACCUMULATOR) * 0.70) < units;
     }
 
     public String encodeMove() {
@@ -135,6 +135,16 @@ public class Site {
 	incoming = 0;
 	outgoing = 0;
 	heading = Direction.STILL;
+    }
+
+    public void age() {
+	float currentAge = value(P.AGE)+1;
+	if (currentAge == 15) {
+	    float v = Math.min(value(P.ACCUMULATOR)+1f, 90.0f / value(P.GENERATOR));
+	    set(P.ACCUMULATOR, v);
+	    set(P.AGE, 0);
+	} else
+	    set(P.AGE, currentAge);
     }
 
     public int compressAttributes() {
