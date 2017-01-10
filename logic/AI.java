@@ -75,11 +75,7 @@ public class AI extends Entity {
 	}
     }
         
-    public void move() {
-	ArrayList<Site> warfare = new ArrayList<Site>(battles.size() + gates.size());
-	warfare.addAll(battles);
-	warfare.addAll(gates);
-	
+    public void move() {	
 	Collections.sort(warfare, maxUnitsCompare);
 	for (Site s : warfare) {
 	    Actions.capture(s);
@@ -108,10 +104,6 @@ public class AI extends Entity {
 		Actions.joint(s);
 	    } else
 		break;
-
-	ArrayList<Site> body = new ArrayList<Site>(border.size() + interior.size());
-	body.addAll(border);
-	body.addAll(interior);
 	
 	Collections.sort(body, maxUnitsCompare);	
 	for (Site s : body) {

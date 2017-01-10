@@ -4,6 +4,7 @@
   (require threading)
   (require racket/function)
   (require racket/list)
+  (require remote-shell/ssh)
   (require racket/async-channel)
   (require "build.rkt")
   (require "cuckoo.rkt")
@@ -22,12 +23,13 @@
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src; java -Xmx250m MyBot") 
 
-  (define botPool '(;; "cd /data/factory/repo/wkJava/halite/src/release/s1/; java MyBot"
-                    ;; "cd /data/factory/repo/wkJava/halite/src/release/s2/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v3/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
+  (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v7/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v8/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v9/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
                     ))
 
   (define sizePool '(20
@@ -41,13 +43,15 @@
   (define (pickSize)
     (list-ref sizePool (random (length sizePool))))
 
-  (define (pickBots solution)
-    (define (h c botPos acc)
+  (define (pickBots solution botPool)
+    (define (h c botPos bots acc)
       (cond ((eq? c 0) acc)
-            ((eq? c botPos) (h (- c 1) botPos (cons currentBot acc)))
-            (#t (h (- c 1) botPos (cons (list-ref botPool (random (length botPool))) acc)))))
+            ((eq? c botPos) (h (- c 1) botPos bots (cons currentBot acc)))
+            (#t (let* ((randomIndex (random (length bots)))
+                       (bot (list-ref bots randomIndex)))
+                  (h (- c 1) botPos (remove bot bots) (cons bot acc))))))
     (let ((bots (random 2 7)))
-      (h bots (random 1 (+ 1 bots)) null)))
+      (h bots (random 1 (+ 1 bots)) botPool null)))
 
   (define (updateBotSolution bots solution)
     (define augmentedCurrentBot (if (null? solution) currentBot
@@ -59,7 +63,7 @@
   
   (define (prepTrial solution)
     (Trial (pickSize)
-           (pickBots solution)
+           (pickBots solution botPool)
            (random 4294967087)
            solution))
 
@@ -69,77 +73,77 @@
            (Trial-seed solution)
            newSolution))
 
-    (define (scoreResult report)
-      (define chunks (string-split report "\n"))
-      
-      (define (findBotIndex p c)
-        (if (string-prefix? (car p) currentBot) c
-            (findBotIndex (cdr p) (+ 1 c))))
-      
-      (define botStanding (string-append (~v (findBotIndex chunks 1)) " "))
+  (define (scoreResult report)
+    (define chunks (string-split report "\n"))
+    
+    (define (findBotIndex p c)
+      (if (string-prefix? (car p) currentBot) c
+          (findBotIndex (cdr p) (+ 1 c))))
+    
+    (define botStanding (string-append (~v (findBotIndex chunks 1)) " "))
 
-      (define (getPosition p)
-        (string->number (second (string-split (car p) " "))))
+    (define (getPosition p)
+      (string->number (second (string-split (car p) " "))))
 
-      (if (not (eq? (string-length (string-trim (last chunks))) 0)) 0
-          (~>> chunks
-               (filter (lambda (x)
-                         (string-prefix? x botStanding)))
-               getPosition)))
+    (if (not (eq? (string-length (string-trim (last chunks))) 0)) 0
+        (~>> chunks
+             (filter (lambda (x)
+                       (string-prefix? x botStanding)))
+             getPosition)))
 
-    (define (showResults results)
-      (string-append "Winning Score - "
-                     (~v (~>> results
-                              (foldl (lambda (o acc)
-                                       (if (= (Outcome-position o) 0) acc
-                                           (+ acc (/ (length (Trial-bots (Outcome-trial o)))
-                                                     (Outcome-position o)))))
-                                     0)
-                              exact->inexact))
-                     "\n"
-                     "Max Score - "
-                     (~v (~>> results
-                              (map (compose length Trial-bots Outcome-trial))
-                              (apply +)))
-                     "\n"
-                     "Won games - "
-                     (~v (~>> results
-                              (foldl (lambda (o acc)
-                                       (if (= (Outcome-position o) 1) (+ 1 acc)
-                                           acc))
-                                     0)))
-                     "\n"
-                     "tossed games - "
-                     (~v (~>> results
-                              (foldl (lambda (o acc)
-                                       (if (= (Outcome-position o) 0) (+ 1 acc)
-                                           acc))
-                                     0)))
-                     "\n"
-                     "total games - "
-                     (~v (length results))
-                     "\n"))
+  (define (showResults results)
+    (string-append "Winning Score - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 0) acc
+                                         (+ acc (/ (length (Trial-bots (Outcome-trial o)))
+                                                   (Outcome-position o)))))
+                                   0)
+                            exact->inexact))
+                   "\n"
+                   "Max Score - "
+                   (~v (~>> results
+                            (map (compose length Trial-bots Outcome-trial))
+                            (apply +)))
+                   "\n"
+                   "Won games - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 1) (+ 1 acc)
+                                         acc))
+                                   0)))
+                   "\n"
+                   "tossed games - "
+                   (~v (~>> results
+                            (foldl (lambda (o acc)
+                                     (if (= (Outcome-position o) 0) (+ 1 acc)
+                                         acc))
+                                   0)))
+                   "\n"
+                   "total games - "
+                   (~v (length results))
+                   "\n"))
 
-    (define (runTrial trial)
-      (let ((args (append (list #f
-                                #f
-                                #f
-                                "/home/veden/haliteFiles/halite"
-                                (string-append "-d " (~v (Trial-size trial)) " " (~v (Trial-size trial)))
-                                (string-append "-s " (~v (Trial-seed trial)))
-                                "-q"
-                                "-r"
-                                )
-                          (Trial-bots trial))))
-        (let-values ([(sp i o e) (apply subprocess args)])
-          (let ((report (port->string i)))
-            (unless (eq? i #f)
-              (close-input-port i))
-            (unless (eq? o #f)
-              (close-output-port o))
-            (unless (eq? e #f)
-              (close-input-port e))
-            (Outcome trial (scoreResult report))))))
+  (define (runTrial trial)
+    (let ((args (append (list #f
+                              #f
+                              #f
+                              "/home/veden/haliteFiles/halite"
+                              (string-append "-d " (~v (Trial-size trial)) " " (~v (Trial-size trial)))
+                              (string-append "-s " (~v (Trial-seed trial)))
+                              "-q"
+                              "-r"
+                              )
+                        (Trial-bots trial))))
+      (let-values ([(sp i o e) (apply subprocess args)])
+        (let ((report (port->string i)))
+          (unless (eq? i #f)
+            (close-input-port i))
+          (unless (eq? o #f)
+            (close-output-port o))
+          (unless (eq? e #f)
+            (close-input-port e))
+          (Outcome trial (scoreResult report))))))
 
   (define (playThreaded trials)
     (define result-channel (make-async-channel))
@@ -152,7 +156,7 @@
                     ((done) 'quitting)
                     (else (async-channel-put result-channel (runTrial trial))
                           (loop)))))))
-    (define threadCount 5)
+    (define threadCount 4)
     (define threads (build-list threadCount (lambda (x)
                                               (trialThread))))
     (define work-queue (append trials (make-list threadCount 'done)))
@@ -231,6 +235,21 @@
                   result)))
          flatten
          showResults))
+  
+  (define (makeSnapshot name)
+    (let* ((endpoint (remote #:host "halite"
+                             #:user "hman"))
+           (destination (string-append "/srv/halite/halite-match-manager/bots/" name "/"))
+           (FQDestination (string-append "hman@halite:" destination))
+           (cmd (lambda (x folder)
+                  (string-append "scp " (if folder "-r " "") "/data/factory/repo/wkJava/halite/src/" x " "
+                                 FQDestination))))
+      (ssh endpoint (string-append "mkdir " destination))
+      (system (cmd "game" #t))
+      (system (cmd "logic" #t))
+      (system (cmd "MyBot.java" #f))
+      (system (cmd "MyBot.class" #f))
+      ))
 
   (define (badCommand)
     (error "need commandline argument:\nsingle <int games> <int seed (-1 is random))>\ntest <int number of rounds> <?int drop first k suites>\n"))
@@ -242,6 +261,7 @@
             ((vector "test" r d) (display (playTestSuite (string->number r)
                                                          (string->number d))))
             ((vector "tune" s) (pretty-display (tuneParameters (list-ref testSeedRounds (- (string->number s) 1)))))
+            ((vector "snapshot" name) (pretty-display (makeSnapshot name)))
             ((vector "single" c s) (begin (when (not (= (string->number s) -1))
                                             (random-seed (string->number s)))
                                           (display (showResults (time (playGames (string->number c)))))))

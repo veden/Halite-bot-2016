@@ -55,13 +55,8 @@
 
     (define frame9 (newFrame 200 275 "Total Generator"))
     (define frame10 (newFrame 200 275 "Total Units"))
-    (define frame11 (newFrame 200 275 "Total Overkill"))
-    (define frame12 (newFrame 200 275 "Total Damage"))
-    (define frame13 (newFrame 200 275 "Total Potential"))
-    (define frame14 (newFrame 200 275 "Total Generated"))
-    (define frame15 (newFrame 200 275 "Total Capped Loss"))
     (define frame16 (newFrame 200 275 "Total Sites"))
-    (define extendFrames (append (list frame9 frame10 frame11 frame12 frame13 frame14 frame15 frame16) frames))
+    (define extendFrames (append (list frame9 frame10 frame16) frames))
 
     (define frame17 (newFrame 600 275 "Game metadata"))
 
@@ -108,15 +103,9 @@
       (map (lambda (dc title data)
              (plot/dc data dc 0 10 190 260 #:x-label title #:y-label ""))
            dcPlots
-           (list "total generator" "total units" "total overkill" "total damage" "total potential"
-                 "total generated" "total capped loss" "total sites")
+           (list "total generator" "total units" "total sites")
            (list (cgp Player-totalGenerator)
                  (cgp Player-totalUnits)
-                 (cgp Player-totalOverkill)
-                 (cgp Player-totalDamage)
-                 (cgp Player-totalPotential)
-                 (cgp Player-totalGenerated)
-                 (cgp Player-totalCappedLoss)
                  (cgp Player-totalSites))))
 
     (define (newCanvas parent [o #f])
@@ -137,11 +126,6 @@
 
     (define canvas9 (new canvas% [parent frame9]))
     (define canvas10 (new canvas% [parent frame10]))
-    (define canvas11 (new canvas% [parent frame11]))
-    (define canvas12 (new canvas% [parent frame12]))
-    (define canvas13 (new canvas% [parent frame13]))
-    (define canvas14 (new canvas% [parent frame14]))
-    (define canvas15 (new canvas% [parent frame15]))
     (define canvas16 (new canvas% [parent frame16]
                           [paint-callback (lambda (a b)
                                             (refreshPlots))]))
@@ -211,13 +195,8 @@
 
     (define dc9 (send canvas9 get-dc))
     (define dc10 (send canvas10 get-dc))
-    (define dc11 (send canvas11 get-dc))
-    (define dc12 (send canvas12 get-dc))
-    (define dc13 (send canvas13 get-dc))
-    (define dc14 (send canvas14 get-dc))
-    (define dc15 (send canvas15 get-dc))
     (define dc16 (send canvas16 get-dc))
-    (define dcPlots (list dc9 dc10 dc11 dc12 dc13 dc14 dc15 dc16))
+    (define dcPlots (list dc9 dc10 dc16))
     
     (define (drawOnFrames site frame)
       (let ((x (* (Site-x site) scaleX))

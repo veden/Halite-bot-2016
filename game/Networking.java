@@ -1,15 +1,10 @@
 package game;
 
-import java.util.ArrayList;
-
 import game.Site.Direction;
 import game.Site.P;
 import game.Site.State;
 
 import logic.AI;
-import logic.Parameters;
-import logic.util.MathUtil;
-import logic.util.RingIterator;
 
 public class Networking {
     private GameMap map;
@@ -52,20 +47,6 @@ public class Networking {
 		else
 		    Stats.siteCounter.put((float)gen, Stats.siteCounter.get(gen)+1f);
 	    }
-	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator;
-	for (int i = 0; i < map.sites.length; i++) {
-	    Site s = map.sites[i];
-	    RingIterator ri = new RingIterator(s);
-	    float total = s.value(P.GENERATOR);
-	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) {
-		ArrayList<Site> ring = ri.next();
-		for (Site r : ring) 
-		    total += r.value(P.GENERATOR) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
-	    }
-	    s.sitePotential = total / Stats.totalGenerator;
-	    if (s.sitePotential > Stats.maxSitePotential)
-		Stats.maxSitePotential = s.sitePotential;
-	}
     }
 
     private void deserializeGameMap(String inputString) {
@@ -112,10 +93,6 @@ public class Networking {
 		s.units = strengthInt;
 		map.classifySite(s);
 	    }
-	if (!map.processedExploreValues)
-	    for (Site s : map.sites)
-		s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
-	map.processedExploreValues = true;
     }
 
     private void sendString(String sendString) {

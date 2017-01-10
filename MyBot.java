@@ -8,13 +8,6 @@ public class MyBot {
     private static int turn = 0;
    
     public static void main(String[] args) throws java.io.IOException {
-	long start = 0;
-	GameMap map = new GameMap();
-	Networking server = new Networking(map); 
-
-	Debug.startup(map);
-	server.sendInit("VedenV14");
-
 	if (args.length > 0) {
 	    Parameters.generatorWeight = Float.parseFloat(args[0]);
 	    Parameters.siteCountWeight = Float.parseFloat(args[1]);
@@ -39,6 +32,15 @@ public class MyBot {
 	    Parameters.sitePotentialWeighting = Float.parseFloat(args[20]);
 	    Parameters.sitePotentialDistance = Float.parseFloat(args[21]);
 	}
+
+	long start = 0;
+	GameMap map = new GameMap();
+	Networking server = new Networking(map); 
+
+	map.analyzeUnexplored();
+	
+	Debug.startup(map);
+	server.sendInit("VedenV15");
 
 	while(true) {
 	    start = Debug.startClock(turn);

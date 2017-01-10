@@ -1,6 +1,5 @@
 package logic.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.function.Predicate;
@@ -60,20 +59,13 @@ public class Enemy extends Entity {
 		    return v > 0 ? 1 : -1;
 		}
 	    };
-	
-	ArrayList<Site> body = new ArrayList<Site>(interior.size() + border.size());
-	body.addAll(interior);
-	body.addAll(border);
+
 	Collections.sort(body, maxGeneratorUnits);
 	
 	for (Site b : body)
 	    identifyTargets(b);
 	for (Site b : body)
 	    b.commit(P.DAMAGE);
-
-	ArrayList<Site> warfare = new ArrayList<Site>(gates.size() + battles.size());
-	warfare.addAll(gates);
-	warfare.addAll(battles);
 
 	Predicate<Site> np = new Predicate<Site>() {
 		@Override

@@ -1,6 +1,7 @@
 package game;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -9,6 +10,7 @@ import game.Site.P;
 import game.Site.State;
 
 import logic.AI;
+import logic.Parameters;
 import logic.model.Enemy;
 import logic.model.Entity;
 import logic.util.CompareUtil;
@@ -23,8 +25,6 @@ public class GameMap{
     public int height;
     public float scale;
     public float scaling;
-
-    public boolean processedExploreValues = false;
 
     public AI bot;
 
@@ -90,14 +90,6 @@ public class GameMap{
     }
     
     public void classifySite(Site site) {
-	if (!processedExploreValues) {
-	    float v = site.generateExploreValue();
-	    if (v > Stats.maxExploreValue)
-		Stats.maxExploreValue = v;
-	    if ((v < Stats.minExploreValue) && (v != 0))
-		Stats.minExploreValue = v;
-	}
-	
 	if (site.get(State.MINE) || site.get(State.ENEMY)) {
 	    if (site.units == 0)
 		site.set(State.USED);
@@ -126,49 +118,74 @@ public class GameMap{
 	} else if (site.get(State.NEUTRAL)) {
 	    if (site.units == 0) {
 		HashMap<Integer, Boolean> neighborCheck = new HashMap<Integer, Boolean>();
-		for (Site neighbor : site.neighbors.values())
-		    if (neighbor.get(State.MINE)) {
-			bot.addBattle(neighbor);
-			neighborCheck.put(bot.id, true);
-		    } else if (neighbor.get(State.ENEMY)) {
-			getEnemy(neighbor.owner).addBattle(neighbor);
-			neighborCheck.put(neighbor.owner, true);
-		    }
-		if (neighborCheck.size() == 1) {
-		    for (Site neighbor : site.neighbors.values())
-			if (neighbor.get(State.MINE))
-			    bot.addOpen(site);
-			else if (neighbor.get(State.ENEMY)) 
-			    getEnemy(neighbor.owner).addOpen(site);
-		    site.set(State.OPEN);
-		}
-		site.set(State.BATTLE);
-	    } else {
-		boolean frontier = false;
-		boolean frontierEnemy = false;
 		for (Site neighbor : site.neighbors.values()) {
 		    if (neighbor.get(State.MINE))
-			frontier = true;
+			bot.addBattle(neighbor);
 		    else if (neighbor.get(State.ENEMY))
-			frontierEnemy = true;
+			getEnemy(neighbor.owner).addBattle(neighbor);
+		    if (neighbor.owner != 0)
+			neighborCheck.put(neighbor.owner, true);
 		}
-		if (frontier && frontierEnemy) {
-		    for (Site neighbor : site.neighbors.values())
-			if (neighbor.get(State.MINE))
-			    bot.addGate(neighbor);
-			else if (neighbor.get(State.ENEMY))
-			    getEnemy(neighbor.owner).addGate(neighbor);
-		    site.set(State.GATE);		
+		if (neighborCheck.size() == 1)
+		    site.set(State.OPEN);
+		site.set(State.BATTLE);
+	    } else {
+	        ArrayList<Site> frontier = new ArrayList<Site>();
+		ArrayList<Site> frontierEnemy = new ArrayList<Site>();
+		for (Site neighbor : site.neighbors.values())
+		    if (neighbor.get(State.MINE))
+			frontier.add(neighbor);
+		    else if (neighbor.get(State.ENEMY))
+			frontierEnemy.add(neighbor);
+		if ((frontier.size() > 0) && (frontierEnemy.size() > 0)) {
+		    for (Site s : frontier)
+			bot.addGate(s);
+		    for (Site s : frontierEnemy)
+			getEnemy(s.owner).addGate(s);
+		    site.set(State.GATE);
 		} else {
-		    for (Site neighbor : site.neighbors.values())
-			if (neighbor.get(State.MINE))
+		    if (frontier.size() > 0)
+			for (Site s : frontier)
 			    bot.addFrontier(site);
-			else if (neighbor.get(State.ENEMY))
-			    getEnemy(neighbor.owner).addFrontier(site);
+		    else if (frontierEnemy.size() > 0) {
+			BitSet used = new BitSet();
+			for (Site s : frontierEnemy)
+			    if (!used.get(s.owner)) {
+				used.set(s.owner);
+				getEnemy(s.owner).addFrontier(site);
+			    }
+		    }
 		    addUnexplored(site);
 		}
 	    }
 	}
+    }
+
+    public void analyzeUnexplored() {
+	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator;
+	for (Site s : sites) {
+	    RingIterator ri = new RingIterator(s);
+	    float total = s.value(P.GENERATOR);
+	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) {
+		ArrayList<Site> ring = ri.next();
+		for (Site r : ring) 
+		    total += r.value(P.GENERATOR) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
+	    }
+	    s.sitePotential = total / Stats.totalGenerator;
+	    if (s.sitePotential > Stats.maxSitePotential)
+		Stats.maxSitePotential = s.sitePotential;
+	}
+
+	for (Site s : sites) {
+	    float v = s.generateExploreValue();
+	    if (v > Stats.maxExploreValue)
+		Stats.maxExploreValue = v;
+	    if ((v < Stats.minExploreValue) && (v != 0))
+		Stats.minExploreValue = v;
+	}
+
+	for (Site s : sites)
+	    s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
     }
     
     public void scoreUnexplored() {

@@ -49,12 +49,6 @@
   (struct Player (id
                   totalGenerator
                   totalUnits
-                  totalPotential
-                  totalGenerated
-                  totalOverkill
-                  totalDamage
-                  totalCappedLoss
-                  totalCaptured
                   totalSites))
 
   (struct Replay ([currentFrame #:mutable]
