@@ -55,7 +55,7 @@ public class Site {
 	for (P p : P.values())
 	    set(p, 0f);
 	set(P.EXPLORE_VALUE, -Float.MAX_VALUE);
-	set(P.ACCUMULATOR, 4f);
+	set(P.ACCUMULATOR, Parameters.baseAccumulator);
     }
 
     public float generateExploreValue() {
@@ -71,7 +71,27 @@ public class Site {
 	set(P.EXPLORE_VALUE, v);
 	return v;
     }
-     
+
+
+    public void assign(int o, int prevO, int myId, boolean objective, float mapScaling) {
+	reset();
+	if (o == prevO)
+	    age();
+	else {
+	    set(P.AGE, 0);
+	    //set(P.ACCUMULATOR, Parameters.baseAccumulator);
+	}
+	owner = o;
+	if (owner == 0) {
+	    set(State.NEUTRAL);
+	    if (objective)
+		set(State.OBJECTIVE);
+	} else if (owner == myId)
+	    set(State.MINE);
+	else
+	    set(State.ENEMY);
+    }
+    
     public boolean aboveActionThreshold() {
 	return value(P.GENERATOR) * value(P.ACCUMULATOR) < units;
     }

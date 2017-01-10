@@ -64,19 +64,7 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
-		int prevO = s.owner;
-		s.reset();
-		s.owner = owner;
-		if (owner == prevO)
-		    s.age();
-		else
-		    s.set(P.AGE, 0);
-		if (s.owner == 0)
-		    s.set(State.NEUTRAL);
-		else if (s.owner == map.bot.id)
-		    s.set(State.MINE);
-		else
-		    s.set(State.ENEMY);
+		s.assign(owner, s.owner, map.bot.id, s.get(State.OBJECTIVE), map.scaling);
 		++x;
 		if(x == map.width) {
 		    x = 0;

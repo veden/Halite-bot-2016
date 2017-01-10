@@ -23,4 +23,6 @@ public class Parameters {
     public static float evadeThreshold = 0.05f;
     public static float sitePotentialWeighting = 0.20f;
     public static float sitePotentialDistance = 4;
+
+    public static float baseAccumulator = 4f;
 }

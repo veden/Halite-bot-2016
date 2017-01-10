@@ -24,7 +24,7 @@ public class GameMap{
     public int width;
     public int height;
     public float scale;
-    public float scaling;
+    public float scaling = 0;
 
     public AI bot;
 
