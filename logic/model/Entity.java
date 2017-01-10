@@ -1,6 +1,5 @@
 package logic.model;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 

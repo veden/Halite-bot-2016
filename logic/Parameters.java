@@ -6,11 +6,11 @@ public class Parameters {
     public static float sitePotentialWeight = 0.5f; // 0.41f; //0.33f;
     public static float siteCountWeight = 0.3f; // 0.76f  // 0.46f;
     public static float generatorTotalWeight = 0.5f; // 0.61f; // 0.05f;
-    public static float level1Defense = 0.75f;
-    public static float level2Defense = 0.70f;
-    public static float level3Defense = 1f;
-    public static float phaseLevel2 = 0.65f;
-    public static float phaseLevel3 = 0.34f;
+    // public static float level1Defense = 0.75f;
+    // public static float level2Defense = 0.70f;
+    // public static float level3Defense = 1f;
+    // public static float phaseLevel2 = 0.65f;
+    // public static float phaseLevel3 = 0.34f;
     public static float objectiveThreshold = 0.0f;
     public static float objectiveUnitSpread = 0.6f;
     public static float objectiveGeneratorSpread = 0.3f;

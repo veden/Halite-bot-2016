@@ -33,8 +33,10 @@ public class RingIterator implements Iterator<ArrayList<Site>> {
     }
 
     public void addCenter(Site center) {
-	currentSet.add(center);
-	used.set(center.id);
+	if (!used.get(center.id)) {
+	    currentSet.add(center);
+	    used.set(center.id);
+	}
     } 
 
     @Override

@@ -14,11 +14,11 @@ public class MyBot {
 	    Parameters.sitePotentialWeight = Float.parseFloat(args[2]);
 	    Parameters.siteCountWeight = Float.parseFloat(args[3]);
 	    Parameters.generatorTotalWeight = Float.parseFloat(args[4]);
-	    Parameters.level1Defense = Float.parseFloat(args[5]);
-	    Parameters.level2Defense = Float.parseFloat(args[6]);
-	    Parameters.level3Defense = Float.parseFloat(args[7]);
-	    Parameters.phaseLevel2 = Float.parseFloat(args[8]);
-	    Parameters.phaseLevel3 = Float.parseFloat(args[9]);
+	    // Parameters.level1Defense = Float.parseFloat(args[5]);
+	    // Parameters.level2Defense = Float.parseFloat(args[6]);
+	    // Parameters.level3Defense = Float.parseFloat(args[7]);
+	    // Parameters.phaseLevel2 = Float.parseFloat(args[8]);
+	    // Parameters.phaseLevel3 = Float.parseFloat(args[9]);
 	    Parameters.objectiveThreshold = Float.parseFloat(args[10]);
 	    Parameters.objectiveUnitSpread = Float.parseFloat(args[11]);
 	    Parameters.objectiveGeneratorSpread = Float.parseFloat(args[12]);

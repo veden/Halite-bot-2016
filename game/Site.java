@@ -96,10 +96,6 @@ public class Site {
 	    return neighbors.get(heading);
 	}
     }
-
-    // public void scaleCommit(P property) {
-    // 	set(property, value())
-    // 	    }
     
     public void commit(P property) {
 	set(property, stagingValue);
