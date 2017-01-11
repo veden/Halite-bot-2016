@@ -9,13 +9,13 @@ public class Site {
 
     public static enum State {
 	BATTLE, FRONTIER, UNEXPLORED, INTERIOR, BORDER, OPEN,
-	READY, OBJECTIVE, COMBAT_READY, GATE, LOCKED, 
+	READY, OBJECTIVE, COMBAT_READY, GATE, 
 	
 	USED, MINE, NEUTRAL, ENEMY
     }
 
     public static enum P {
-	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR
+	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR, LOCKED
     }
 
     public static enum Direction {
@@ -148,6 +148,7 @@ public class Site {
 	set(P.EXPLORE, 0);
 	set(P.REINFORCE, 0);
 	set(P.DAMAGE, 0);
+	set(P.LOCKED, Float.MAX_VALUE);
 	incoming = 0;
 	outgoing = 0;
 	heading = Direction.STILL;
@@ -167,7 +168,7 @@ public class Site {
 	int result = 0;
 	int highest = 0;
 	for (Enum<State> p : State.values()) {
-	    if (p.ordinal() > State.LOCKED.ordinal())
+	    if (p.ordinal() == State.USED.ordinal())
 		break;
 	    result = result | (status.contains(p) ? 1 : 0) << p.ordinal();
 	    if (p.ordinal() > highest)
@@ -181,7 +182,7 @@ public class Site {
     }
     
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + compressAttributes();
+	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + compressAttributes();
     }
 
     public String encodeSite() {

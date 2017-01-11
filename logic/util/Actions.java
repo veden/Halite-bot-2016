@@ -172,7 +172,7 @@ public class Actions {
 	    	    unitBuildUp = n.units;
 	    if (unitBuildUp < s.units * 1.2f)
 		for (Site n : s.target().neighbors.values()) {
-		    n.set(State.LOCKED);
+		    n.set(P.LOCKED, 0);
 		    // boolean enemyAdj = s.get(State.ENEMY);
 		    // if (!enemyAdj)
 		    //     for (Site en : n.neighbors.values()) {
