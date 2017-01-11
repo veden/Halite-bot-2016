@@ -16,6 +16,9 @@ public class Actions {
 	if (!a.get(State.USED) && (a != b)) {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
+	    b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
+	    for (Site n : b.neighbors.values())
+		n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
 	    a.set(State.USED);
 	    return true;
 	}

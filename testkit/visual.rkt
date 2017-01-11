@@ -44,7 +44,7 @@
              [x windowX]
              [y windowY])))
     
-    (define frame (newFrame 400 500 ""))
+    (define frame (newFrame 500 500 ""))
     (define frame1 (newFrame 500 500 "units"))
     (define frame2 (newFrame 500 500 "generator"))
     (define frame3 (newFrame 500 500 "owner"))
