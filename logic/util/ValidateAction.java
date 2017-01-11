@@ -30,7 +30,7 @@ public class ValidateAction {
     }
 
     public static boolean bump(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE) && !b.moving() && (a.units > b.units * Parameters.bumpMultiplerThreshold) && (b.value(P.LOCKED) > a.units)) {
+	if (!a.get(State.USED) && b.get(State.MINE) && !b.moving() && (a.units > b.units * Parameters.bumpMultiplerThreshold) && (b.value(P.LOCKED) >= a.units)) {
 	    float v = a.units + b.units + b.incoming;
 	    if (v <= Site.MAX_STRENGTH)
 		return false;
@@ -41,7 +41,7 @@ public class ValidateAction {
     }
     
     public static boolean move(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE) && (b.value(P.LOCKED) > a.units)) {
+	if (!a.get(State.USED) && b.get(State.MINE) && (b.value(P.LOCKED) >= a.units)) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
 	    // if (!b.moving())
 	    // 	units += b.value(P.GENERATOR);
@@ -51,7 +51,7 @@ public class ValidateAction {
     }
 
     public static boolean explore(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (b.value(P.LOCKED) > a.units) && (b.incoming == 0)) {
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (b.value(P.LOCKED) >= a.units) && (b.incoming == 0)) {
 	    float remainingUnits = a.units - b.units;
 	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
 	}
@@ -59,11 +59,11 @@ public class ValidateAction {
     }
 
     public static boolean capture(Site a, Site b) {
-	return !a.get(State.USED) && b.get(State.OPEN) && (b.value(P.LOCKED) > a.units) && (b.incoming == 0);	
+	return !a.get(State.USED) && b.get(State.OPEN) && (b.value(P.LOCKED) >= a.units) && (b.incoming == 0);	
     }
 
     public static boolean breach(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.GATE) && (b.value(P.LOCKED) > a.units)) {
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.GATE) && (b.value(P.LOCKED) >= a.units)) {
 	    float highestUnit = 0;
 	    for (Site neighbor : b.neighbors.values()) {
 		float v = neighbor.value(P.GENERATOR);
@@ -78,7 +78,7 @@ public class ValidateAction {
     }
     
     public static boolean attack(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && !b.get(State.GATE) && !b.get(State.OPEN) && (b.value(P.LOCKED) > a.units)) {
+	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && !b.get(State.GATE) && !b.get(State.OPEN) && (b.value(P.LOCKED) >= a.units)) {
 	    float enemyUnits = 0;
 	    for (Site neighbor : b.neighbors.values()) {
 	    	float v = neighbor.value(P.GENERATOR);
