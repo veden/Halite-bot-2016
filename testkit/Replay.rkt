@@ -22,6 +22,7 @@
                 explore
                 reinforce
                 damage
+                locked
                 battle
                 frontier
                 unexplored
@@ -31,8 +32,7 @@
                 ready
                 objective
                 combatReady
-                gate
-                locked))
+                gate))
 
   (struct SiteCount (value size))
   
@@ -101,6 +101,7 @@
                    "exp-" (~v (Site-explore site)) "\n"
                    "r-" (~v (Site-reinforce site)) "\n"
                    "dmg-" (~v (Site-damage site)) "\n"
+                   "lk-" (~v (Site-locked site)) "\n"
                    "b-" (~v (Site-battle site)) "\n"
                    "f-" (~v (Site-frontier site)) "\n"
                    "ue-" (~v (Site-unexplored site)) "\n"
@@ -110,8 +111,7 @@
                    "gate-" (~v (Site-gate site)) "\n"
                    "rdy-" (~v (Site-ready site)) "\n"
                    "cRdy-" (~v (Site-combatReady site)) "\n"
-                   "obj-" (~v (Site-objective site)) "\n"
-                   "lk-" (~v (Site-locked site)) "\n"))
+                   "obj-" (~v (Site-objective site)) "\n"))
 
   (define (buildPlayers players)
     (~> (string-trim players)
