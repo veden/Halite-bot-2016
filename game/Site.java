@@ -177,12 +177,8 @@ public class Site {
 	return result | 1 << (State.USED.ordinal());
     }
 
-    public String encodeExploreValue() {
-	return value(P.EXPLORE_VALUE)+"";
-    }
-    
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + compressAttributes();
+	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + compressAttributes();
     }
 
     public String encodeSite() {

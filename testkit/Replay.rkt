@@ -2,7 +2,8 @@
   (provide jumpTo
            readReplay
            createFrame
-           site->string
+           site->string1
+           site->string2
            replay->string
            (struct-out Frame)
            (struct-out Site)
@@ -23,6 +24,9 @@
                 reinforce
                 damage
                 locked
+                age
+                accumulator
+                exploreValue
                 battle
                 frontier
                 unexplored
@@ -92,10 +96,10 @@
          generators
          sitesText))
 
-  (define (site->string site)
+  (define (site->string1 site)
     (string-append "x-" (~v (Site-x site)) "\n"
                    "y-" (~v (Site-y site)) "\n"
-                   "gen-" (~v (Site-generator site)) "\n"
+                   "ge-" (~v (Site-generator site)) "\n"
                    "u-" (~v (Site-units site)) "\n"
                    "o-" (~v (Site-owner site)) "\n"
                    "exp-" (~v (Site-explore site)) "\n"
@@ -107,11 +111,16 @@
                    "ue-" (~v (Site-unexplored site)) "\n"
                    "in-" (~v (Site-internal site)) "\n"
                    "bor-" (~v (Site-border site)) "\n"
-                   "open-" (~v (Site-open site)) "\n"
-                   "gate-" (~v (Site-gate site)) "\n"
+                   "op" (~v (Site-open site)) "\n"
+                   "g-" (~v (Site-gate site)) "\n"
                    "rdy-" (~v (Site-ready site)) "\n"
                    "cRdy-" (~v (Site-combatReady site)) "\n"
                    "obj-" (~v (Site-objective site)) "\n"))
+
+  (define (site->string2 site)
+    (string-append "age-" (~v (Site-age site)) "\n"
+                   "eV-" (~v (Site-exploreValue site)) "\n"
+                   "acc-" (~v (Site-accumulator site)) "\n"))
 
   (define (buildPlayers players)
     (~> (string-trim players)

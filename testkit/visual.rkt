@@ -44,7 +44,7 @@
              [x windowX]
              [y windowY])))
     
-    (define frame (newFrame 275 500 ""))
+    (define frame (newFrame 400 500 ""))
     (define frame1 (newFrame 500 500 "units"))
     (define frame2 (newFrame 500 500 "generator"))
     (define frame3 (newFrame 500 500 "owner"))
@@ -160,7 +160,8 @@
                                  (inexact->exact (floor (/ x scaleX))))
                              (if (not (null? activeHighlight)) (Site-y activeHighlight)
                                  (inexact->exact (floor (/ y scaleY))))))
-      (send siteBox set-label (site->string site)))
+      (send siteBox set-label (site->string1 site))
+      (send siteBox2 set-label (site->string2 site)))
 
     (define (displayHighlight x y)
       (define site (findSite (Frame-sites (list-ref (Replay-frames activeReplay)
@@ -254,6 +255,12 @@
                          [parent panel]
                          [label ""]
                          [vert-margin 30]))
+
+    (define siteBox2 (new message%
+                          [parent panel]
+                          [label ""]
+                          [vert-margin 30]
+                          [horiz-margin 150]))
 
     (define siteCountsBox (new message%
                                [parent panelMetadata]
