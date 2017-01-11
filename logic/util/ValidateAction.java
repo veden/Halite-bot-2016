@@ -30,12 +30,23 @@ public class ValidateAction {
     }
 
     public static boolean bump(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.MINE) && !b.moving() && (a.units > b.units * Parameters.bumpMultiplerThreshold) && (b.value(P.LOCKED) >= a.units)) {
-	    float v = a.units + b.units + b.incoming;
-	    if (v <= Site.MAX_STRENGTH)
+	if (!a.get(State.USED) &&
+	    b.get(State.MINE) &&
+	    !b.moving() &&
+	    !b.get(State.USED) &&
+	    (a.units > b.units * Parameters.bumpMultiplerThreshold) &&
+	    (b.value(P.LOCKED) >= a.units) &&
+	    (a.value(P.LOCKED) >= b.units)) {
+	    
+	    float aV = a.units + b.units + b.incoming;
+	    float bV = b.units + a.incoming;
+	    
+	    if (aV <= Site.MAX_STRENGTH)
 		return false;
-	    else
-		return v - b.units <= Site.MAX_STRENGTH;
+	    else {
+		return ((aV - b.units <= Site.MAX_STRENGTH) &&
+			(bV <= Site.MAX_STRENGTH));
+	    }
 	}
 	return false;
     }
