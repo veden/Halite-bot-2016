@@ -49,6 +49,13 @@ public class AI extends Entity {
     
     public void planTroopMovements() {
 
+	Predicate<Site> pMineNothing = new Predicate<Site>() {
+		@Override
+		public boolean test(Site t) {
+		    return t.get(State.MINE) && (t.value(P.DAMAGE) == 0) && (t.value(P.REINFORCE) == 0);
+		}
+	    };
+	
 	Collections.sort(frontier, maxExploreCompare);
 	for (Site s : frontier)
 	    for (Site n : s.neighbors.values())
@@ -73,6 +80,49 @@ public class AI extends Entity {
 	    if (!changed)
 		break;
 	}
+
+	ArrayList<Site> backfill = new ArrayList<Site>(); 
+	for (Site s : body) 
+	    if ((s.value(P.REINFORCE) == 0) && (s.value(P.DAMAGE) == 0)) {
+		float highestDamage = 0;
+		float highestReinforce = 0;
+		for (Site n : s.neighbors.values()) {
+		    if (n.value(P.DAMAGE) > highestDamage) {
+			highestDamage = n.value(P.DAMAGE);
+			highestReinforce = -Float.MAX_VALUE;
+		    }
+			
+		    if ((highestDamage == -Float.MAX_VALUE) && (n.value(P.REINFORCE) > highestReinforce))
+			highestReinforce = n.value(P.REINFORCE);
+		}
+		if (highestDamage != 0) {
+		    s.set(P.DAMAGE, 0.9f * highestDamage);
+		    backfill.add(s);
+		} else if (highestReinforce != 0) {
+		    s.set(P.REINFORCE, 0.9f * highestReinforce);
+		    backfill.add(s);	    
+		}
+	    }
+	
+	RingIterator backfiller = new RingIterator(backfill, pMineNothing);
+	while (backfiller.hasNext())
+	    for (Site s : backfiller.next()) {
+		float highestDamage = 0;
+		float highestReinforce = 0;
+		for (Site n : s.neighbors.values()) {
+		    if (n.value(P.DAMAGE) > highestDamage) {
+			highestDamage = n.value(P.DAMAGE);
+			highestReinforce = -Float.MAX_VALUE;
+		    }
+			
+		    if ((highestDamage == -Float.MAX_VALUE) && (n.value(P.REINFORCE) > highestReinforce))
+			highestReinforce = n.value(P.REINFORCE);
+		}
+		if (highestDamage != 0)
+		    s.set(P.DAMAGE, highestDamage * 0.9f);
+		else if (highestReinforce != 0)
+		    s.set(P.REINFORCE, highestReinforce * 0.9f);
+	    }
     }
         
     public void move() {	
