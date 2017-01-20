@@ -23,13 +23,11 @@
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src; java -Xmx250m MyBot") 
 
-  (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v5/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v6/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v4/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v7/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v8/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v9/; java MyBot"
-                    "cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
+  (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v11/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v12/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v13/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v14/; java MyBot"
                     ))
 
   (define sizePool '(20
