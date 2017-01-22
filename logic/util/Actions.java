@@ -45,11 +45,11 @@ public class Actions {
 	    ArrayList<Direction> temp = new ArrayList<Direction>();
 	    if ((cursor & 1) == 1) 
 		temp.add(ambushers.get(0));
-	    if ((cursor & 2) == 1)
+	    if ((cursor & 2) == 2)
 		temp.add(ambushers.get(1));
-	    if ((cursor & 4) == 1)
+	    if ((cursor & 4) == 4)
 		temp.add(ambushers.get(2));
-	    if ((cursor & 8) == 1)
+	    if ((cursor & 8) == 8)
 		temp.add(ambushers.get(3));
 	    float tempTotal = 0;
 	    for (Direction d : temp)
