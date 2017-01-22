@@ -62,8 +62,8 @@ public class ValidateAction {
     }
 
     public static boolean explore(Site a, Site b) {
-	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (b.value(P.LOCKED) >= a.units) && (b.incoming == 0)) {
-	    float remainingUnits = a.units - b.units;
+	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (b.value(P.LOCKED) >= a.units) && (b.incoming < b.units)) {
+	    float remainingUnits = a.units + b.incoming - b.units;
 	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
 	}
 	return false;

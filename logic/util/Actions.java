@@ -31,7 +31,6 @@ public class Actions {
 	    Site n = s.neighbors.get(d);
 	    if (n.get(State.MINE) &&
 		!n.get(State.USED) &&
-		(n.value(P.EXPLORE) <= s.value(P.EXPLORE)) &&
 		(n.value(P.REINFORCE) <= s.value(P.EXPLORE)) &&
 		(n.value(P.DAMAGE) == 0))
 		
