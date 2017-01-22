@@ -79,7 +79,7 @@ public class Site {
 	    age();
 	else {
 	    set(P.AGE, 0);
-	    //set(P.ACCUMULATOR, Parameters.baseAccumulator);
+	    set(P.ACCUMULATOR, Math.max(Parameters.baseAccumulator, value(P.ACCUMULATOR) - 0.5f));
 	}
 	owner = o;
 	if (owner == 0) {
@@ -97,7 +97,7 @@ public class Site {
     }
 
     public boolean aboveCombatThreshold() {
-	return value(P.GENERATOR) * (value(P.ACCUMULATOR) * 0.70) < units;
+	return value(P.GENERATOR) * (value(P.ACCUMULATOR) * 0.65) < units;
     }
 
     public String encodeMove() {
@@ -156,8 +156,8 @@ public class Site {
 
     public void age() {
 	float currentAge = value(P.AGE)+1;
-	if (currentAge == 17) {
-	    float v = Math.min(value(P.ACCUMULATOR)+1f, 110.0f / value(P.GENERATOR));
+	if (currentAge == 15) {
+	    float v = Math.min(value(P.ACCUMULATOR)+1f, 90.0f / value(P.GENERATOR));
 	    set(P.ACCUMULATOR, v);
 	    set(P.AGE, 0);
 	} else
