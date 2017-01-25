@@ -15,7 +15,7 @@ public class Site {
     }
 
     public static enum P {
-	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR, LOCKED
+	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR, LOCKED, DISTANCE
     }
 
     public static enum Direction {
@@ -147,6 +147,7 @@ public class Site {
 	stagingValue = 0;
 	set(P.EXPLORE, 0);
 	set(P.REINFORCE, 0);
+	set(P.DISTANCE, 0);
 	set(P.DAMAGE, 0);
 	set(P.LOCKED, Float.MAX_VALUE);
 	incoming = 0;
@@ -178,7 +179,7 @@ public class Site {
     }
 
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + compressAttributes();
+	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + compressAttributes();
     }
 
     public String encodeSite() {

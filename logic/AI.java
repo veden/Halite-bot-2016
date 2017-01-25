@@ -23,21 +23,41 @@ public class AI extends Entity {
 		return t.get(State.MINE) && (t.value(P.REINFORCE) != 0) && (t.value(P.DAMAGE) == 0);
 	    }
 	};
+
+    private Predicate<Site> pMineDistance = new Predicate<Site>() {
+	    @Override
+	    public boolean test(Site t) {
+		return t.get(State.MINE) && (t.value(P.DISTANCE) == 0);
+	    }
+	};
     
     private Comparator<Site> maxReinforceCompare = CompareUtil.maxProperty(P.REINFORCE);
     private Comparator<Site> maxExploreCompare = CompareUtil.maxProperty(P.EXPLORE);
     
-    private Comparator<Site> maxUnitsCompare = new Comparator<Site>() {
+    // private Comparator<Site> maxUnitsCompare = new Comparator<Site>() {
+    // 	    @Override
+    // 	    public int compare(Site arg0, Site arg1) {
+    // 		float v = arg1.value(P.DAMAGE) - arg0.value(P.DAMAGE);
+    // 		if (v == 0) {
+    // 		    v = arg1.value(P.REINFORCE) - arg0.value(P.REINFORCE);
+    // 		    if (v == 0) {
+    // 			v = arg1.units - arg0.units;
+    // 			if (v == 0)
+    // 			    return arg0.id - arg1.id;
+    // 		    }
+    // 		}
+    // 		return v > 0 ? 1 : -1;
+    // 	    }
+    // 	};
+
+    private Comparator<Site> maxUnitDistanceCompare = new Comparator<Site>() {
 	    @Override
-	    public int compare(Site arg0, Site arg1) {
-		float v = arg1.value(P.DAMAGE) - arg0.value(P.DAMAGE);
+	    public int compare(Site o1, Site o2) {
+		float v = o2.units - o1.units;
 		if (v == 0) {
-		    v = arg1.value(P.REINFORCE) - arg0.value(P.REINFORCE);
-		    if (v == 0) {
-			v = arg1.units - arg0.units;
-			if (v == 0)
-			    return arg0.id - arg1.id;
-		    }
+		    v = o1.value(P.DISTANCE) - o2.value(P.DISTANCE);
+		    if (v == 0) 
+			return o1.id - o2.id;
 		}
 		return v > 0 ? 1 : -1;
 	    }
@@ -62,6 +82,15 @@ public class AI extends Entity {
 		if (n.get(State.MINE) && (s.value(P.EXPLORE) > n.value(P.REINFORCE)) && (n.value(P.DAMAGE) == 0))
 		    n.set(P.REINFORCE, s.value(P.EXPLORE));
 
+	RingIterator distanceRings = new RingIterator(frontier, pMineDistance);
+	int distance = 1;
+	while (distanceRings.hasNext()) {
+	    for (Site s : distanceRings.next())
+		s.set(P.DISTANCE, distance);
+	    distance++;
+	}
+	
+	
 	RingIterator myRings = new RingIterator(frontier, pMineReinforce);
 	float d = 0f;
 	while (myRings.hasNext()) {
@@ -126,7 +155,7 @@ public class AI extends Entity {
     }
         
     public void move() {	
-	Collections.sort(warfare, maxUnitsCompare);
+	Collections.sort(warfare, maxUnitDistanceCompare);
 	for (Site s : warfare) {
 	    Actions.capture(s);
 	    if (!s.moving()) {
@@ -143,7 +172,7 @@ public class AI extends Entity {
 	    Actions.commitMove(s, s.target());
 	}
 
-	Collections.sort(frontier, maxExploreCompare);
+	Collections.sort(frontier, maxUnitDistanceCompare);
 	float totalExplore = 0f;
 	for (Site f : frontier)
 	    totalExplore += f.value(P.EXPLORE);
@@ -155,7 +184,7 @@ public class AI extends Entity {
 	    } else
 		break;
 	
-	Collections.sort(body, maxUnitsCompare);	
+	Collections.sort(body, maxUnitDistanceCompare);
 	for (Site s : body) {
 	    if (s.get(State.READY)) {
 		if (s.value(P.DAMAGE) == 0) {
@@ -166,7 +195,7 @@ public class AI extends Entity {
 
 	    if (s.get(State.BORDER) && !s.moving())
 		Actions.explore(s);
-	    
+
 	    Actions.commitMove(s, s.target());
 	}
     }

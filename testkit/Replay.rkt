@@ -27,6 +27,7 @@
                 age
                 accumulator
                 exploreValue
+                distance
                 battle
                 frontier
                 unexplored
@@ -120,7 +121,8 @@
   (define (site->string2 site)
     (string-append "age-" (~v (Site-age site)) "\n"
                    "eV-" (~v (Site-exploreValue site)) "\n"
-                   "acc-" (~v (Site-accumulator site)) "\n"))
+                   "acc-" (~v (Site-accumulator site)) "\n"
+                   "dis-" (~v (Site-distance site)) "\n"))
 
   (define (buildPlayers players)
     (~> (string-trim players)
