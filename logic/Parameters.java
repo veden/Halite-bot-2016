@@ -11,9 +11,9 @@ public class Parameters {
     // public static float level3Defense = 1f;
     // public static float phaseLevel2 = 0.65f;
     // public static float phaseLevel3 = 0.34f;
-    public static float objectiveThreshold = 0.30f;
-    public static float objectiveUnitSpread = 0.5f;
-    public static float objectiveGeneratorSpread = 0.4f;
+    public static float objectiveThreshold = 0.55f;
+    public static float objectiveUnitSpread = 0.7f;
+    public static float objectiveGeneratorSpread = 0.25f;
     public static float reinforceSpread = 0.08f;
     public static float enemyGeneratorWeight = 0.4f;
     public static float enemyUnitWeight = 0.1f;

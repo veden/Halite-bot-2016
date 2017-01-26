@@ -103,7 +103,7 @@ public class GameMap{
 		}
 	    }
 	    if (site.aboveActionThreshold())
-		    site.set(State.READY);
+		site.set(State.READY);
 	    if (site.aboveCombatThreshold())
 		site.set(State.COMBAT_READY);
 	    
@@ -206,10 +206,15 @@ public class GameMap{
 	Collections.sort(unexplored, CompareUtil.maxProperty(P.EXPLORE_VALUE));
 	
 	ArrayList<Site> objectivePoints = new ArrayList<Site>();
+
+	float total = 0f;
+	for (Site s : unexplored)
+	    total += s.value(P.EXPLORE_VALUE);
+	total *= Parameters.objectiveThreshold;
 	
 	for (Site s : unexplored) {	   
 	    //s.stagingValue = s.value(P.EXPLORE_VALUE);
-	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
+	    //	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
 	    // RingIterator ri = new RingIterator(s);
 	    // float d = 0f;
 	    // while (ri.hasNext()) {
@@ -220,40 +225,43 @@ public class GameMap{
 	    // for (Site n : s.neighbors.values())
 	    // 	n.stagingValue += s.value(P.EXPLORE_VALUE);
 	    
-	    // if (s.value(P.EXPLORE_VALUE) > Parameters.objectiveThreshold) {
-	    // 	if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
-	    // 	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
-	    // 	float v = s.value(P.EXPLORE) * 0.98f;
-	    // 	for (Site n : s.neighbors.values())
-	    // 	    if ((v >= n.value(P.EXPLORE)))
-	    // 		n.set(P.EXPLORE, v);
-	    // 	objectivePoints.add(s);
-	    // }
+	    //if (s.value(P.EXPLORE_VALUE) > Parameters.objectiveThreshold) {
+	    if (total > 0) {
+		total -= s.value(P.EXPLORE_VALUE);
+		if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
+		    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
+		float v = s.value(P.EXPLORE) * 0.98f;
+		for (Site n : s.neighbors.values())
+		    if ((v >= n.value(P.EXPLORE)))
+			n.set(P.EXPLORE, v);
+		objectivePoints.add(s);
+	    } else
+		break;
 	}
-	// RingIterator riop = new RingIterator(objectivePoints,
-	// 				     new Predicate<Site>() {
-	// 					 @Override
-	// 					 public boolean test(Site t) {
-	// 					     return (t.value(P.EXPLORE) != 0);
-	// 					 }
-	// 				     });
+	RingIterator riop = new RingIterator(objectivePoints,
+					     new Predicate<Site>() {
+						 @Override
+						 public boolean test(Site t) {
+						     return (t.value(P.EXPLORE) != 0);
+						 }
+					     });
 
-	// while (riop.hasNext()) {
-	//     boolean changed = false;
-	//     ArrayList<Site> sortedNeighbors = riop.next();
-	//     Collections.sort(sortedNeighbors, CompareUtil.maxProperty(P.EXPLORE));
-	//     for (Site s : sortedNeighbors) {
-	// 	float absorb = s.value(P.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Site.MAX_STRENGTH)) - (Parameters.objectiveGeneratorSpread * (1 - (s.value(P.GENERATOR) / Stats.maxGenerator))));
-	// 	for (Site sn : s.neighbors.values()) {
-	// 	    if ((absorb > sn.value(P.EXPLORE))) {
-	// 		sn.set(P.EXPLORE, absorb);
-	// 		changed = true;
-	// 	    }
-	// 	}
-	//     }
-	//     if (!changed)
-	//     	break;
-	//}
+	while (riop.hasNext()) {
+	    boolean changed = false;
+	    ArrayList<Site> sortedNeighbors = riop.next();
+	    Collections.sort(sortedNeighbors, CompareUtil.maxProperty(P.EXPLORE));
+	    for (Site s : sortedNeighbors) {
+		float absorb = s.value(P.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Site.MAX_STRENGTH)) - (Parameters.objectiveGeneratorSpread * (1 - (s.value(P.GENERATOR) / Stats.maxGenerator))));
+		for (Site sn : s.neighbors.values()) {
+		    if ((absorb > sn.value(P.EXPLORE))) {
+			sn.set(P.EXPLORE, absorb);
+			changed = true;
+		    }
+		}
+	    }
+	    if (!changed)
+	    	break;
+	}
 	
 	for (Site s : sites)
 	    if (!s.get(State.UNEXPLORED) || (s.value(P.GENERATOR) == 0))
