@@ -15,10 +15,10 @@ public class Actions {
 	if (!a.get(State.USED) && (a != b)) {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
-	    b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
-	    for (Site n : b.neighbors.values())
-		n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
 	    if (b.value(P.DAMAGE) != 0) {
+		b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
+		for (Site n : b.neighbors.values())
+		    n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
 		for (Site n : b.neighbors.values())
 		    n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
 	    }
@@ -170,8 +170,8 @@ public class Actions {
 	    for (Site n : s.target().neighbors.values())
 		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
 		    unitBuildUp = n.units;
-	    if (((unitBuildUp > 200) && (s.units > 120)) ||
-		(unitBuildUp < s.units * 1.2f))
+	    float units = s.units + s.incoming - s.outgoing;
+	    if (unitBuildUp < units * 1.15f)
 		for (Site n : s.target().neighbors.values()) {
 		    n.set(P.LOCKED, 0);
 		    // boolean enemyAdj = s.get(State.ENEMY);
@@ -185,6 +185,10 @@ public class Actions {
 		    //     for (Site en : n.neighbors.values())
 		    // 	    en.set(State.LOCKED);
 		}
+	    // if (unitBuildUp > (units * 1.1f))
+	    // 	for (Site n : s.target().neighbors.values()) {
+	    // 	    n.set(P.LOCKED, unitBuildUp - units);
+	    // 	}
 	}
     }
 }

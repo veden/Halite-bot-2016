@@ -154,8 +154,7 @@ public class GameMap{
 		    site.set(State.GATE);
 		} else {
 		    if (frontier.size() > 0)
-			for (Site s : frontier)
-			    bot.addFrontier(site);
+			bot.addFrontier(site);
 		    else if (frontierEnemy.size() > 0) {
 			BitSet used = new BitSet();
 			for (Site s : frontierEnemy)
@@ -230,7 +229,7 @@ public class GameMap{
 		total -= s.value(P.EXPLORE_VALUE);
 		if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
 		    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
-		float v = s.value(P.EXPLORE) * 0.98f;
+		float v = s.value(P.EXPLORE) * 0.95f;
 		for (Site n : s.neighbors.values())
 		    if ((v >= n.value(P.EXPLORE)))
 			n.set(P.EXPLORE, v);

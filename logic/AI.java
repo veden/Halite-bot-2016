@@ -203,7 +203,7 @@ public class AI extends Entity {
 	float totalExplore = 0f;
 	for (Site f : frontier)
 	    totalExplore += f.value(P.EXPLORE);
-	totalExplore *= 0.90f;
+	totalExplore *= 0.85f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {
 		totalExplore -= s.value(P.EXPLORE);
