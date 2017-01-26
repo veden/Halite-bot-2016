@@ -93,8 +93,16 @@ public class GameMap{
 	if (site.get(State.MINE) || site.get(State.ENEMY)) {
 	    if (site.units == 0)
 		site.set(State.USED);
+	    else if (site.get(State.ENEMY)) {
+		site.set(State.ATTACK);
+		for (Site n : site.neighbors.values()) {
+		    n.set(State.ATTACK);
+		    for (Site nn : n.neighbors.values())
+			nn.set(State.ATTACK);
+		}
+	    }
 	    if (site.aboveActionThreshold())
-		site.set(State.READY);
+		    site.set(State.READY);
 	    if (site.aboveCombatThreshold())
 		site.set(State.COMBAT_READY);
 	    

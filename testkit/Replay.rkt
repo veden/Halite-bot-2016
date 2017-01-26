@@ -37,7 +37,8 @@
                 ready
                 objective
                 combatReady
-                gate))
+                gate
+                attack))
 
   (struct SiteCount (value size))
   
@@ -122,7 +123,8 @@
     (string-append "age-" (~v (Site-age site)) "\n"
                    "eV-" (~v (Site-exploreValue site)) "\n"
                    "acc-" (~v (Site-accumulator site)) "\n"
-                   "dis-" (~v (Site-distance site)) "\n"))
+                   "dis-" (~v (Site-distance site)) "\n"
+                   "atk-" (~v (Site-attack site)) "\n"))
 
   (define (buildPlayers players)
     (~> (string-trim players)
