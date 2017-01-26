@@ -6,27 +6,27 @@ import game.Site.P;
 import game.Site.State;
 
 public class ValidateAction {
-    public static float totalGenerator(Site a) {
-	float gen = (float)a.value(P.GENERATOR);
-	for (Site nn : a.neighbors.values())
-	    if (nn.get(State.ENEMY))
-	        gen += (float)nn.value(P.GENERATOR);
-	return gen;
-    }
+    // public static float totalGenerator(Site a) {
+    // 	float gen = (float)a.value(P.GENERATOR);
+    // 	for (Site nn : a.neighbors.values())
+    // 	    if (nn.get(State.ENEMY))
+    // 	        gen += (float)nn.value(P.GENERATOR);
+    // 	return gen;
+    // }
     
-    public static float totalDeath(Site a) {
-	float death = 0f;
-	for (Site nn : a.neighbors.values())
-	    if (nn.get(State.ENEMY))
-	        death += (float)nn.units;
-	return death;
-    }
+    // public static float totalDeath(Site a) {
+    // 	float death = 0f;
+    // 	for (Site nn : a.neighbors.values())
+    // 	    if (nn.get(State.ENEMY))
+    // 	        death += (float)nn.units;
+    // 	return death;
+    // }
     
-    public static int totalUnits(Site a, Site b) {
-	if (a == b)
-	    return a.incoming + a.units - a.outgoing;
-	return b.incoming + b.units + a.units - b.outgoing;
-    }
+    // public static int totalUnits(Site a, Site b) {
+    // 	if (a == b)
+    // 	    return a.incoming + a.units - a.outgoing;
+    // 	return b.incoming + b.units + a.units - b.outgoing;
+    // }
 
     public static boolean bump(Site a, Site b) {
 	if (!a.get(State.USED) &&
@@ -61,7 +61,7 @@ public class ValidateAction {
     public static boolean explore(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.UNEXPLORED) && (b.value(P.LOCKED) >= a.units) && (b.incoming < b.units)) {
 	    float remainingUnits = a.units + b.incoming - b.units;
-	    return (remainingUnits > 0) && (remainingUnits < Site.MAX_STRENGTH);
+	    return (remainingUnits > 0) && (remainingUnits <= Site.MAX_STRENGTH);
 	}
 	return false;
     }

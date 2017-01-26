@@ -169,9 +169,10 @@ public class Actions {
 	    float unitBuildUp = 0;
 	    for (Site n : s.target().neighbors.values())
 		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
-		    unitBuildUp = n.units;
+		    unitBuildUp += n.units;
 	    float units = s.units + s.incoming - s.outgoing;
-	    if (unitBuildUp < units * 1.15f)
+	    if // (((units > 130) && (unitBuildUp > 130)) ||
+		(unitBuildUp < units * 1.15f)//)
 		for (Site n : s.target().neighbors.values()) {
 		    n.set(P.LOCKED, 0);
 		    // boolean enemyAdj = s.get(State.ENEMY);
