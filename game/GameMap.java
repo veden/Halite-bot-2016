@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import game.Site.P;
 import game.Site.State;
@@ -177,7 +178,7 @@ public class GameMap{
 	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) {
 		ArrayList<Site> ring = ri.next();
 		for (Site r : ring) 
-		    total += r.value(P.GENERATOR) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
+		    total += (r.value(P.GENERATOR) / Stats.maxGenerator) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
 	    }
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)
@@ -204,10 +205,11 @@ public class GameMap{
 	
 	Collections.sort(unexplored, CompareUtil.maxProperty(P.EXPLORE_VALUE));
 	
-	//	ArrayList<Site> objectivePoints = new ArrayList<Site>();
+	ArrayList<Site> objectivePoints = new ArrayList<Site>();
 	
 	for (Site s : unexplored) {	   
-	    s.stagingValue = s.value(P.EXPLORE_VALUE);
+	    //s.stagingValue = s.value(P.EXPLORE_VALUE);
+	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
 	    // RingIterator ri = new RingIterator(s);
 	    // float d = 0f;
 	    // while (ri.hasNext()) {
@@ -215,19 +217,19 @@ public class GameMap{
 	    // 	for (Site r : ri.next()) 
 	    // 	    r.stagingValue += s.value(P.EXPLORE_VALUE) * Math.max(0, (0.98f - (0.05f * d)));
 	    // }
- 	    // for (Site n : s.neighbors.values())
+	    // for (Site n : s.neighbors.values())
 	    // 	n.stagingValue += s.value(P.EXPLORE_VALUE);
+	    
+	    // if (s.value(P.EXPLORE_VALUE) > Parameters.objectiveThreshold) {
+	    // 	if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
+	    // 	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
+	    // 	float v = s.value(P.EXPLORE) * 0.98f;
+	    // 	for (Site n : s.neighbors.values())
+	    // 	    if ((v >= n.value(P.EXPLORE)))
+	    // 		n.set(P.EXPLORE, v);
+	    // 	objectivePoints.add(s);
+	    // }
 	}
-	// if (normalize(s.value(P.EXPLORE_VALUE), Stats.minExplore, Stats.maxExplore) > Parameters.objectiveThreshold) {
-	// 	if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
-	// 	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
-	// 	float v = s.value(P.EXPLORE) * 0.98f;
-	// 	for (Site n : s.neighbors.values())
-	// 	    if ((v >= n.value(P.EXPLORE)))
-	// 		n.set(P.EXPLORE, v);
-	// 	objectivePoints.add(s);
-	// }
-
 	// RingIterator riop = new RingIterator(objectivePoints,
 	// 				     new Predicate<Site>() {
 	// 					 @Override
@@ -251,14 +253,13 @@ public class GameMap{
 	//     }
 	//     if (!changed)
 	//     	break;
-	// }
+	//}
 	
 	for (Site s : sites)
-	    if (s.get(State.UNEXPLORED)) {
-		s.commit(P.EXPLORE);
-	    } else
-		s.stagingValue = 0;
+	    if (!s.get(State.UNEXPLORED) || (s.value(P.GENERATOR) == 0))
+		s.set(P.EXPLORE, 0);
     }
+	
 
     public int safeCoordinate(int x, int limit) {
 	if (x < 0) 

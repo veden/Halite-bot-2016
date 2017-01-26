@@ -27,8 +27,8 @@ public class MyBot {
 	    Parameters.enemyUnitWeight = Float.parseFloat(args[15]);
 	    Parameters.enemyGeneratorSpread = Float.parseFloat(args[16]);
 	    Parameters.enemyUnitSpread = Float.parseFloat(args[17]);
-	    Parameters.bumpMultiplerThreshold = Float.parseFloat(args[18]);
-	    Parameters.evadeThreshold = Float.parseFloat(args[19]);
+	    // Parameters.bumpMultiplerThreshold = Float.parseFloat(args[18]);
+	    // Parameters.evadeThreshold = Float.parseFloat(args[19]);
 	    Parameters.sitePotentialWeighting = Float.parseFloat(args[20]);
 	    Parameters.sitePotentialDistance = Float.parseFloat(args[21]);
 	}

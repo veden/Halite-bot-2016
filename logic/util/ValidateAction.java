@@ -1,10 +1,9 @@
 package logic.util;
 
+import game.GameMap;
 import game.Site;
 import game.Site.P;
 import game.Site.State;
-
-import logic.Parameters;
 
 public class ValidateAction {
     public static float totalGenerator(Site a) {
@@ -34,7 +33,7 @@ public class ValidateAction {
 	    b.get(State.MINE) &&
 	    !b.moving() &&
 	    !b.get(State.USED) &&
-	    (a.units > b.units * Parameters.bumpMultiplerThreshold) &&
+	    (a.units > b.units) &&
 	    (b.value(P.LOCKED) >= a.units) &&
 	    (a.value(P.LOCKED) >= b.units)) {
 	    
@@ -54,8 +53,6 @@ public class ValidateAction {
     public static boolean move(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.MINE) && (b.value(P.LOCKED) >= a.units)) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
-	    // if (!b.moving())
-	    // 	units += b.value(P.GENERATOR);
 	    return units <= Site.MAX_STRENGTH;
 	}
 	return false;
@@ -73,14 +70,20 @@ public class ValidateAction {
 	return !a.get(State.USED) && b.get(State.OPEN) && (b.value(P.LOCKED) >= a.units) && (b.incoming == 0);	
     }
 
-    public static boolean breach(Site a, Site b) {
+    public static boolean breach(Site a, Site b, GameMap map) {
 	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.GATE) && (b.value(P.LOCKED) >= a.units)) {
 	    float highestUnit = 0;
+	    boolean strongerThan = true;
 	    for (Site neighbor : b.neighbors.values()) {
 		float v = neighbor.value(P.GENERATOR);
-		if (neighbor.get(State.ENEMY) && (highestUnit < v))
+		if (neighbor.get(State.ENEMY) && (highestUnit < v)) {
 		    highestUnit = v;
+		    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
+			strongerThan = false;
+		}
 	    }
+	    if (!strongerThan)
+		return false;
 	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit;
 	    return (v > 0) && (v <= Site.MAX_STRENGTH);
@@ -90,14 +93,7 @@ public class ValidateAction {
     
     public static boolean attack(Site a, Site b) {
 	if (!a.get(State.USED) && b.get(State.NEUTRAL) && b.get(State.BATTLE) && !b.get(State.GATE) && !b.get(State.OPEN) && (b.value(P.LOCKED) >= a.units)) {
-	    float enemyUnits = 0;
-	    for (Site neighbor : b.neighbors.values()) {
-	    	float v = neighbor.value(P.GENERATOR);
-	    	if (neighbor.get(State.ENEMY) && (enemyUnits < v))
-	    	    enemyUnits += v;
-	    }
-	    enemyUnits /= 2.0;
-	    float v = a.units + b.incoming - enemyUnits;
+	    float v = a.units + b.incoming;
 	    return (v <= Site.MAX_STRENGTH);
 	} else
 	    return false;

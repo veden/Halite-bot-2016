@@ -62,7 +62,7 @@ public class Site {
 	float v = 0;
 	if (value(P.GENERATOR) != 0)
 	    v = ((1f - (units/Site.MAX_STRENGTH)) *
-	    	 ((Parameters.generatorWeight * ((value(P.GENERATOR) / Stats.maxGenerator))) *
+	    	 ((Parameters.generatorWeight * ((value(P.GENERATOR) / Stats.maxGenerator))) +
 		  (Parameters.siteCostWeight * ((1f / ((float)units / value(P.GENERATOR))) / Stats.maxGenerator)) +
 		  (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
 		  (Parameters.siteCountWeight * (1f - ((Stats.siteCounter.get(value(P.GENERATOR)) / Stats.totalSites)))) +

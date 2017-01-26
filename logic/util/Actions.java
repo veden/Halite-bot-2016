@@ -2,13 +2,12 @@ package logic.util;
 
 import java.util.ArrayList;
 
+import game.GameMap;
 import game.Site;
 import game.Site.Direction;
 import game.Site.P;
 import game.Site.State;
 import game.Stats;
-
-import logic.Parameters;
 
 public class Actions {
 
@@ -19,6 +18,11 @@ public class Actions {
 	    b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
 	    for (Site n : b.neighbors.values())
 		n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
+	    if (b.value(P.DAMAGE) != 0) {
+		for (Site n : b.neighbors.values())
+		    n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
+	    }
+	    
 	    a.set(State.USED);
 	    return true;
 	}
@@ -36,33 +40,35 @@ public class Actions {
 		
 		ambushers.add(d);
 	}
-	int setSize = 1 << ambushers.size();
-	float lowest = Float.MAX_VALUE;
-	ArrayList<Direction> lowestAmbushers = new ArrayList<Direction>();
-	for (int selection = 1; selection < setSize; selection++) {
-	    int cursor = selection;
-	    ArrayList<Direction> temp = new ArrayList<Direction>();
-	    if ((cursor & 1) == 1) 
-		temp.add(ambushers.get(0));
-	    if ((cursor & 2) == 2)
-		temp.add(ambushers.get(1));
-	    if ((cursor & 4) == 4)
-		temp.add(ambushers.get(2));
-	    if ((cursor & 8) == 8)
-		temp.add(ambushers.get(3));
-	    float tempTotal = 0;
-	    for (Direction d : temp)
-		tempTotal += s.neighbors.get(d).units;
-	    tempTotal += s.incoming - s.units;
-	    if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
-		lowestAmbushers = temp;
-		lowest = tempTotal;
+	if (ambushers.size() > 1) {
+	    int setSize = 1 << ambushers.size();
+	    float lowest = Float.MAX_VALUE;
+	    ArrayList<Direction> lowestAmbushers = new ArrayList<Direction>();
+	    for (int selection = 1; selection < setSize; selection++) {
+		int cursor = selection;
+		ArrayList<Direction> temp = new ArrayList<Direction>();
+		if ((cursor & 1) == 1) 
+		    temp.add(ambushers.get(0));
+		if ((cursor & 2) == 2)
+		    temp.add(ambushers.get(1));
+		if ((cursor & 4) == 4)
+		    temp.add(ambushers.get(2));
+		if ((cursor & 8) == 8)
+		    temp.add(ambushers.get(3));
+		float tempTotal = 0;
+		for (Direction d : temp)
+		    tempTotal += s.neighbors.get(d).units;
+		tempTotal += s.incoming - s.units;
+		if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+		    lowestAmbushers = temp;
+		    lowest = tempTotal;
+		}
 	    }
-	}
-	for (Direction d : lowestAmbushers) {
-	    Site neighbor = s.neighbors.get(d);	
-	    neighbor.heading = Site.reverse(d);
-	    Actions.commitMove(neighbor, s);
+	    for (Direction d : lowestAmbushers) {
+		Site neighbor = s.neighbors.get(d);	
+		neighbor.heading = Site.reverse(d);
+		Actions.commitMove(neighbor, s);
+	    }
 	}
     }
     
@@ -71,8 +77,7 @@ public class Actions {
 	    Site neighbor = s.neighbors.get(d);
 	    if (ValidateAction.explore(s, neighbor) &&
 		(s.target().value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) &&
-		(s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)) &&
-		((s.moving() && (s.target().units > neighbor.units)) || !s.moving())) {
+		(s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE))) {
 
 		s.heading = d;
 	    }
@@ -112,6 +117,8 @@ public class Actions {
 	    	    count++;
 	    	else if (n.get(State.ENEMY))
 	    	    count--;
+		else
+		    count -= 0.5f;
 	    if (ValidateAction.attack(s, neighbor) &&
 		(count <= lowestCount) &&
 		(s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE))) {
@@ -122,21 +129,12 @@ public class Actions {
 	}
     }
 
-    public static void breach(Site s) {
-	int lowestCount = Integer.MAX_VALUE;
+    public static void breach(Site s, GameMap map) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    int count = 0;
-	    for (Site n : neighbor.neighbors.values())
-		if (n.get(State.MINE))
-		    count++;
-		else if (n.get(State.ENEMY))
-		    count--;
-	    if (ValidateAction.breach(s, neighbor) &&
-		(count <= lowestCount) &&
+	    if (ValidateAction.breach(s, neighbor, map) &&
 		(s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE))) {
 		
-		lowestCount = count;
 		s.heading = d;
 	    }
 	}
@@ -167,12 +165,13 @@ public class Actions {
     }
 
     public static void lock(Site s, float mapScaling) {
-	if (s.moving() && (s.units > Stats.maxGenerator) && (mapScaling > Parameters.evadeThreshold)) {
+	if (s.moving() && (s.units > Stats.maxGenerator)) {
 	    float unitBuildUp = 0;
 	    for (Site n : s.target().neighbors.values())
-	    	if (n.get(State.ENEMY) && (n.units > unitBuildUp))
-	    	    unitBuildUp = n.units;
-	    if (unitBuildUp < s.units * 1.2f)
+		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
+		    unitBuildUp = n.units;
+	    if (((unitBuildUp > 200) && (s.units > 120)) ||
+		(unitBuildUp < s.units * 1.2f))
 		for (Site n : s.target().neighbors.values()) {
 		    n.set(P.LOCKED, 0);
 		    // boolean enemyAdj = s.get(State.ENEMY);

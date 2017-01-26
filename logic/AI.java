@@ -50,6 +50,19 @@ public class AI extends Entity {
     // 	    }
     // 	};
 
+    private Comparator<Site> lowestCompare = new Comparator<Site>() {
+	    @Override
+	    public int compare(Site o1, Site o2) {
+		float v = o1.value(P.DAMAGE) - o2.value(P.DAMAGE);
+		if (v == 0) {
+		    v = o2.units - o1.units;
+		    if (v == 0) 
+			return o1.id - o2.id;
+		}
+		return v > 0 ? 1 : -1;
+	    }
+	};
+    
     private Comparator<Site> maxUnitDistanceCompare = new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
@@ -153,30 +166,44 @@ public class AI extends Entity {
 		    s.set(P.REINFORCE, highestReinforce * 0.9f);
 	    }
     }
-        
-    public void move() {	
-	Collections.sort(warfare, maxUnitDistanceCompare);
+
+    private void processWarfare(boolean firstMove) {
+	if (firstMove)
+	    Collections.sort(warfare, lowestCompare);
+	else
+	    Collections.sort(warfare, maxUnitDistanceCompare);
 	for (Site s : warfare) {
-	    Actions.capture(s);
+	    if (!s.get(State.ATTACK) && firstMove)
+		continue;
+	    else if (s.get(State.ATTACK) && !firstMove)
+		continue;
+	    
 	    if (!s.moving()) {
 		Actions.attack(s);
 		if (s.moving())
 		    Actions.lock(s, map.scaling);
 	    }
+	    if (!s.moving())
+		Actions.capture(s);
 	    if (!s.moving() && s.get(State.COMBAT_READY))
 		Actions.reinforce(s, P.DAMAGE);
 
 	    if (s.get(State.GATE) && !s.moving())
-		Actions.breach(s);
+		Actions.breach(s, map);
 	    
 	    Actions.commitMove(s, s.target());
 	}
-
-	Collections.sort(frontier, maxUnitDistanceCompare);
+    } 
+    
+    public void move() {	
+	processWarfare(true);
+	processWarfare(false);
+	
+	Collections.sort(frontier, maxExploreCompare);
 	float totalExplore = 0f;
 	for (Site f : frontier)
 	    totalExplore += f.value(P.EXPLORE);
-	totalExplore *= 0.75f;
+	totalExplore *= 0.90f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {
 		totalExplore -= s.value(P.EXPLORE);
