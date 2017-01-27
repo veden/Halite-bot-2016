@@ -174,11 +174,9 @@ public class GameMap{
 	for (Site s : sites) {
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.value(P.GENERATOR);
-	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) {
-		ArrayList<Site> ring = ri.next();
-		for (Site r : ring) 
+	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) 
+		for (Site r : ri.next()) 
 		    total += (r.value(P.GENERATOR) / Stats.maxGenerator) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
-	    }
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)
 		Stats.maxSitePotential = s.sitePotential;

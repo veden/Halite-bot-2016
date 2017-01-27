@@ -220,8 +220,11 @@ public class AI extends Entity {
 		    Actions.reinforce(s, P.DAMAGE);
 	    }
 
-	    if (s.get(State.BORDER) && !s.moving())
+	    if (s.get(State.BORDER) && !s.moving()) {
 		Actions.explore(s);
+		if (!s.moving())
+		    Actions.assist(s);
+	    }
 
 	    Actions.commitMove(s, s.target());
 	}

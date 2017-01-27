@@ -16,9 +16,9 @@ public class Actions {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
 	    if (b.value(P.DAMAGE) != 0) {
-		b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
-		for (Site n : b.neighbors.values())
-		    n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
+		// b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
+		// for (Site n : b.neighbors.values())
+		//     n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
 		for (Site n : b.neighbors.values())
 		    n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
 	    }
@@ -65,7 +65,7 @@ public class Actions {
 		}
 	    }
 	    for (Direction d : lowestAmbushers) {
-		Site neighbor = s.neighbors.get(d);	
+		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
 	    }
@@ -75,15 +75,66 @@ public class Actions {
     public static void explore(Site s) {
 	for (Direction d : Site.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.explore(s, neighbor) &&
-		(s.target().value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) &&
-		(s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE))) {
-
-		s.heading = d;
+	    if (ValidateAction.explore(s, neighbor) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE))) {
+		if (s.target() == s)
+		    s.heading = d;
+		else { 
+		    if (((s.target().value(P.EXPLORE) == neighbor.value(P.EXPLORE)) &&
+			 (s.target().value(P.EXPLORE_VALUE) < neighbor.value(P.EXPLORE_VALUE))) ||
+			(s.target().value(P.EXPLORE) < neighbor.value(P.EXPLORE)))
+			s.heading = d;
+		}
 	    }
 	}	
     }
 
+
+    public static void assist(Site s) {
+	// Site target = s;
+	// ArrayList<Direction> help = new ArrayList<Direction>();
+	// for (Direction d : Site.CARDINALS) {
+	//     Site neighbor = s.neighbors.get(d);
+	//     if (neighbor.get(State.MINE)) {
+	// 	if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)))
+	// 	    help.add(d);
+	//     } else if (neighbor.get(State.UNEXPLORED)) 
+	// 	if ((target.value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)))
+	// 	    target = neighbor;
+	// }
+	// if (target != s) {
+	//     int setSize = 1 << help.size();
+	//     float lowest = Float.MAX_VALUE;
+	//     ArrayList<Direction> lowestHelp = new ArrayList<Direction>();
+	//     for (int selection = 1; selection < setSize; selection++) {
+	// 	int cursor = selection;
+	// 	ArrayList<Direction> temp = new ArrayList<Direction>();
+	// 	if ((cursor & 1) == 1) 
+	// 	    temp.add(help.get(0));
+	// 	if ((cursor & 2) == 2)
+	// 	    temp.add(help.get(1));
+	// 	if ((cursor & 4) == 4)
+	// 	    temp.add(help.get(2));
+	// 	if ((cursor & 8) == 8)
+	// 	    temp.add(help.get(3));
+	// 	float tempTotal = 0;
+	// 	for (Direction d : temp)
+	// 	    tempTotal += s.neighbors.get(d).units;
+	// 	tempTotal += s.incoming + s.units + s.value(P.GENERATOR) - target.units;
+	// 	if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+	// 	    lowestHelp = temp;
+	// 	    lowest = tempTotal;
+	// 	}
+	//     }
+	//     for (Direction d : lowestHelp) {
+	// 	Site neighbor = s.neighbors.get(d);
+	// 	neighbor.heading = Site.reverse(d);
+	// 	Actions.commitMove(neighbor, s);
+	//     }
+	//     if (lowestHelp.size() > 0)
+	// 	s.set(State.USED);
+	// }
+    }
+    
     public static void reinforce(Site s, P siteProperty) {
 	Direction bump = null;
 	
@@ -93,7 +144,7 @@ public class Actions {
 		s.heading = d;
 		bump = null;
 	    }
-
+	    
 	    if (ValidateAction.bump(s, neighbor) && (s.target().value(siteProperty) < neighbor.value(siteProperty))) {
 		s.heading = d;
 		bump = d;
@@ -113,10 +164,10 @@ public class Actions {
 	    Site neighbor = s.neighbors.get(d);
 	    int count = 0;
 	    for (Site n : neighbor.neighbors.values())
-	    	if (n.get(State.MINE))
-	    	    count++;
-	    	else if (n.get(State.ENEMY))
-	    	    count--;
+		if (n.get(State.MINE))
+		    count++;
+		else if (n.get(State.ENEMY))
+		    count--;
 		else
 		    count -= 0.5f;
 	    if (ValidateAction.attack(s, neighbor) &&
