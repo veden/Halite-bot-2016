@@ -37,7 +37,7 @@ public class AI extends Entity {
     private Comparator<Site> lowestCompare = new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
-		float v = o1.value(P.DAMAGE) - o2.value(P.DAMAGE);
+		float v = o2.value(P.DAMAGE) - o1.value(P.DAMAGE);
 		if (v == 0) {
 		    v = o2.units - o1.units;
 		    if (v == 0) 
@@ -85,8 +85,7 @@ public class AI extends Entity {
 	    for (Site s : distanceRings.next())
 		s.set(P.DISTANCE, distance);
 	    distance++;
-	}
-	
+	}	
 	
 	RingIterator myRings = new RingIterator(frontier, pMineReinforce);
 	float d = 0f;
@@ -149,6 +148,14 @@ public class AI extends Entity {
 		else if (highestReinforce != 0)
 		    s.set(P.REINFORCE, highestReinforce * 0.9f);
 	    }
+	// for (Site s : frontier)
+	//     for (Site n : s.neighbors.values()) 
+	// 	if (n.get(State.MINE) && (n.value(P.DAMAGE) > 0))
+	// 	    n.stagingValue = n.value(P.DAMAGE) * 0.98f;
+
+	// for (Site s : body)
+	//     if (s.stagingValue != 0)
+	// 	s.commit(P.DAMAGE);
     }
 
     private void processWarfare(boolean firstMove) {
@@ -187,8 +194,7 @@ public class AI extends Entity {
 	float totalExplore = 0f;
 	for (Site f : frontier)
 	    totalExplore += f.value(P.EXPLORE);
-	//	totalExplore *= 0.5f;
-	totalExplore *= 0.85f;
+	totalExplore *= 0.87f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {
 		totalExplore -= s.value(P.EXPLORE);
