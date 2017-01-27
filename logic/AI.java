@@ -34,22 +34,6 @@ public class AI extends Entity {
     private Comparator<Site> maxReinforceCompare = CompareUtil.maxProperty(P.REINFORCE);
     private Comparator<Site> maxExploreCompare = CompareUtil.maxProperty(P.EXPLORE);
     
-    // private Comparator<Site> maxUnitsCompare = new Comparator<Site>() {
-    // 	    @Override
-    // 	    public int compare(Site arg0, Site arg1) {
-    // 		float v = arg1.value(P.DAMAGE) - arg0.value(P.DAMAGE);
-    // 		if (v == 0) {
-    // 		    v = arg1.value(P.REINFORCE) - arg0.value(P.REINFORCE);
-    // 		    if (v == 0) {
-    // 			v = arg1.units - arg0.units;
-    // 			if (v == 0)
-    // 			    return arg0.id - arg1.id;
-    // 		    }
-    // 		}
-    // 		return v > 0 ? 1 : -1;
-    // 	    }
-    // 	};
-
     private Comparator<Site> lowestCompare = new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
@@ -203,6 +187,7 @@ public class AI extends Entity {
 	float totalExplore = 0f;
 	for (Site f : frontier)
 	    totalExplore += f.value(P.EXPLORE);
+	//	totalExplore *= 0.5f;
 	totalExplore *= 0.85f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {
@@ -222,7 +207,7 @@ public class AI extends Entity {
 
 	    if (s.get(State.BORDER) && !s.moving()) {
 		Actions.explore(s);
-		if (!s.moving())
+		if (!s.moving() && (s.value(P.DAMAGE) == 0))
 		    Actions.assist(s);
 	    }
 

@@ -95,13 +95,13 @@ public class Actions {
 	// for (Direction d : Site.CARDINALS) {
 	//     Site neighbor = s.neighbors.get(d);
 	//     if (neighbor.get(State.MINE)) {
-	// 	if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)))
+	// 	if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)) && (neighbor.value(P.DAMAGE) == 0))
 	// 	    help.add(d);
 	//     } else if (neighbor.get(State.UNEXPLORED)) 
 	// 	if ((target.value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)))
 	// 	    target = neighbor;
 	// }
-	// if (target != s) {
+	// if ((target != s) && ((s.incoming + s.units + s.value(P.GENERATOR)) < target.units) && (s.outgoing == 0)) {
 	//     int setSize = 1 << help.size();
 	//     float lowest = Float.MAX_VALUE;
 	//     ArrayList<Direction> lowestHelp = new ArrayList<Direction>();
