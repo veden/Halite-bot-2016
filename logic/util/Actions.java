@@ -160,10 +160,6 @@ public class Actions {
 	}
     }
 
-    public static void evade(Site s) {
-	
-    }
-
     public static void lock(Site s, float mapScaling) {
 	if (s.moving() && (s.units > Stats.maxGenerator)) {
 	    float unitBuildUp = 0;
@@ -171,25 +167,9 @@ public class Actions {
 		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
 		    unitBuildUp += n.units;
 	    float units = s.units + s.incoming - s.outgoing;
-	    if // (((units > 130) && (unitBuildUp > 130)) ||
-		(unitBuildUp < units * 1.15f)//)
-		for (Site n : s.target().neighbors.values()) {
+	    if (unitBuildUp < units * 1.15f)
+		for (Site n : s.target().neighbors.values())
 		    n.set(P.LOCKED, 0);
-		    // boolean enemyAdj = s.get(State.ENEMY);
-		    // if (!enemyAdj)
-		    //     for (Site en : n.neighbors.values()) {
-		    // 	    enemyAdj = en.get(State.ENEMY);
-		    // 	if (enemyAdj)
-		    // 	    break;
-		    //     }
-		    // if (enemyAdj)
-		    //     for (Site en : n.neighbors.values())
-		    // 	    en.set(State.LOCKED);
-		}
-	    // if (unitBuildUp > (units * 1.1f))
-	    // 	for (Site n : s.target().neighbors.values()) {
-	    // 	    n.set(P.LOCKED, unitBuildUp - units);
-	    // 	}
 	}
     }
 }

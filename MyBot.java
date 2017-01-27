@@ -40,7 +40,7 @@ public class MyBot {
 	map.analyzeUnexplored();
 	
 	Debug.startup(map);
-	server.sendInit("VedenV16");
+	server.sendInit("VedenV17");
 
 	while(true) {
 	    start = Debug.startClock(turn);
