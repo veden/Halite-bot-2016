@@ -21,8 +21,8 @@ public class Parameters {
     public static float enemyUnitSpread = 0.15f;
     //public static float bumpMultiplerThreshold = 1.3f;
     //    public static float evadeThreshold = f;
-    public static float sitePotentialWeighting = 0.20f;
-    public static float sitePotentialDistance = 4;
+    public static float sitePotentialWeighting = 0.09f;
+    public static float sitePotentialDistance = 10;
 
     public static float baseAccumulator = 4f;
 }
