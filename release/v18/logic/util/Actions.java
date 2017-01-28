@@ -90,49 +90,49 @@ public class Actions {
 
 
     public static void assist(Site s) {
-	Site target = s;
-	ArrayList<Direction> help = new ArrayList<Direction>();
-	for (Direction d : Site.CARDINALS) {
-	    Site neighbor = s.neighbors.get(d);
-	    if (neighbor.get(State.MINE)) {
-		if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)) && (neighbor.value(P.DAMAGE) == 0))
-		    help.add(d);
-	    } else if (neighbor.get(State.UNEXPLORED)) 
-		if ((target.value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)))
-		    target = neighbor;
-	}
-	if ((target != s) && ((s.incoming + s.units + s.value(P.GENERATOR)) < target.units) && (s.outgoing == 0)) {
-	    int setSize = 1 << help.size();
-	    float lowest = Float.MAX_VALUE;
-	    ArrayList<Direction> lowestHelp = new ArrayList<Direction>();
-	    for (int selection = 1; selection < setSize; selection++) {
-		int cursor = selection;
-		ArrayList<Direction> temp = new ArrayList<Direction>();
-		if ((cursor & 1) == 1) 
-		    temp.add(help.get(0));
-		if ((cursor & 2) == 2)
-		    temp.add(help.get(1));
-		if ((cursor & 4) == 4)
-		    temp.add(help.get(2));
-		if ((cursor & 8) == 8)
-		    temp.add(help.get(3));
-		float tempTotal = 0;
-		for (Direction d : temp)
-		    tempTotal += s.neighbors.get(d).units;
-		tempTotal += s.incoming + s.units + s.value(P.GENERATOR) - target.units;
-		if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
-		    lowestHelp = temp;
-		    lowest = tempTotal;
-		}
-	    }
-	    for (Direction d : lowestHelp) {
-		Site neighbor = s.neighbors.get(d);
-		neighbor.heading = Site.reverse(d);
-		Actions.commitMove(neighbor, s);
-	    }
-	    if (lowestHelp.size() > 0)
-		s.set(State.USED);
-	}
+	// Site target = s;
+	// ArrayList<Direction> help = new ArrayList<Direction>();
+	// for (Direction d : Site.CARDINALS) {
+	//     Site neighbor = s.neighbors.get(d);
+	//     if (neighbor.get(State.MINE)) {
+	// 	if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)) && (neighbor.value(P.DAMAGE) == 0))
+	// 	    help.add(d);
+	//     } else if (neighbor.get(State.UNEXPLORED)) 
+	// 	if ((target.value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)))
+	// 	    target = neighbor;
+	// }
+	// if ((target != s) && ((s.incoming + s.units + s.value(P.GENERATOR)) < target.units) && (s.outgoing == 0)) {
+	//     int setSize = 1 << help.size();
+	//     float lowest = Float.MAX_VALUE;
+	//     ArrayList<Direction> lowestHelp = new ArrayList<Direction>();
+	//     for (int selection = 1; selection < setSize; selection++) {
+	// 	int cursor = selection;
+	// 	ArrayList<Direction> temp = new ArrayList<Direction>();
+	// 	if ((cursor & 1) == 1) 
+	// 	    temp.add(help.get(0));
+	// 	if ((cursor & 2) == 2)
+	// 	    temp.add(help.get(1));
+	// 	if ((cursor & 4) == 4)
+	// 	    temp.add(help.get(2));
+	// 	if ((cursor & 8) == 8)
+	// 	    temp.add(help.get(3));
+	// 	float tempTotal = 0;
+	// 	for (Direction d : temp)
+	// 	    tempTotal += s.neighbors.get(d).units;
+	// 	tempTotal += s.incoming + s.units + s.value(P.GENERATOR) - target.units;
+	// 	if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+	// 	    lowestHelp = temp;
+	// 	    lowest = tempTotal;
+	// 	}
+	//     }
+	//     for (Direction d : lowestHelp) {
+	// 	Site neighbor = s.neighbors.get(d);
+	// 	neighbor.heading = Site.reverse(d);
+	// 	Actions.commitMove(neighbor, s);
+	//     }
+	//     if (lowestHelp.size() > 0)
+	// 	s.set(State.USED);
+	// }
     }
     
     public static void reinforce(Site s, P siteProperty) {

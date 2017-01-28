@@ -21,7 +21,10 @@
      seed
      solution))
 
-  (define currentBot "cd /data/factory/repo/wkJava/halite/src; java -Xmx250m MyBot") 
+  (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot") 
+  ;(define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v20/; java -Xmx250m MyBot")
+  ;   (define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v19/; java -Xmx250m MyBot")
+  ; (define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v18/; java -Xmx250m MyBot") 
 
   (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v11/; java MyBot"
@@ -167,13 +170,29 @@
     (playThreaded (build-list cnt (lambda (x)
                                     (prepTrial null)))))
 
-  (define testSeedRounds '((2010 5)
-                           (2000 10)
-                           (1007 15)
-                           (1010 30)
-                           (1050 50)
-                           (2060 20)
-                           (2080 50)))
+  (define testSeedRounds '(((2010 5)
+                            (2000 10)
+                            (1007 15)
+                            (1010 30)
+                            (1050 50)
+                            (2060 20)
+                            (2080 50))
+                           
+                           ((2011 5)
+                            (2001 10)
+                            (1008 15)
+                            (1011 30)
+                            (1051 50)
+                            (2061 20)
+                            (2081 50))
+
+                           ((2012 5)
+                            (2002 10)
+                            (1009 15)
+                            (1012 30)
+                            (1052 50)
+                            (2062 20)
+                            (2082 50))))
 
   (define currentBest '(0.4 0.7 0.9 0.3 0.4
                             0.75 0.70 1 0.65 0.34
@@ -224,7 +243,7 @@
     (random-seed (car seedRound))
     (playGames (cadr seedRound)))
 
-  (define (playTestSuite cnt [drp 0])
+  (define (playTestSuite cnt [drp 0] [testSeedRounds (car testSeedRounds)])
     (~>> (take (drop testSeedRounds drp) cnt)
          (map (lambda (x)
                 (pretty-display x)
@@ -256,8 +275,9 @@
       (if (not (eq? 0 (compileCurrent))) "bad compile"
           (match (current-command-line-arguments)
             ((vector "test" r) (display (playTestSuite (string->number r))))
-            ((vector "test" r d) (display (playTestSuite (string->number r)
-                                                         (string->number d))))
+            ((vector "test" r d s) (display (playTestSuite (string->number r)
+                                                           (string->number d)
+                                                           (list-ref testSeedRounds (string->number s)))))
             ((vector "tune" s) (pretty-display (tuneParameters (list-ref testSeedRounds (- (string->number s) 1)))))
             ((vector "snapshot" name) (pretty-display (makeSnapshot name)))
             ((vector "single" c s) (begin (when (not (= (string->number s) -1))
