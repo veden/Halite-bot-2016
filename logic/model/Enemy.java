@@ -75,7 +75,7 @@ public class Enemy extends Entity {
 		}
 	    };
 
-	float defenseRange = Math.max(map.scaling * 1.05f * map.scale, 8f);
+	float defenseRange = Math.max(map.scaling * 1.125f * map.scale, 8f);
 	
 	Collections.sort(warfare, maxGeneratorUnits);
 	for (Site w : warfare)
