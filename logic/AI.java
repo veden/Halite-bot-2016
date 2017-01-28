@@ -148,14 +148,6 @@ public class AI extends Entity {
 		else if (highestReinforce != 0)
 		    s.set(P.REINFORCE, highestReinforce * 0.9f);
 	    }
-	// for (Site s : frontier)
-	//     for (Site n : s.neighbors.values()) 
-	// 	if (n.get(State.MINE) && (n.value(P.DAMAGE) > 0))
-	// 	    n.stagingValue = n.value(P.DAMAGE) * 0.98f;
-
-	// for (Site s : body)
-	//     if (s.stagingValue != 0)
-	// 	s.commit(P.DAMAGE);
     }
 
     private void processWarfare(boolean firstMove) {
