@@ -35,16 +35,25 @@
 
   (define sizePool '(20
                      25
+                     25
+                     30
+                     30
                      30
                      35
+                     35
+                     35
+                     35
                      40
+                     40
+                     40
+                     45
                      45
                      50))
 
   (define (pickSize)
     (list-ref sizePool (random (length sizePool))))
 
-  (define (pickBots solution botPool)
+  (define (pickBots botPool)
     (define (h c botPos bots acc)
       (cond ((eq? c 0) acc)
             ((eq? c botPos) (h (- c 1) botPos bots (cons currentBot acc)))
@@ -64,7 +73,7 @@
   
   (define (prepTrial solution)
     (Trial (pickSize)
-           (pickBots solution botPool)
+           (pickBots botPool)
            (random 4294967087)
            solution))
 
