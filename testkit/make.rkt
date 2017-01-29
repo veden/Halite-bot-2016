@@ -1,3 +1,4 @@
+
 (module Trainer racket
   (provide (all-defined-out))
 
@@ -22,15 +23,15 @@
      solution))
 
   (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot") 
-  ;(define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v20/; java -Xmx250m MyBot")
-  ;   (define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v19/; java -Xmx250m MyBot")
-  ; (define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v18/; java -Xmx250m MyBot") 
+  ;;(define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v24/; java -Xmx250m MyBot")
 
   (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v11/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v12/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v13/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v14/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v15/; java MyBot"
+                    "cd /data/factory/repo/wkJava/halite/src/release/v16/; java MyBot"
                     ))
 
   (define sizePool '(20
