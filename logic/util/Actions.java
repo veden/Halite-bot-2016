@@ -15,13 +15,12 @@ public class Actions {
 	if (!a.get(State.USED) && (a != b)) {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
-	    if (b.value(P.DAMAGE) != 0) {
-		// b.set(P.LOCKED, b.value(P.LOCKED) - a.units);
-		// for (Site n : b.neighbors.values())
-		//     n.set(P.LOCKED, n.value(P.LOCKED) - a.units);
-		for (Site n : b.neighbors.values())
-		    n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
+	    //	    if (b.value(P.DAMAGE) != 0)
+	    for (Site n : b.neighbors.values()) {
+		n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
+		n.set(P.REINFORCE, n.value(P.REINFORCE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
 	    }
+	    
 	    
 	    a.set(State.USED);
 	    return true;
@@ -155,7 +154,7 @@ public class Actions {
 	    Site target = s.target();
 	    target.heading = Site.reverse(bump);
 	    commitMove(target, s);
-	} 
+	}
     }
 
     public static void attack(Site s) {
