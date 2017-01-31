@@ -20,11 +20,11 @@ public class Actions {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
 	    //	    if (b.value(P.DAMAGE) != 0)
-	    for (Site n : b.neighbors.values()) {
+	    for (Site n : b.neighbors.values())
 		n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
-		n.set(P.REINFORCE, n.value(P.REINFORCE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
-	    }
-	    
+	
+	    for (Site n : a.neighbors.values())
+		n.set(P.REINFORCE, n.value(P.REINFORCE) * (1f - (0.0125f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
 	    
 	    a.set(State.USED);
 	    return true;
