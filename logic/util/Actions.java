@@ -11,6 +11,10 @@ import game.Stats;
 
 public class Actions {
 
+    public static enum Action {
+	IDLE, EXPLORE, JOINT, ASSIST, REINFORCE, BUMP, CAPTURE, BREACH, ATTACK
+    }
+    
     public static boolean commitMove(Site a, Site b) {
 	if (!a.get(State.USED) && (a != b)) {
 	    a.outgoing += a.units;
@@ -67,6 +71,7 @@ public class Actions {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
+		neighbor.action = Action.JOINT;
 	    }
 	}
     }
@@ -84,7 +89,9 @@ public class Actions {
 			s.heading = d;
 		}
 	    }
-	}	
+	}
+	if (s.moving())
+	    s.action = Action.EXPLORE;
     }
 
 
@@ -128,6 +135,7 @@ public class Actions {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
+		neighbor.action = Action.ASSIST;
 	    }
 	    if (lowestHelp.size() > 0)
 		s.set(State.USED);
@@ -154,7 +162,10 @@ public class Actions {
 	    Site target = s.target();
 	    target.heading = Site.reverse(bump);
 	    commitMove(target, s);
+	    target.action = Action.BUMP;
 	}
+	if (s.moving())
+	    s.action = Action.REINFORCE;
     }
 
     public static void attack(Site s) {
@@ -177,6 +188,8 @@ public class Actions {
 		s.heading = d;
 	    }
 	}
+	if (s.moving())
+	    s.action = Action.ATTACK;
     }
 
     public static void breach(Site s, GameMap map) {
@@ -188,6 +201,8 @@ public class Actions {
 		s.heading = d;
 	    }
 	}
+	if (s.moving())
+	    s.action = Action.BREACH;
     }
     
     public static void capture(Site s) {
@@ -208,6 +223,8 @@ public class Actions {
 		s.heading = d;
 	    }
 	}
+	if (s.moving())
+	    s.action = Action.CAPTURE;
     }
 
     public static void lock(Site s, float mapScaling) {

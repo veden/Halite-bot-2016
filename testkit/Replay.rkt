@@ -28,6 +28,7 @@
                 accumulator
                 exploreValue
                 distance
+                action
                 battle
                 frontier
                 unexplored
@@ -38,7 +39,8 @@
                 objective
                 combatReady
                 gate
-                attack))
+                attack
+                used))
 
   (struct SiteCount (value size))
   
@@ -124,7 +126,10 @@
                    "eV-" (~v (Site-exploreValue site)) "\n"
                    "acc-" (~v (Site-accumulator site)) "\n"
                    "dis-" (~v (Site-distance site)) "\n"
-                   "atk-" (~v (Site-attack site)) "\n"))
+                   "atk-" (~v (Site-attack site)) "\n"
+                   "act-" (~v (Site-action site)) "\n"
+                   "use-" (~v (Site-used site)) "\n"
+                   ))
 
   (define (buildPlayers players)
     (~> (string-trim players)
