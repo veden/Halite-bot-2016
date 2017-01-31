@@ -19,7 +19,7 @@ public class Actions {
 	if (!a.get(State.USED) && (a != b)) {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
-	    //	    if (b.value(P.DAMAGE) != 0)
+	    
 	    for (Site n : b.neighbors.values())
 		n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
 	
@@ -234,7 +234,7 @@ public class Actions {
 		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
 		    unitBuildUp += n.units;
 	    float units = s.units + s.incoming - s.outgoing;
-	    if (unitBuildUp < units * 1.15f)
+	    if (unitBuildUp < units * 1.16f)
 		for (Site n : s.target().neighbors.values())
 		    n.set(P.LOCKED, 0);
 	}

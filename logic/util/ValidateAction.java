@@ -60,7 +60,7 @@ public class ValidateAction {
 			strongerThan = false;
 		}
 	    }
-	    if (!strongerThan)
+ 	    if (!strongerThan)
 		return false;
 	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit;
