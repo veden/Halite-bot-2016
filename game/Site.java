@@ -4,14 +4,15 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 
 import logic.Parameters;
+import logic.util.Actions.Action;
 
 public class Site {    
 
     public static enum State {
 	BATTLE, FRONTIER, UNEXPLORED, INTERIOR, BORDER, OPEN,
-	READY, OBJECTIVE, COMBAT_READY, GATE, ATTACK,
-	
-	USED, MINE, NEUTRAL, ENEMY
+	READY, OBJECTIVE, COMBAT_READY, GATE, ATTACK, USED,
+
+	MINE, NEUTRAL, ENEMY
     }
 
     public static enum P {
@@ -40,6 +41,7 @@ public class Site {
     public int outgoing;
 
     public Direction heading = Direction.STILL;
+    public Action action = Action.IDLE;
 
     public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
     public EnumMap<P, Float> properties = new EnumMap<P, Float>(P.class);
@@ -150,6 +152,7 @@ public class Site {
 	set(P.DISTANCE, 0);
 	set(P.DAMAGE, 0);
 	set(P.LOCKED, Float.MAX_VALUE);
+	action = Action.IDLE;
 	incoming = 0;
 	outgoing = 0;
 	heading = Direction.STILL;
@@ -169,17 +172,17 @@ public class Site {
 	int result = 0;
 	int highest = 0;
 	for (Enum<State> p : State.values()) {
-	    if (p.ordinal() == State.USED.ordinal())
+	    if (p.ordinal() == State.MINE.ordinal())
 		break;
 	    result = result | (status.contains(p) ? 1 : 0) << p.ordinal();
 	    if (p.ordinal() > highest)
 		highest = p.ordinal();
 	}
-	return result | 1 << (State.USED.ordinal());
+	return result | 1 << (State.MINE.ordinal());
     }
 
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + compressAttributes();
+	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
     }
 
     public String encodeSite() {

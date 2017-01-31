@@ -210,19 +210,6 @@ public class GameMap{
 	total *= Parameters.objectiveThreshold;
 	
 	for (Site s : unexplored) {	   
-	    //s.stagingValue = s.value(P.EXPLORE_VALUE);
-	    //	    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
-	    // RingIterator ri = new RingIterator(s);
-	    // float d = 0f;
-	    // while (ri.hasNext()) {
-	    // 	d++;
-	    // 	for (Site r : ri.next()) 
-	    // 	    r.stagingValue += s.value(P.EXPLORE_VALUE) * Math.max(0, (0.98f - (0.05f * d)));
-	    // }
-	    // for (Site n : s.neighbors.values())
-	    // 	n.stagingValue += s.value(P.EXPLORE_VALUE);
-	    
-	    //if (s.value(P.EXPLORE_VALUE) > Parameters.objectiveThreshold) {
 	    if (total > 0) {
 		total -= s.value(P.EXPLORE_VALUE);
 		if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))

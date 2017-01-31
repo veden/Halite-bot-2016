@@ -143,7 +143,7 @@
                               (string-append "-d " (~v (Trial-size trial)) " " (~v (Trial-size trial)))
                               (string-append "-s " (~v (Trial-seed trial)))
                               "-q"
-                              "-r"
+                              ;;"-r"
                               )
                         (Trial-bots trial))))
       (let-values ([(sp i o e) (apply subprocess args)])
