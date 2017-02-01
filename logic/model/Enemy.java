@@ -1,5 +1,6 @@
 package logic.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.function.Predicate;
@@ -14,6 +15,27 @@ import logic.Parameters;
 import logic.util.RingIterator;
 
 public class Enemy extends Entity {
+
+    private static Comparator<Site> maxGeneratorUnits = new Comparator<Site>() {
+	    @Override
+	    public int compare(Site arg0, Site arg1) {
+		float v = arg1.value(P.GENERATOR) - arg0.value(P.GENERATOR);
+		if (v == 0) {
+		    v = arg1.units - arg0.units;
+		    if (v == 0)
+			return arg0.id - arg1.id;
+		}	
+		return v > 0 ? 1 : -1;
+	    }
+	};
+
+    private static Predicate<Site> isBattleOrMine = new Predicate<Site>() {
+	    @Override
+	    public boolean test(Site t) {
+		return (t.get(State.NEUTRAL) &&
+			(t.get(State.BATTLE) || t.get(State.GATE))) || (t.get(State.MINE));
+	    }
+	};
     
     public Enemy(int id, GameMap map) {
 	super(id, map);
@@ -30,11 +52,11 @@ public class Enemy extends Entity {
 	}
     }
 
-    public void spreadDamage(Site s, Predicate<Site> p, float defenseRange) {	
+    public void spreadDamage(Site s, float defenseRange) {	
 	float svalue = 1f + (Parameters.enemyGeneratorWeight * (s.value(P.GENERATOR) / Stats.maxGenerator)) + (Parameters.enemyUnitWeight * (s.units / Site.MAX_STRENGTH));
 	if (svalue > s.value(P.DAMAGE))
 	    s.set(P.DAMAGE, svalue);
-	RingIterator ri = new RingIterator(s, p);
+	RingIterator ri = new RingIterator(s, isBattleOrMine);
 	for (int d = 0; (d < defenseRange) && ri.hasNext(); d++) {
 	    for (Site r : ri.next()) {
 		for (Site n : r.neighbors.values()) {
@@ -47,19 +69,16 @@ public class Enemy extends Entity {
     }
     
     public void placeDefense() {
-	Comparator<Site> maxGeneratorUnits = new Comparator<Site>() {
-		@Override
-		public int compare(Site arg0, Site arg1) {
-		    float v = arg1.value(P.GENERATOR) - arg0.value(P.GENERATOR);
-		    if (v == 0) {
-			v = arg1.units - arg0.units;
-			if (v == 0)
-			    return arg0.id - arg1.id;
-		    }	
-		    return v > 0 ? 1 : -1;
-		}
-	    };
-
+	ArrayList<Site> body = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> warfare = new ArrayList<Site>((int)Stats.totalSites);
+	for (Site s : map.sites)
+	    if (s.owner == id) 
+		if (s.get(State.BORDER) || s.get(State.INTERIOR))
+		    body.add(s);
+		else if (s.get(State.BATTLE) || s.get(State.GATE))
+		    warfare.add(s);
+	
+	
 	Collections.sort(body, maxGeneratorUnits);
 	
 	for (Site b : body)
@@ -67,18 +86,10 @@ public class Enemy extends Entity {
 	for (Site b : body)
 	    b.commit(P.DAMAGE);
 
-	Predicate<Site> np = new Predicate<Site>() {
-		@Override
-		public boolean test(Site t) {
-		    return (t.get(State.NEUTRAL) &&
-			    (t.get(State.BATTLE) || t.get(State.GATE))) || (t.get(State.MINE));
-		}
-	    };
-
 	float defenseRange = Math.max(map.scaling * 1.125f * map.scale, 8f);
 	
 	Collections.sort(warfare, maxGeneratorUnits);
 	for (Site w : warfare)
-	    spreadDamage(w, np, defenseRange);
+	    spreadDamage(w, defenseRange);
     }
 }

@@ -27,10 +27,9 @@ public class Site {
     public static final EnumSet<Direction> CARDINALS = EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
 
     public static final float MAX_STRENGTH = 255f;
-    public static float MAX_STRENGTH_LOSSY = 0f; //set during network init
 
     public int id;
-    public int units; // originally 
+    public int units;
     public final int x;
     public final int y;
 

@@ -1,7 +1,6 @@
 package game;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -31,10 +30,7 @@ public class GameMap{
 
     public HashMap<Integer, Enemy> enemies = new HashMap<Integer, Enemy>();
     
-    public ArrayList<Site> unexplored = new ArrayList<Site>();
-    
     public void reset() {
-	unexplored.clear();
 	Stats.reset();
 	bot.reset();
 	for (Entry<Integer, Enemy> e : enemies.entrySet())
@@ -53,7 +49,6 @@ public class GameMap{
     }
 
     public void addUnexplored(Site s) {
-	unexplored.add(s);
         Stats.totalUnexploredGenerator += s.value(P.GENERATOR);
 	s.set(State.UNEXPLORED);
     }
@@ -156,12 +151,12 @@ public class GameMap{
 		    if (frontier.size() > 0)
 			bot.addFrontier(site);
 		    else if (frontierEnemy.size() > 0) {
-			BitSet used = new BitSet();
-			for (Site s : frontierEnemy)
-			    if (!used.get(s.owner)) {
-				used.set(s.owner);
-				getEnemy(s.owner).addFrontier(site);
-			    }
+			// BitSet used = new BitSet();
+			// for (Site s : frontierEnemy)
+			//     if (!used.get(s.owner)) {
+			// 	used.set(s.owner);
+			// 	getEnemy(s.owner).addFrontier(site);
+			//     }
 		    }
 		    addUnexplored(site);
 		}
@@ -169,8 +164,7 @@ public class GameMap{
 	}
     }
 
-    public void analyzeUnexplored() {
-	Site.MAX_STRENGTH_LOSSY = Site.MAX_STRENGTH + Stats.maxGenerator;
+    public void prepSites() {
 	for (Site s : sites) {
 	    RingIterator ri = new RingIterator(s);
 	    float total = s.value(P.GENERATOR);
@@ -195,6 +189,11 @@ public class GameMap{
     }
     
     public void scoreUnexplored() {
+	ArrayList<Site> unexplored = new ArrayList<Site>((int)Stats.totalSites);
+	for (Site s : sites)
+	    if (s.get(State.UNEXPLORED))
+		unexplored.add(s);
+	
 	scaling = (1 - ((float)unexplored.size() / Stats.totalSites));
 	
 	if (unexplored.size() == 0)
@@ -261,10 +260,8 @@ public class GameMap{
     }
 
     public void identifyEnemy() {
-	for (Entry<Integer, Enemy> e : enemies.entrySet()) {
-	    Enemy enemy = e.getValue();
-	    enemy.placeDefense();
-	}
+	for (Entry<Integer, Enemy> e : enemies.entrySet())
+	    e.getValue().placeDefense();
     }
     
     public Enemy getEnemy(int id) {

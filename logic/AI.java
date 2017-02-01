@@ -9,6 +9,7 @@ import game.GameMap;
 import game.Site;
 import game.Site.P;
 import game.Site.State;
+import game.Stats;
 
 import logic.model.Entity;
 import logic.util.Actions;
@@ -65,13 +66,14 @@ public class AI extends Entity {
     }
     
     public void planTroopMovements() {
-
-	Predicate<Site> pMineNothing = new Predicate<Site>() {
-		@Override
-		public boolean test(Site t) {
-		    return t.get(State.MINE) && (t.value(P.DAMAGE) == 0) && (t.value(P.REINFORCE) == 0);
-		}
-	    };
+	ArrayList<Site> frontier = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> body = new ArrayList<Site>((int)Stats.totalSites);
+	for (Site s : map.sites)
+	    if (s.get(State.FRONTIER))
+		frontier.add(s);
+	    else if (s.get(State.MINE))
+		if (s.get(State.INTERIOR) || s.get(State.BORDER))
+		    body.add(s);
 	
 	Collections.sort(frontier, maxExploreCompare);
 	for (Site s : frontier)
@@ -105,6 +107,17 @@ public class AI extends Entity {
 	    if (!changed)
 		break;
 	}
+	
+	extendFields(body);
+    }
+
+    private void extendFields(ArrayList<Site> body) {
+	Predicate<Site> pMineNothing = new Predicate<Site>() {
+		@Override
+		public boolean test(Site t) {
+		    return t.get(State.MINE) && (t.value(P.DAMAGE) == 0) && (t.value(P.REINFORCE) == 0);
+		}
+	    };
 
 	ArrayList<Site> backfill = new ArrayList<Site>(); 
 	for (Site s : body) 
@@ -150,17 +163,8 @@ public class AI extends Entity {
 	    }
     }
 
-    private void processWarfare(boolean firstMove) {
-	if (firstMove)
-	    Collections.sort(warfare, lowestCompare);
-	else
-	    Collections.sort(warfare, maxUnitDistanceCompare);
-	for (Site s : warfare) {
-	    if (!s.get(State.ATTACK) && firstMove)
-		continue;
-	    else if (s.get(State.ATTACK) && !firstMove)
-		continue;
-	    
+    private void processWarfare(ArrayList<Site> warfare) {
+	for (Site s : warfare) {	    
 	    if (!s.moving()) {
 		Actions.attack(s);
 		if (s.moving())
@@ -178,14 +182,33 @@ public class AI extends Entity {
 	}
     } 
     
-    public void move() {	
-	processWarfare(true);
-	processWarfare(false);
+    public void move() {
+	float totalExplore = 0f;
+	ArrayList<Site> attacks = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> frontier = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> warfare = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> body = new ArrayList<Site>((int)Stats.totalSites);
+	for (Site s : map.sites)
+	    if (s.get(State.FRONTIER)) {
+		frontier.add(s);
+		totalExplore += s.value(P.EXPLORE);
+	    } else if (s.get(State.MINE))
+		if (s.get(State.BORDER) || s.get(State.INTERIOR))
+		    body.add(s);
+		else if (s.get(State.BATTLE) || s.get(State.GATE))
+		    if (s.get(State.ATTACK))
+		        attacks.add(s);
+		    else
+			warfare.add(s);
+
+	Collections.sort(attacks, lowestCompare);
+	Collections.sort(warfare, maxUnitDistanceCompare);
+	
+	processWarfare(attacks);
+	processWarfare(warfare);
 	
 	Collections.sort(frontier, maxExploreCompare);
-	float totalExplore = 0f;
-	for (Site f : frontier)
-	    totalExplore += f.value(P.EXPLORE);
+		    
 	totalExplore *= 0.87f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {

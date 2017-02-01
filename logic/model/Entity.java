@@ -1,6 +1,5 @@
 package logic.model;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import game.Debug;
@@ -18,9 +17,6 @@ abstract public class Entity {
     public GameMap map;
 
     public HashSet<Site> allSites = new HashSet<Site>();
-    public ArrayList<Site> warfare = new ArrayList<Site>();
-    public ArrayList<Site> body = new ArrayList<Site>();
-    public ArrayList<Site> frontier = new ArrayList<Site>();
     
     public Entity(int id, GameMap map) {
 	this.id = id;
@@ -44,47 +40,38 @@ abstract public class Entity {
 
     public void addGate(Site s) {
 	if (!s.get(State.GATE)) {
-	    if (s.get(State.BORDER)) {
-		body.remove(s);
+	    if (s.get(State.BORDER))
 		s.remove(State.BORDER);
-		warfare.add(s); 
-	    } else if (s.get(State.BATTLE))
+	    else if (s.get(State.BATTLE))
 		s.remove(State.BATTLE);
-	    else {
+	    else 
 		addSite(s);
-		warfare.add(s);
-	    }
 	    s.set(State.GATE);
 	}
     }
        
     public void addFrontier(Site s) {
-	frontier.add(s);
 	s.set(State.FRONTIER);
     }
 
     public void addBorder(Site s) {
 	if (!s.get(State.BATTLE) && !s.get(State.GATE) && !s.get(State.BORDER)) {
 	    addSite(s);
-	    body.add(s);
 	    s.set(State.BORDER);
 	}
     }
     
     public void addBattle(Site s) {
 	if (!s.get(State.BATTLE) && !s.get(State.GATE)) {
-	    if (s.get(State.BORDER)) {
-		body.remove(s);
+	    if (s.get(State.BORDER))
 		s.remove(State.BORDER);
-	    } else 
+	    else 
 		addSite(s);
-	    warfare.add(s);
 	    s.set(State.BATTLE);
 	}
     }
 
     public void addInterior(Site s) {
-        body.add(s);
 	s.set(State.INTERIOR);
 	addSite(s);
     }
@@ -92,9 +79,6 @@ abstract public class Entity {
     public void reset() {
 	if (Debug.enabled)
 	    allSites.clear();
-        body.clear();
-        warfare.clear();
-	frontier.clear();
 	totalGenerator = 0;
 	totalUnits = 0;
 	totalSites = 0;

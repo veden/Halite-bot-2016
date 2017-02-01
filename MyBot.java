@@ -14,11 +14,7 @@ public class MyBot {
 	    Parameters.sitePotentialWeight = Float.parseFloat(args[2]);
 	    Parameters.siteCountWeight = Float.parseFloat(args[3]);
 	    Parameters.generatorTotalWeight = Float.parseFloat(args[4]);
-	    // Parameters.level1Defense = Float.parseFloat(args[5]);
-	    // Parameters.level2Defense = Float.parseFloat(args[6]);
-	    // Parameters.level3Defense = Float.parseFloat(args[7]);
-	    // Parameters.phaseLevel2 = Float.parseFloat(args[8]);
-	    // Parameters.phaseLevel3 = Float.parseFloat(args[9]);
+
 	    Parameters.objectiveThreshold = Float.parseFloat(args[10]);
 	    Parameters.objectiveUnitSpread = Float.parseFloat(args[11]);
 	    Parameters.objectiveGeneratorSpread = Float.parseFloat(args[12]);
@@ -27,8 +23,7 @@ public class MyBot {
 	    Parameters.enemyUnitWeight = Float.parseFloat(args[15]);
 	    Parameters.enemyGeneratorSpread = Float.parseFloat(args[16]);
 	    Parameters.enemyUnitSpread = Float.parseFloat(args[17]);
-	    // Parameters.bumpMultiplerThreshold = Float.parseFloat(args[18]);
-	    // Parameters.evadeThreshold = Float.parseFloat(args[19]);
+
 	    Parameters.sitePotentialWeighting = Float.parseFloat(args[20]);
 	    Parameters.sitePotentialDistance = Float.parseFloat(args[21]);
 	}
@@ -37,7 +32,7 @@ public class MyBot {
 	GameMap map = new GameMap();
 	Networking server = new Networking(map); 
 
-	map.analyzeUnexplored();
+	map.prepSites();
 	
 	Debug.startup(map);
 	server.sendInit("VedenV27");
