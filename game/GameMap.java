@@ -3,6 +3,7 @@ package game;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
@@ -91,12 +92,14 @@ public class GameMap{
 	    if (site.units == 0)
 		site.set(S.USED);
 	    else if (site.is(S.ENEMY)) {
-		site.set(S.ATTACK);
+		HashSet<Site> attackSites = new HashSet<Site>();
 		for (Site n : site.neighbors.values()) {
-		    n.set(S.ATTACK);
+		    attackSites.add(n);
 		    for (Site nn : n.neighbors.values())
-			nn.set(S.ATTACK);
+			    attackSites.add(nn);
 		}
+		for (Site s : attackSites)
+		    s.accumulate(P.ENEMY_UNITS, site.units);
 	    }
 	    if (site.aboveActionThreshold())
 		site.set(S.READY);
@@ -246,20 +249,6 @@ public class GameMap{
 	    if (!changed)
 	    	break;
 	}
-
-	// for (int i = 0; i < 8; i++) {
-	//     for (Site s : unexplored) {
-	// 	float totalExplore = 0f;
-	// 	float v = s.v(F.EXPLORE);
-	// 	for (Site n : s.neighbors.values())
-	// 	    if (n.is(S.UNEXPLORED))
-	// 		totalExplore += n.v(F.EXPLORE) - v;
-	// 	s.stagingValue += (1.35f - (Parameters.objectiveUnitSpread * (s.units / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.v(P.GENERATOR) / Stats.maxGenerator)))) * (s.v(F.EXPLORE) + (0.25f * totalExplore));
-	//     }
-	//     for (Site s : sites)
-	// 	s.commit(F.EXPLORE);
-	// }
-
 	
 	for (Site s : sites)
 	    if (s.isNot(S.UNEXPLORED) || (s.v(P.GENERATOR) == 0))

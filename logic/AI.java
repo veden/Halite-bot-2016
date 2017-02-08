@@ -197,8 +197,8 @@ public class AI extends Entity {
 		if (s.is(S.BORDER) || s.is(S.INTERIOR))
 		    body.add(s);
 		else if (s.is(S.BATTLE) || s.is(S.GATE))
-		    if (s.is(S.ATTACK))
-		        attacks.add(s);
+		    if (s.v(P.ENEMY_UNITS) != 0)
+			attacks.add(s);
 		    else
 			warfare.add(s);
 

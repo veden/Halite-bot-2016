@@ -28,6 +28,7 @@
                 accumulator
                 exploreValue
                 distance
+                enemyUnits
                 action
                 battle
                 frontier
@@ -39,7 +40,6 @@
                 objective
                 combatReady
                 gate
-                attack
                 used))
 
   (struct SiteCount (value size))
@@ -126,7 +126,7 @@
                    "eV-" (~v (Site-exploreValue site)) "\n"
                    "acc-" (~v (Site-accumulator site)) "\n"
                    "dis-" (~v (Site-distance site)) "\n"
-                   "atk-" (~v (Site-attack site)) "\n"
+                   "eU-" (~v (Site-enemyUnits site)) "\n"
                    "act-" (~v (Site-action site)) "\n"
                    "use-" (~v (Site-used site)) "\n"
                    ))

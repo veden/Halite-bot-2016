@@ -7,16 +7,13 @@ import game.Site;
 import game.Stats;
 
 import logic.Constants;
+import logic.Constants.A;
 import logic.Constants.D;
 import logic.Constants.F;
 import logic.Constants.P;
 import logic.Constants.S;
 
 public class Actions {
-
-    public static enum Action {
-	IDLE, EXPLORE, JOINT, ASSIST, REINFORCE, BUMP, CAPTURE, BREACH, ATTACK
-    }
     
     public static boolean commitMove(Site a, Site b) {
 	if (a.isNot(S.USED) && (a != b)) {
@@ -74,7 +71,7 @@ public class Actions {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
-		neighbor.action = Action.JOINT;
+		neighbor.action = A.JOINT;
 	    }
 	}
     }
@@ -94,7 +91,7 @@ public class Actions {
 	    }
 	}
 	if (s.moving())
-	    s.action = Action.EXPLORE;
+	    s.action = A.EXPLORE;
     }
 
 
@@ -138,7 +135,7 @@ public class Actions {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
-		neighbor.action = Action.ASSIST;
+		neighbor.action = A.ASSIST;
 	    }
 	    if (lowestHelp.size() > 0)
 		s.set(S.USED);
@@ -165,10 +162,10 @@ public class Actions {
 	    Site target = s.target();
 	    target.heading = Site.reverse(bump);
 	    commitMove(target, s);
-	    target.action = Action.BUMP;
+	    target.action = A.BUMP;
 	}
 	if (s.moving())
-	    s.action = Action.REINFORCE;
+	    s.action = A.REINFORCE;
     }
 
     public static void attack(Site s) {
@@ -192,7 +189,7 @@ public class Actions {
 	    }
 	}
 	if (s.moving())
-	    s.action = Action.ATTACK;
+	    s.action = A.ATTACK;
     }
 
     public static void breach(Site s, GameMap map) {
@@ -205,7 +202,7 @@ public class Actions {
 	    }
 	}
 	if (s.moving())
-	    s.action = Action.BREACH;
+	    s.action = A.BREACH;
     }
     
     public static void capture(Site s) {
@@ -227,7 +224,7 @@ public class Actions {
 	    }
 	}
 	if (s.moving())
-	    s.action = Action.CAPTURE;
+	    s.action = A.CAPTURE;
     }
 
     public static void lock(Site s, float mapScaling) {

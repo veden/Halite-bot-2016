@@ -4,12 +4,12 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 
 import logic.Constants;
+import logic.Constants.A;
 import logic.Constants.D;
 import logic.Constants.F;
 import logic.Constants.P;
 import logic.Constants.S;
 import logic.Parameters;
-import logic.util.Actions.Action;
 
 public class Site {
     public int id;
@@ -24,7 +24,7 @@ public class Site {
     public int outgoing;
 
     public D heading = D.STILL;
-    public Action action = Action.IDLE;
+    public A action = A.IDLE;
 
     public EnumMap<D, Site> neighbors = new EnumMap<D, Site>(D.class);
     public EnumMap<P, Float> properties = new EnumMap<P, Float>(P.class);
@@ -110,6 +110,12 @@ public class Site {
 	stagingValue = 0;
     }
 
+    public void accumulate(P property, float v) {
+	if (!properties.containsKey(property))
+	    properties.put(property, 0f);
+	properties.put(property, properties.get(property) + v);
+    }
+    
     public void set(S s) {
 	status.add(s);
     }
@@ -150,8 +156,9 @@ public class Site {
 	    set(field, 0);
 
 	set(P.DISTANCE, 0);
+	set(P.ENEMY_UNITS, 0);
 	set(P.ALLOWED_UNITS, Constants.MAX_UNITS);
-	action = Action.IDLE;
+	action = A.IDLE;
 	incoming = 0;
 	outgoing = 0;
 	heading = D.STILL;
@@ -181,7 +188,7 @@ public class Site {
     }
 
     public String encodeAttributes() {
-	return units + " " + owner + " " + v(F.EXPLORE) + " " + v(F.REINFORCE) + " " + v(F.DAMAGE) + " " + v(P.ALLOWED_UNITS) + " " + v(P.AGE) + " " + v(P.ACCUMULATOR) + " " + v(P.EXPLORE_VALUE) + " " + v(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
+	return units + " " + owner + " " + v(F.EXPLORE) + " " + v(F.REINFORCE) + " " + v(F.DAMAGE) + " " + v(P.ALLOWED_UNITS) + " " + v(P.AGE) + " " + v(P.ACCUMULATOR) + " " + v(P.EXPLORE_VALUE) + " " + v(P.DISTANCE) + " " + action.ordinal() + " " + v(P.ENEMY_UNITS) + " " + compressAttributes();
     }
 
     public String encodeSite() {
