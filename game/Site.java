@@ -48,13 +48,13 @@ public class Site {
 
     public float generateExploreValue() {
 	float v = 0;
-	if (value(P.GENERATOR) != 0)
+	if (v(P.GENERATOR) != 0)
 	    v = ((1f - (units/Constants.MAX_UNITS)) *
-	    	 ((Parameters.generatorWeight * ((value(P.GENERATOR) / Stats.maxGenerator))) +
-		  (Parameters.siteCostWeight * ((1f / ((float)units / value(P.GENERATOR))) / Stats.maxGenerator)) +
+	    	 ((Parameters.generatorWeight * ((v(P.GENERATOR) / Stats.maxGenerator))) +
+		  (Parameters.siteCostWeight * ((1f / ((float)units / v(P.GENERATOR))) / Stats.maxGenerator)) +
 		  (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
-		  (Parameters.siteCountWeight * (1f - ((Stats.siteCounter.get(value(P.GENERATOR)) / Stats.totalSites)))) +
-		  (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(value(P.GENERATOR)) * value(P.GENERATOR)) / Stats.totalGenerator))
+		  (Parameters.siteCountWeight * (1f - ((Stats.siteCounter.get(v(P.GENERATOR)) / Stats.totalSites)))) +
+		  (Parameters.generatorTotalWeight * ((Stats.siteCounter.get(v(P.GENERATOR)) * v(P.GENERATOR)) / Stats.totalGenerator))
 		  ));
 	set(P.EXPLORE_VALUE, v);
 	return v;
@@ -67,7 +67,7 @@ public class Site {
 	    age();
 	else {
 	    set(P.AGE, 0);
-	    set(P.ACCUMULATOR, Math.max(Parameters.baseAccumulator, value(P.ACCUMULATOR) - 0.5f));
+	    set(P.ACCUMULATOR, Math.max(Parameters.baseAccumulator, v(P.ACCUMULATOR) - 0.5f));
 	}
 	owner = o;
 	if (owner == 0) {
@@ -81,11 +81,11 @@ public class Site {
     }
     
     public boolean aboveActionThreshold() {
-	return value(P.GENERATOR) * value(P.ACCUMULATOR) < units;
+	return v(P.GENERATOR) * v(P.ACCUMULATOR) < units;
     }
 
     public boolean aboveCombatThreshold() {
-	return value(P.GENERATOR) * (value(P.ACCUMULATOR) * 0.65) < units;
+	return v(P.GENERATOR) * (v(P.ACCUMULATOR) * 0.65) < units;
     }
 
     public String encodeMove() {
@@ -114,27 +114,31 @@ public class Site {
 	status.add(s);
     }
 
-    public void set(P property, float value) {
-	properties.put(property, value);
+    public void set(P property, float v) {
+	properties.put(property, v);
     }
 
-    public void set(F field, float value) {
-        fields.put(field, value);
+    public void set(F field, float v) {
+        fields.put(field, v);
     }
 
     public void remove(S s) {
 	status.remove(s);
     }
     
-    public boolean get(S s) {
+    public boolean is(S s) {
 	return status.contains(s);
     }
 
-    public float value(P property) {
+    public boolean isNot(S s) {
+	return !status.contains(s);
+    }
+
+    public float v(P property) {
 	return properties.get(property);
     }
 
-    public float value(F field) {
+    public float v(F field) {
 	return fields.get(field);
     }
  
@@ -154,9 +158,9 @@ public class Site {
     }
 
     public void age() {
-	float currentAge = value(P.AGE)+1;
+	float currentAge = v(P.AGE)+1;
 	if (currentAge == 15) {
-	    float v = Math.min(value(P.ACCUMULATOR)+1f, 90.0f / value(P.GENERATOR));
+	    float v = Math.min(v(P.ACCUMULATOR)+1f, 90.0f / v(P.GENERATOR));
 	    set(P.ACCUMULATOR, v);
 	    set(P.AGE, 0);
 	} else
@@ -177,11 +181,11 @@ public class Site {
     }
 
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(F.EXPLORE) + " " + value(F.REINFORCE) + " " + value(F.DAMAGE) + " " + value(P.ALLOWED_UNITS) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
+	return units + " " + owner + " " + v(F.EXPLORE) + " " + v(F.REINFORCE) + " " + v(F.DAMAGE) + " " + v(P.ALLOWED_UNITS) + " " + v(P.AGE) + " " + v(P.ACCUMULATOR) + " " + v(P.EXPLORE_VALUE) + " " + v(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
     }
 
     public String encodeSite() {
-	return x + " " + y + " " + value(P.GENERATOR);
+	return x + " " + y + " " + v(P.GENERATOR);
     }
      
     @Override

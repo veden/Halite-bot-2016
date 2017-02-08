@@ -13,7 +13,7 @@ public class CompareUtil {
 	return new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
-		float v = o2.value(siteProperty) - o1.value(siteProperty);
+		float v = o2.v(siteProperty) - o1.v(siteProperty);
 		if (v == 0)
 		    return o1.id - o2.id;
 		return v > 0 ? 1 : -1;
@@ -26,7 +26,7 @@ public class CompareUtil {
 	return new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
-		float v = o2.value(field) - o1.value(field);
+		float v = o2.v(field) - o1.v(field);
 		if (v == 0)
 		    return o1.id - o2.id;
 		return v > 0 ? 1 : -1;
@@ -38,7 +38,7 @@ public class CompareUtil {
 	return new Comparator<Site>() {
 	    @Override
 	    public int compare(Site o1, Site o2) {
-		float v = o1.value(siteProperty) - o2.value(siteProperty);
+		float v = o1.v(siteProperty) - o2.v(siteProperty);
 		if (v == 0)
 		    return o1.id - o2.id;
 		return v > 0 ? 1 : -1;

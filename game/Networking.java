@@ -32,15 +32,15 @@ public class Networking {
 	        float gen = Float.parseFloat(inputStringComponents[index++]);
 		Site center = map.getSite(b, a);
 		center.set(P.GENERATOR, (float)gen);
-		Stats.totalGenerator += center.value(P.GENERATOR);
+		Stats.totalGenerator += center.v(P.GENERATOR);
 		center.neighbors.put(D.NORTH, map.getSite(b, a - 1));
 		center.neighbors.put(D.EAST, map.getSite(b + 1, a));
 		center.neighbors.put(D.SOUTH, map.getSite(b, a + 1));
 		center.neighbors.put(D.WEST,  map.getSite(b - 1, a));
-		if (center.value(P.GENERATOR) > Stats.maxGenerator)
-		    Stats.maxGenerator = center.value(P.GENERATOR);
-		if (center.value(P.GENERATOR) < Stats.minGenerator)
-		    Stats.minGenerator = center.value(P.GENERATOR);
+		if (center.v(P.GENERATOR) > Stats.maxGenerator)
+		    Stats.maxGenerator = center.v(P.GENERATOR);
+		if (center.v(P.GENERATOR) < Stats.minGenerator)
+		    Stats.minGenerator = center.v(P.GENERATOR);
 		if (!Stats.siteCounter.containsKey(gen))
 		    Stats.siteCounter.put((float)gen, 1.0f);
 		else
@@ -63,7 +63,7 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
-		s.assign(owner, s.owner, map.bot.id, s.get(S.OBJECTIVE), map.scaling);
+		s.assign(owner, s.owner, map.bot.id, s.is(S.OBJECTIVE), map.scaling);
 		++x;
 		if(x == map.width) {
 		    x = 0;

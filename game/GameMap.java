@@ -50,7 +50,7 @@ public class GameMap{
     }
 
     public void addUnexplored(Site s) {
-        Stats.totalUnexploredGenerator += s.value(P.GENERATOR);
+        Stats.totalUnexploredGenerator += s.v(P.GENERATOR);
 	s.set(S.UNEXPLORED);
     }
     
@@ -71,26 +71,26 @@ public class GameMap{
     public void collectStats() {
 	for (int i = 0; i < sites.length; i++) {
 	    Site s = sites[i];
-	    if (s.value(F.EXPLORE) > Stats.maxExplore)
-		Stats.maxExplore = s.value(F.EXPLORE);
-	    if (s.value(F.EXPLORE) < Stats.minExplore)
-		Stats.minExplore = s.value(F.EXPLORE);
-	    if (s.value(F.REINFORCE) > Stats.maxReinforce)
-		Stats.maxReinforce = s.value(F.REINFORCE);
-	    if (s.value(F.REINFORCE) < Stats.minReinforce)
-		Stats.minReinforce = s.value(F.REINFORCE);
-	    if (s.value(F.DAMAGE) > Stats.maxDamage)
-		Stats.maxDamage = s.value(F.DAMAGE);
-	    if (s.value(F.DAMAGE) < Stats.minDamage)
-		Stats.minDamage = s.value(F.DAMAGE);
+	    if (s.v(F.EXPLORE) > Stats.maxExplore)
+		Stats.maxExplore = s.v(F.EXPLORE);
+	    if (s.v(F.EXPLORE) < Stats.minExplore)
+		Stats.minExplore = s.v(F.EXPLORE);
+	    if (s.v(F.REINFORCE) > Stats.maxReinforce)
+		Stats.maxReinforce = s.v(F.REINFORCE);
+	    if (s.v(F.REINFORCE) < Stats.minReinforce)
+		Stats.minReinforce = s.v(F.REINFORCE);
+	    if (s.v(F.DAMAGE) > Stats.maxDamage)
+		Stats.maxDamage = s.v(F.DAMAGE);
+	    if (s.v(F.DAMAGE) < Stats.minDamage)
+		Stats.minDamage = s.v(F.DAMAGE);
 	}
     }
     
     public void classifySite(Site site) {
-	if (site.get(S.MINE) || site.get(S.ENEMY)) {
+	if (site.is(S.MINE) || site.is(S.ENEMY)) {
 	    if (site.units == 0)
 		site.set(S.USED);
-	    else if (site.get(S.ENEMY)) {
+	    else if (site.is(S.ENEMY)) {
 		site.set(S.ATTACK);
 		for (Site n : site.neighbors.values()) {
 		    n.set(S.ATTACK);
@@ -104,14 +104,14 @@ public class GameMap{
 		site.set(S.COMBAT_READY);
 	    
 	    Entity e;
-	    if (site.get(S.MINE))
+	    if (site.is(S.MINE))
 		e = bot;
 	    else 
 		e = getEnemy(site.owner);
 	    
 	    boolean border = false;
 	    for (Site neighbor : site.neighbors.values())
-		if (neighbor.get(S.NEUTRAL)) {
+		if (neighbor.is(S.NEUTRAL)) {
 		    border = true;
 		    break;
 		} 
@@ -120,13 +120,13 @@ public class GameMap{
 		e.addInterior(site);
 	    else
 		e.addBorder(site);
-	} else if (site.get(S.NEUTRAL)) {
+	} else if (site.is(S.NEUTRAL)) {
 	    if (site.units == 0) {
 		HashMap<Integer, Boolean> neighborCheck = new HashMap<Integer, Boolean>();
 		for (Site neighbor : site.neighbors.values()) {
-		    if (neighbor.get(S.MINE))
+		    if (neighbor.is(S.MINE))
 			bot.addBattle(neighbor);
-		    else if (neighbor.get(S.ENEMY))
+		    else if (neighbor.is(S.ENEMY))
 			getEnemy(neighbor.owner).addBattle(neighbor);
 		    if (neighbor.owner != 0)
 			neighborCheck.put(neighbor.owner, true);
@@ -138,9 +138,9 @@ public class GameMap{
 	        ArrayList<Site> frontier = new ArrayList<Site>();
 		ArrayList<Site> frontierEnemy = new ArrayList<Site>();
 		for (Site neighbor : site.neighbors.values())
-		    if (neighbor.get(S.MINE))
+		    if (neighbor.is(S.MINE))
 			frontier.add(neighbor);
-		    else if (neighbor.get(S.ENEMY))
+		    else if (neighbor.is(S.ENEMY))
 			frontierEnemy.add(neighbor);
 		if ((frontier.size() > 0) && (frontierEnemy.size() > 0)) {
 		    for (Site s : frontier)
@@ -154,7 +154,7 @@ public class GameMap{
 		    else if (frontierEnemy.size() > 0) {
 			// BitSet used = new BitSet();
 			// for (Site s : frontierEnemy)
-			//     if (!used.get(s.owner)) {
+			//     if (!used.is(s.owner)) {
 			// 	used.set(s.owner);
 			// 	getEnemy(s.owner).addFrontier(site);
 			//     }
@@ -168,10 +168,10 @@ public class GameMap{
     public void prepSites() {
 	for (Site s : sites) {
 	    RingIterator ri = new RingIterator(s);
-	    float total = s.value(P.GENERATOR);
+	    float total = s.v(P.GENERATOR);
 	    for (int d = 0; d < Parameters.sitePotentialDistance && ri.hasNext(); d++) 
 		for (Site r : ri.next()) 
-		    total += (r.value(P.GENERATOR) / Stats.maxGenerator) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
+		    total += (r.v(P.GENERATOR) / Stats.maxGenerator) * (1f - (Parameters.sitePotentialWeighting * (1 + d)));
 	    s.sitePotential = total / Stats.totalGenerator;
 	    if (s.sitePotential > Stats.maxSitePotential)
 		Stats.maxSitePotential = s.sitePotential;
@@ -186,13 +186,13 @@ public class GameMap{
 	}
 
 	for (Site s : sites)
-	    s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.value(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
+	    s.set(P.EXPLORE_VALUE, MathUtil.normalize(s.v(P.EXPLORE_VALUE), Stats.minExploreValue, Stats.maxExploreValue));
     }
     
     public void scoreUnexplored() {
 	ArrayList<Site> unexplored = new ArrayList<Site>((int)Stats.totalSites);
 	for (Site s : sites)
-	    if (s.get(S.UNEXPLORED))
+	    if (s.is(S.UNEXPLORED))
 		unexplored.add(s);
 	
 	scaling = (1 - ((float)unexplored.size() / Stats.totalSites));
@@ -206,17 +206,17 @@ public class GameMap{
 
 	float total = 0f;
 	for (Site s : unexplored)
-	    total += s.value(P.EXPLORE_VALUE);
+	    total += s.v(P.EXPLORE_VALUE);
 	total *= Parameters.objectiveThreshold;
 	
 	for (Site s : unexplored) {	   
 	    if (total > 0) {
-		total -= s.value(P.EXPLORE_VALUE);
-		if (s.value(F.EXPLORE) < s.value(P.EXPLORE_VALUE))
-		    s.set(F.EXPLORE, s.value(P.EXPLORE_VALUE));
-		float v = s.value(F.EXPLORE) * 0.95f;
+		total -= s.v(P.EXPLORE_VALUE);
+		if (s.v(F.EXPLORE) < s.v(P.EXPLORE_VALUE))
+		    s.set(F.EXPLORE, s.v(P.EXPLORE_VALUE));
+		float v = s.v(F.EXPLORE) * 0.95f;
 		for (Site n : s.neighbors.values())
-		    if ((v >= n.value(F.EXPLORE)))
+		    if ((v >= n.v(F.EXPLORE)))
 			n.set(F.EXPLORE, v);
 		objectivePoints.add(s);
 	    } else
@@ -226,7 +226,7 @@ public class GameMap{
 					     new Predicate<Site>() {
 						 @Override
 						 public boolean test(Site t) {
-						     return (t.value(F.EXPLORE) != 0);
+						     return (t.v(F.EXPLORE) != 0);
 						 }
 					     });
 
@@ -235,9 +235,9 @@ public class GameMap{
 	    ArrayList<Site> sortedNeighbors = riop.next();
 	    Collections.sort(sortedNeighbors, CompareUtil.maxField(F.EXPLORE));
 	    for (Site s : sortedNeighbors) {
-		float absorb = s.value(F.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.value(P.GENERATOR) / Stats.maxGenerator))));
+		float absorb = s.v(F.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.v(P.GENERATOR) / Stats.maxGenerator))));
 		for (Site sn : s.neighbors.values()) {
-		    if ((absorb > sn.value(F.EXPLORE))) {
+		    if ((absorb > sn.v(F.EXPLORE))) {
 			sn.set(F.EXPLORE, absorb);
 			changed = true;
 		    }
@@ -250,18 +250,19 @@ public class GameMap{
 	// for (int i = 0; i < 8; i++) {
 	//     for (Site s : unexplored) {
 	// 	float totalExplore = 0f;
-	// 	float value = s.v(F.EXPLORE);
+	// 	float v = s.v(F.EXPLORE);
 	// 	for (Site n : s.neighbors.values())
 	// 	    if (n.is(S.UNEXPLORED))
-	// 		totalExplore += n.v(F.EXPLORE) - value;
-	// 	s.stage(F.EXPLORE, (1.35f - (Parameters.objectiveUnitSpread * (s.v(P.UNITS) / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.v(P.GENERATOR) / Stats.maxGenerator)))) * (s.v(F.EXPLORE) + (0.25f * totalExplore)));
+	// 		totalExplore += n.v(F.EXPLORE) - v;
+	// 	s.stagingValue += (1.35f - (Parameters.objectiveUnitSpread * (s.units / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.v(P.GENERATOR) / Stats.maxGenerator)))) * (s.v(F.EXPLORE) + (0.25f * totalExplore));
 	//     }
 	//     for (Site s : sites)
-	// 	s.commit();
+	// 	s.commit(F.EXPLORE);
+	// }
 
 	
 	for (Site s : sites)
-	    if (!s.get(S.UNEXPLORED) || (s.value(P.GENERATOR) == 0))
+	    if (s.isNot(S.UNEXPLORED) || (s.v(P.GENERATOR) == 0))
 		s.set(F.EXPLORE, 0);
     }
 	

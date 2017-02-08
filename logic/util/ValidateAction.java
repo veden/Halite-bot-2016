@@ -9,13 +9,13 @@ import logic.Constants.S;
 
 public class ValidateAction {
     public static boolean bump(Site a, Site b) {
-	if (!a.get(S.USED) &&
-	    b.get(S.MINE) &&
+	if (a.isNot(S.USED) &&
+	    b.is(S.MINE) &&
 	    !b.moving() &&
-	    !b.get(S.USED) &&
+	    b.isNot(S.USED) &&
 	    (a.units > b.units) &&
-	    (b.value(P.ALLOWED_UNITS) >= a.units) &&
-	    (a.value(P.ALLOWED_UNITS) >= b.units)) {
+	    (b.v(P.ALLOWED_UNITS) >= a.units) &&
+	    (a.v(P.ALLOWED_UNITS) >= b.units)) {
 	    
 	    float aV = a.units + b.units + b.incoming;
 	    float bV = b.units + a.incoming;
@@ -31,7 +31,7 @@ public class ValidateAction {
     }
     
     public static boolean move(Site a, Site b) {
-	if (!a.get(S.USED) && b.get(S.MINE) && (b.value(P.ALLOWED_UNITS) >= a.units)) {
+	if (a.isNot(S.USED) && b.is(S.MINE) && (b.v(P.ALLOWED_UNITS) >= a.units)) {
 	    float units = a.units + b.incoming + b.units - b.outgoing;
 	    return units <= Constants.MAX_UNITS;
 	}
@@ -39,7 +39,7 @@ public class ValidateAction {
     }
 
     public static boolean explore(Site a, Site b) {
-	if (!a.get(S.USED) && b.get(S.UNEXPLORED) && (b.value(P.ALLOWED_UNITS) >= a.units) && (b.incoming < b.units)) {
+	if (a.isNot(S.USED) && b.is(S.UNEXPLORED) && (b.v(P.ALLOWED_UNITS) >= a.units) && (b.incoming < b.units)) {
 	    float remainingUnits = a.units + b.incoming - b.units;
 	    return (remainingUnits > 0) && (remainingUnits <= Constants.MAX_UNITS);
 	}
@@ -47,16 +47,16 @@ public class ValidateAction {
     }
 
     public static boolean capture(Site a, Site b) {
-	return !a.get(S.USED) && b.get(S.OPEN) && (b.value(P.ALLOWED_UNITS) >= a.units) && (b.incoming == 0);
+	return a.isNot(S.USED) && b.is(S.OPEN) && (b.v(P.ALLOWED_UNITS) >= a.units) && (b.incoming == 0);
     }
 
     public static boolean breach(Site a, Site b, GameMap map) {
-	if (!a.get(S.USED) && b.get(S.NEUTRAL) && b.get(S.GATE) && (b.value(P.ALLOWED_UNITS) >= a.units)) {
+	if (a.isNot(S.USED) && b.is(S.NEUTRAL) && b.is(S.GATE) && (b.v(P.ALLOWED_UNITS) >= a.units)) {
 	    float highestUnit = 0;
 	    boolean strongerThan = true;
 	    for (Site neighbor : b.neighbors.values()) {
-		float v = neighbor.value(P.GENERATOR);
-		if (neighbor.get(S.ENEMY) && (highestUnit < v)) {
+		float v = neighbor.v(P.GENERATOR);
+		if (neighbor.is(S.ENEMY) && (highestUnit < v)) {
 		    highestUnit = v;
 		    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
 			strongerThan = false;
@@ -72,7 +72,7 @@ public class ValidateAction {
     }
     
     public static boolean attack(Site a, Site b) {
-	if (!a.get(S.USED) && b.get(S.NEUTRAL) && b.get(S.BATTLE) && !b.get(S.GATE) && !b.get(S.OPEN) && (b.value(P.ALLOWED_UNITS) >= a.units)) {
+	if (a.isNot(S.USED) && b.is(S.NEUTRAL) && b.is(S.BATTLE) && b.isNot(S.GATE) && b.isNot(S.OPEN) && (b.v(P.ALLOWED_UNITS) >= a.units)) {
 	    float v = a.units + b.incoming;
 	    return (v <= Constants.MAX_UNITS);
 	} else

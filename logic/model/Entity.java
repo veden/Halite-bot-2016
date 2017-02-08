@@ -29,7 +29,7 @@ abstract public class Entity {
     }
     
     private void addSite(Site s) {
-	totalGenerator += s.value(P.GENERATOR);
+	totalGenerator += s.v(P.GENERATOR);
 	totalUnits += s.units;
 	totalSites += 1;
 	if (Debug.enabled) {
@@ -40,10 +40,10 @@ abstract public class Entity {
     }
 
     public void addGate(Site s) {
-	if (!s.get(S.GATE)) {
-	    if (s.get(S.BORDER))
+	if (s.isNot(S.GATE)) {
+	    if (s.is(S.BORDER))
 		s.remove(S.BORDER);
-	    else if (s.get(S.BATTLE))
+	    else if (s.is(S.BATTLE))
 		s.remove(S.BATTLE);
 	    else 
 		addSite(s);
@@ -56,15 +56,15 @@ abstract public class Entity {
     }
 
     public void addBorder(Site s) {
-	if (!s.get(S.BATTLE) && !s.get(S.GATE) && !s.get(S.BORDER)) {
+	if (s.isNot(S.BATTLE) && s.isNot(S.GATE) && s.isNot(S.BORDER)) {
 	    addSite(s);
 	    s.set(S.BORDER);
 	}
     }
     
     public void addBattle(Site s) {
-	if (!s.get(S.BATTLE) && !s.get(S.GATE)) {
-	    if (s.get(S.BORDER))
+	if (s.isNot(S.BATTLE) && s.isNot(S.GATE)) {
+	    if (s.is(S.BORDER))
 		s.remove(S.BORDER);
 	    else 
 		addSite(s);
