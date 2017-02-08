@@ -3,47 +3,32 @@ package game;
 import java.util.EnumMap;
 import java.util.EnumSet;
 
+import logic.Constants;
+import logic.Constants.D;
+import logic.Constants.F;
+import logic.Constants.P;
+import logic.Constants.S;
 import logic.Parameters;
 import logic.util.Actions.Action;
 
-public class Site {    
-
-    public static enum State {
-	BATTLE, FRONTIER, UNEXPLORED, INTERIOR, BORDER, OPEN,
-	READY, OBJECTIVE, COMBAT_READY, GATE, ATTACK, USED,
-
-	MINE, NEUTRAL, ENEMY
-    }
-
-    public static enum P {
-	EXPLORE_VALUE, EXPLORE, REINFORCE, DAMAGE, GENERATOR, AGE, ACCUMULATOR, LOCKED, DISTANCE
-    }
-
-    public static enum Direction {
-	NORTH, EAST, SOUTH, WEST, STILL;
-    }
-
-    public static final EnumSet<Direction> DIRECTIONS = EnumSet.of(Direction.STILL, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-    public static final EnumSet<Direction> CARDINALS = EnumSet.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-
-    public static final float MAX_STRENGTH = 255f;
-
+public class Site {
     public int id;
     public int units;
     public final int x;
     public final int y;
 
     public int owner;
-    public EnumSet<State> status = EnumSet.noneOf(State.class);
+    public EnumSet<S> status = EnumSet.noneOf(S.class);
    
     public int incoming;
     public int outgoing;
 
-    public Direction heading = Direction.STILL;
+    public D heading = D.STILL;
     public Action action = Action.IDLE;
 
-    public EnumMap<Direction, Site> neighbors = new EnumMap<Direction, Site>(Direction.class);
+    public EnumMap<D, Site> neighbors = new EnumMap<D, Site>(D.class);
     public EnumMap<P, Float> properties = new EnumMap<P, Float>(P.class);
+    public EnumMap<F, Float> fields = new EnumMap<F, Float>(F.class);
 
     public float stagingValue = 0f;
     
@@ -55,6 +40,8 @@ public class Site {
 	this.id = (int)(x * height + y);
 	for (P p : P.values())
 	    set(p, 0f);
+	for (F f : F.values())
+	    set(f, 0f);
 	set(P.EXPLORE_VALUE, -Float.MAX_VALUE);
 	set(P.ACCUMULATOR, Parameters.baseAccumulator);
     }
@@ -62,7 +49,7 @@ public class Site {
     public float generateExploreValue() {
 	float v = 0;
 	if (value(P.GENERATOR) != 0)
-	    v = ((1f - (units/Site.MAX_STRENGTH)) *
+	    v = ((1f - (units/Constants.MAX_UNITS)) *
 	    	 ((Parameters.generatorWeight * ((value(P.GENERATOR) / Stats.maxGenerator))) +
 		  (Parameters.siteCostWeight * ((1f / ((float)units / value(P.GENERATOR))) / Stats.maxGenerator)) +
 		  (Parameters.sitePotentialWeight * (sitePotential / Stats.maxSitePotential)) +
@@ -84,13 +71,13 @@ public class Site {
 	}
 	owner = o;
 	if (owner == 0) {
-	    set(State.NEUTRAL);
+	    set(S.NEUTRAL);
 	    if (objective)
-		set(State.OBJECTIVE);
+		set(S.OBJECTIVE);
 	} else if (owner == myId)
-	    set(State.MINE);
+	    set(S.MINE);
 	else
-	    set(State.ENEMY);
+	    set(S.ENEMY);
     }
     
     public boolean aboveActionThreshold() {
@@ -106,7 +93,7 @@ public class Site {
     }
 
     public boolean moving() {
-	return heading != Direction.STILL;
+	return heading != D.STILL;
     }
 
     public Site target() {
@@ -118,12 +105,12 @@ public class Site {
 	}
     }
     
-    public void commit(P property) {
-	set(property, stagingValue);
+    public void commit(F field) {
+	set(field, stagingValue);
 	stagingValue = 0;
     }
 
-    public void set(State s) {
+    public void set(S s) {
 	status.add(s);
     }
 
@@ -131,30 +118,39 @@ public class Site {
 	properties.put(property, value);
     }
 
-    public void remove(State s) {
+    public void set(F field, float value) {
+        fields.put(field, value);
+    }
+
+    public void remove(S s) {
 	status.remove(s);
     }
     
-    public boolean get(State s) {
+    public boolean get(S s) {
 	return status.contains(s);
     }
 
     public float value(P property) {
 	return properties.get(property);
     }
+
+    public float value(F field) {
+	return fields.get(field);
+    }
  
     public void reset() {
 	status.clear();
 	stagingValue = 0;
-	set(P.EXPLORE, 0);
-	set(P.REINFORCE, 0);
+
+	for (F field : F.values())
+	    set(field, 0);
+
 	set(P.DISTANCE, 0);
-	set(P.DAMAGE, 0);
-	set(P.LOCKED, Float.MAX_VALUE);
+	set(P.ALLOWED_UNITS, Constants.MAX_UNITS);
 	action = Action.IDLE;
 	incoming = 0;
 	outgoing = 0;
-	heading = Direction.STILL;
+	heading = D.STILL;
     }
 
     public void age() {
@@ -170,18 +166,18 @@ public class Site {
     public int compressAttributes() {
 	int result = 0;
 	int highest = 0;
-	for (Enum<State> p : State.values()) {
-	    if (p.ordinal() == State.MINE.ordinal())
+	for (Enum<S> p : S.values()) {
+	    if (p.ordinal() == S.MINE.ordinal())
 		break;
 	    result = result | (status.contains(p) ? 1 : 0) << p.ordinal();
 	    if (p.ordinal() > highest)
 		highest = p.ordinal();
 	}
-	return result | 1 << (State.MINE.ordinal());
+	return result | 1 << (S.MINE.ordinal());
     }
 
     public String encodeAttributes() {
-	return units + " " + owner + " " + value(P.EXPLORE) + " " + value(P.REINFORCE) + " " + value(P.DAMAGE) + " " + value(P.LOCKED) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
+	return units + " " + owner + " " + value(F.EXPLORE) + " " + value(F.REINFORCE) + " " + value(F.DAMAGE) + " " + value(P.ALLOWED_UNITS) + " " + value(P.AGE) + " " + value(P.ACCUMULATOR) + " " + value(P.EXPLORE_VALUE) + " " + value(P.DISTANCE) + " " + action.ordinal() + " " + compressAttributes();
     }
 
     public String encodeSite() {
@@ -197,30 +193,30 @@ public class Site {
 	return false;
     }
 
-    public static int encodeDirection(Direction d) {
+    public static int encodeDirection(D d) {
 	int o;
-	if (d == Direction.NORTH)
+	if (d == D.NORTH)
 	    o = 1;
-	else if (d == Direction.EAST)
+	else if (d == D.EAST)
 	    o = 2;
-	else if (d == Direction.SOUTH)
+	else if (d == D.SOUTH)
 	    o = 3;
-	else if (d == Direction.WEST)
+	else if (d == D.WEST)
 	    o = 4;
 	else
 	    o = 0;
 	return o;
     }
 
-    public static Direction reverse(Direction d) {
-	if (d == Direction.NORTH)
-	    return Direction.SOUTH;
-	else if (d == Direction.EAST)
-	    return Direction.WEST;
-	else if (d == Direction.SOUTH)
-	    return Direction.NORTH;
-	else if (d == Direction.WEST)
-	    return Direction.EAST;
-	return Direction.STILL;
+    public static D reverse(D d) {
+	if (d == D.NORTH)
+	    return D.SOUTH;
+	else if (d == D.EAST)
+	    return D.WEST;
+	else if (d == D.SOUTH)
+	    return D.NORTH;
+	else if (d == D.WEST)
+	    return D.EAST;
+	return D.STILL;
     }
 }

@@ -1,10 +1,9 @@
 package game;
 
-import game.Site.Direction;
-import game.Site.P;
-import game.Site.State;
-
 import logic.AI;
+import logic.Constants.D;
+import logic.Constants.P;
+import logic.Constants.S;
 
 public class Networking {
     private GameMap map;
@@ -34,10 +33,10 @@ public class Networking {
 		Site center = map.getSite(b, a);
 		center.set(P.GENERATOR, (float)gen);
 		Stats.totalGenerator += center.value(P.GENERATOR);
-		center.neighbors.put(Direction.NORTH, map.getSite(b, a - 1));
-		center.neighbors.put(Direction.EAST, map.getSite(b + 1, a));
-		center.neighbors.put(Direction.SOUTH, map.getSite(b, a + 1));
-		center.neighbors.put(Direction.WEST,  map.getSite(b - 1, a));
+		center.neighbors.put(D.NORTH, map.getSite(b, a - 1));
+		center.neighbors.put(D.EAST, map.getSite(b + 1, a));
+		center.neighbors.put(D.SOUTH, map.getSite(b, a + 1));
+		center.neighbors.put(D.WEST,  map.getSite(b - 1, a));
 		if (center.value(P.GENERATOR) > Stats.maxGenerator)
 		    Stats.maxGenerator = center.value(P.GENERATOR);
 		if (center.value(P.GENERATOR) < Stats.minGenerator)
@@ -64,7 +63,7 @@ public class Networking {
 	    currentIndex += 2;
 	    for(int a = 0; a < counter; ++a) {
 		Site s = map.getSite(x, y);
-		s.assign(owner, s.owner, map.bot.id, s.get(State.OBJECTIVE), map.scaling);
+		s.assign(owner, s.owner, map.bot.id, s.get(S.OBJECTIVE), map.scaling);
 		++x;
 		if(x == map.width) {
 		    x = 0;
@@ -119,7 +118,7 @@ public class Networking {
 	StringBuilder sb = new StringBuilder();
 	for (int i = 0; i < map.sites.length; i++) {
 	    Site s = map.sites[i];
-	    if (s.heading != Direction.STILL)
+	    if (s.heading != D.STILL)
 		sb.append(s.encodeMove());
 	}
 	sendString(sb.toString());

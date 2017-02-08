@@ -6,10 +6,11 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
-import game.Site.P;
-import game.Site.State;
-
 import logic.AI;
+import logic.Constants;
+import logic.Constants.F;
+import logic.Constants.P;
+import logic.Constants.S;
 import logic.Parameters;
 import logic.model.Enemy;
 import logic.model.Entity;
@@ -50,7 +51,7 @@ public class GameMap{
 
     public void addUnexplored(Site s) {
         Stats.totalUnexploredGenerator += s.value(P.GENERATOR);
-	s.set(State.UNEXPLORED);
+	s.set(S.UNEXPLORED);
     }
     
     public float manhattanDistance(Site s1, Site s2) {
@@ -70,47 +71,47 @@ public class GameMap{
     public void collectStats() {
 	for (int i = 0; i < sites.length; i++) {
 	    Site s = sites[i];
-	    if (s.value(P.EXPLORE) > Stats.maxExplore)
-		Stats.maxExplore = s.value(P.EXPLORE);
-	    if (s.value(P.EXPLORE) < Stats.minExplore)
-		Stats.minExplore = s.value(P.EXPLORE);
-	    if (s.value(P.REINFORCE) > Stats.maxReinforce)
-		Stats.maxReinforce = s.value(P.REINFORCE);
-	    if (s.value(P.REINFORCE) < Stats.minReinforce)
-		Stats.minReinforce = s.value(P.REINFORCE);
-	    if (s.value(P.DAMAGE) > Stats.maxDamage)
-		Stats.maxDamage = s.value(P.DAMAGE);
-	    if (s.value(P.DAMAGE) < Stats.minDamage)
-		Stats.minDamage = s.value(P.DAMAGE);
+	    if (s.value(F.EXPLORE) > Stats.maxExplore)
+		Stats.maxExplore = s.value(F.EXPLORE);
+	    if (s.value(F.EXPLORE) < Stats.minExplore)
+		Stats.minExplore = s.value(F.EXPLORE);
+	    if (s.value(F.REINFORCE) > Stats.maxReinforce)
+		Stats.maxReinforce = s.value(F.REINFORCE);
+	    if (s.value(F.REINFORCE) < Stats.minReinforce)
+		Stats.minReinforce = s.value(F.REINFORCE);
+	    if (s.value(F.DAMAGE) > Stats.maxDamage)
+		Stats.maxDamage = s.value(F.DAMAGE);
+	    if (s.value(F.DAMAGE) < Stats.minDamage)
+		Stats.minDamage = s.value(F.DAMAGE);
 	}
     }
     
     public void classifySite(Site site) {
-	if (site.get(State.MINE) || site.get(State.ENEMY)) {
+	if (site.get(S.MINE) || site.get(S.ENEMY)) {
 	    if (site.units == 0)
-		site.set(State.USED);
-	    else if (site.get(State.ENEMY)) {
-		site.set(State.ATTACK);
+		site.set(S.USED);
+	    else if (site.get(S.ENEMY)) {
+		site.set(S.ATTACK);
 		for (Site n : site.neighbors.values()) {
-		    n.set(State.ATTACK);
+		    n.set(S.ATTACK);
 		    for (Site nn : n.neighbors.values())
-			nn.set(State.ATTACK);
+			nn.set(S.ATTACK);
 		}
 	    }
 	    if (site.aboveActionThreshold())
-		site.set(State.READY);
+		site.set(S.READY);
 	    if (site.aboveCombatThreshold())
-		site.set(State.COMBAT_READY);
+		site.set(S.COMBAT_READY);
 	    
 	    Entity e;
-	    if (site.get(State.MINE))
+	    if (site.get(S.MINE))
 		e = bot;
 	    else 
 		e = getEnemy(site.owner);
 	    
 	    boolean border = false;
 	    for (Site neighbor : site.neighbors.values())
-		if (neighbor.get(State.NEUTRAL)) {
+		if (neighbor.get(S.NEUTRAL)) {
 		    border = true;
 		    break;
 		} 
@@ -119,34 +120,34 @@ public class GameMap{
 		e.addInterior(site);
 	    else
 		e.addBorder(site);
-	} else if (site.get(State.NEUTRAL)) {
+	} else if (site.get(S.NEUTRAL)) {
 	    if (site.units == 0) {
 		HashMap<Integer, Boolean> neighborCheck = new HashMap<Integer, Boolean>();
 		for (Site neighbor : site.neighbors.values()) {
-		    if (neighbor.get(State.MINE))
+		    if (neighbor.get(S.MINE))
 			bot.addBattle(neighbor);
-		    else if (neighbor.get(State.ENEMY))
+		    else if (neighbor.get(S.ENEMY))
 			getEnemy(neighbor.owner).addBattle(neighbor);
 		    if (neighbor.owner != 0)
 			neighborCheck.put(neighbor.owner, true);
 		}
 		if (neighborCheck.size() == 1)
-		    site.set(State.OPEN);
-		site.set(State.BATTLE);
+		    site.set(S.OPEN);
+		site.set(S.BATTLE);
 	    } else {
 	        ArrayList<Site> frontier = new ArrayList<Site>();
 		ArrayList<Site> frontierEnemy = new ArrayList<Site>();
 		for (Site neighbor : site.neighbors.values())
-		    if (neighbor.get(State.MINE))
+		    if (neighbor.get(S.MINE))
 			frontier.add(neighbor);
-		    else if (neighbor.get(State.ENEMY))
+		    else if (neighbor.get(S.ENEMY))
 			frontierEnemy.add(neighbor);
 		if ((frontier.size() > 0) && (frontierEnemy.size() > 0)) {
 		    for (Site s : frontier)
 			bot.addGate(s);
 		    for (Site s : frontierEnemy)
 			getEnemy(s.owner).addGate(s);
-		    site.set(State.GATE);
+		    site.set(S.GATE);
 		} else {
 		    if (frontier.size() > 0)
 			bot.addFrontier(site);
@@ -191,7 +192,7 @@ public class GameMap{
     public void scoreUnexplored() {
 	ArrayList<Site> unexplored = new ArrayList<Site>((int)Stats.totalSites);
 	for (Site s : sites)
-	    if (s.get(State.UNEXPLORED))
+	    if (s.get(S.UNEXPLORED))
 		unexplored.add(s);
 	
 	scaling = (1 - ((float)unexplored.size() / Stats.totalSites));
@@ -211,12 +212,12 @@ public class GameMap{
 	for (Site s : unexplored) {	   
 	    if (total > 0) {
 		total -= s.value(P.EXPLORE_VALUE);
-		if (s.value(P.EXPLORE) < s.value(P.EXPLORE_VALUE))
-		    s.set(P.EXPLORE, s.value(P.EXPLORE_VALUE));
-		float v = s.value(P.EXPLORE) * 0.95f;
+		if (s.value(F.EXPLORE) < s.value(P.EXPLORE_VALUE))
+		    s.set(F.EXPLORE, s.value(P.EXPLORE_VALUE));
+		float v = s.value(F.EXPLORE) * 0.95f;
 		for (Site n : s.neighbors.values())
-		    if ((v >= n.value(P.EXPLORE)))
-			n.set(P.EXPLORE, v);
+		    if ((v >= n.value(F.EXPLORE)))
+			n.set(F.EXPLORE, v);
 		objectivePoints.add(s);
 	    } else
 		break;
@@ -225,19 +226,19 @@ public class GameMap{
 					     new Predicate<Site>() {
 						 @Override
 						 public boolean test(Site t) {
-						     return (t.value(P.EXPLORE) != 0);
+						     return (t.value(F.EXPLORE) != 0);
 						 }
 					     });
 
 	while (riop.hasNext()) {
 	    boolean changed = false;
 	    ArrayList<Site> sortedNeighbors = riop.next();
-	    Collections.sort(sortedNeighbors, CompareUtil.maxProperty(P.EXPLORE));
+	    Collections.sort(sortedNeighbors, CompareUtil.maxField(F.EXPLORE));
 	    for (Site s : sortedNeighbors) {
-		float absorb = s.value(P.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Site.MAX_STRENGTH)) - (Parameters.objectiveGeneratorSpread * (1 - (s.value(P.GENERATOR) / Stats.maxGenerator))));
+		float absorb = s.value(F.EXPLORE) * (0.98f - (Parameters.objectiveUnitSpread * (s.units / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.value(P.GENERATOR) / Stats.maxGenerator))));
 		for (Site sn : s.neighbors.values()) {
-		    if ((absorb > sn.value(P.EXPLORE))) {
-			sn.set(P.EXPLORE, absorb);
+		    if ((absorb > sn.value(F.EXPLORE))) {
+			sn.set(F.EXPLORE, absorb);
 			changed = true;
 		    }
 		}
@@ -245,10 +246,23 @@ public class GameMap{
 	    if (!changed)
 	    	break;
 	}
+
+	// for (int i = 0; i < 8; i++) {
+	//     for (Site s : unexplored) {
+	// 	float totalExplore = 0f;
+	// 	float value = s.v(F.EXPLORE);
+	// 	for (Site n : s.neighbors.values())
+	// 	    if (n.is(S.UNEXPLORED))
+	// 		totalExplore += n.v(F.EXPLORE) - value;
+	// 	s.stage(F.EXPLORE, (1.35f - (Parameters.objectiveUnitSpread * (s.v(P.UNITS) / Constants.MAX_UNITS)) - (Parameters.objectiveGeneratorSpread * (1 - (s.v(P.GENERATOR) / Stats.maxGenerator)))) * (s.v(F.EXPLORE) + (0.25f * totalExplore)));
+	//     }
+	//     for (Site s : sites)
+	// 	s.commit();
+
 	
 	for (Site s : sites)
-	    if (!s.get(State.UNEXPLORED) || (s.value(P.GENERATOR) == 0))
-		s.set(P.EXPLORE, 0);
+	    if (!s.get(S.UNEXPLORED) || (s.value(P.GENERATOR) == 0))
+		s.set(F.EXPLORE, 0);
     }
 	
 

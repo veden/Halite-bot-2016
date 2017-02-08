@@ -4,10 +4,13 @@ import java.util.ArrayList;
 
 import game.GameMap;
 import game.Site;
-import game.Site.Direction;
-import game.Site.P;
-import game.Site.State;
 import game.Stats;
+
+import logic.Constants;
+import logic.Constants.D;
+import logic.Constants.F;
+import logic.Constants.P;
+import logic.Constants.S;
 
 public class Actions {
 
@@ -16,40 +19,40 @@ public class Actions {
     }
     
     public static boolean commitMove(Site a, Site b) {
-	if (!a.get(State.USED) && (a != b)) {
+	if (!a.get(S.USED) && (a != b)) {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
 	    
 	    for (Site n : b.neighbors.values())
-		n.set(P.DAMAGE, n.value(P.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
+		n.set(F.DAMAGE, n.value(F.DAMAGE) * (1f - (0.35f * ((b.incoming + b.units - b.outgoing) / Constants.MAX_UNITS))));
 	
 	    for (Site n : a.neighbors.values())
-		n.set(P.REINFORCE, n.value(P.REINFORCE) * (1f - (0.0125f * ((b.incoming + b.units - b.outgoing) / Site.MAX_STRENGTH))));
+		n.set(F.REINFORCE, n.value(F.REINFORCE) * (1f - (0.0125f * ((b.incoming + b.units - b.outgoing) / Constants.MAX_UNITS))));
 	    
-	    a.set(State.USED);
+	    a.set(S.USED);
 	    return true;
 	}
 	return false;
     }
        
     public static void joint(Site s) {
-	ArrayList<Direction> ambushers = new ArrayList<Direction>();
-	for (Direction d : Site.CARDINALS) {
+	ArrayList<D> ambushers = new ArrayList<D>();
+	for (D d : Constants.CARDINALS) {
 	    Site n = s.neighbors.get(d);
-	    if (n.get(State.MINE) &&
-		!n.get(State.USED) &&
-		(n.value(P.REINFORCE) <= s.value(P.EXPLORE)) &&
-		(n.value(P.DAMAGE) == 0))
+	    if (n.get(S.MINE) &&
+		!n.get(S.USED) &&
+		(n.value(F.REINFORCE) <= s.value(F.EXPLORE)) &&
+		(n.value(F.DAMAGE) == 0))
 		
 		ambushers.add(d);
 	}
 	if (ambushers.size() > 1) {
 	    int setSize = 1 << ambushers.size();
 	    float lowest = Float.MAX_VALUE;
-	    ArrayList<Direction> lowestAmbushers = new ArrayList<Direction>();
+	    ArrayList<D> lowestAmbushers = new ArrayList<D>();
 	    for (int selection = 1; selection < setSize; selection++) {
 		int cursor = selection;
-		ArrayList<Direction> temp = new ArrayList<Direction>();
+		ArrayList<D> temp = new ArrayList<D>();
 		if ((cursor & 1) == 1) 
 		    temp.add(ambushers.get(0));
 		if ((cursor & 2) == 2)
@@ -59,15 +62,15 @@ public class Actions {
 		if ((cursor & 8) == 8)
 		    temp.add(ambushers.get(3));
 		float tempTotal = 0;
-		for (Direction d : temp)
+		for (D d : temp)
 		    tempTotal += s.neighbors.get(d).units;
 		tempTotal += s.incoming - s.units;
-		if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+		if ((tempTotal > 0) && (tempTotal <= Constants.MAX_UNITS) && (tempTotal < lowest)) {
 		    lowestAmbushers = temp;
 		    lowest = tempTotal;
 		}
 	    }
-	    for (Direction d : lowestAmbushers) {
+	    for (D d : lowestAmbushers) {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
@@ -77,15 +80,15 @@ public class Actions {
     }
     
     public static void explore(Site s) {
-	for (Direction d : Site.CARDINALS) {
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.explore(s, neighbor) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE))) {
+	    if (ValidateAction.explore(s, neighbor) && (s.value(F.REINFORCE) <= neighbor.value(F.EXPLORE))) {
 		if (s.target() == s)
 		    s.heading = d;
 		else { 
-		    if (((s.target().value(P.EXPLORE) == neighbor.value(P.EXPLORE)) &&
+		    if (((s.target().value(F.EXPLORE) == neighbor.value(F.EXPLORE)) &&
 			 (s.target().value(P.EXPLORE_VALUE) < neighbor.value(P.EXPLORE_VALUE))) ||
-			(s.target().value(P.EXPLORE) < neighbor.value(P.EXPLORE)))
+			(s.target().value(F.EXPLORE) < neighbor.value(F.EXPLORE)))
 			s.heading = d;
 		}
 	    }
@@ -97,23 +100,23 @@ public class Actions {
 
     public static void assist(Site s) {
 	Site target = s;
-	ArrayList<Direction> help = new ArrayList<Direction>();
-	for (Direction d : Site.CARDINALS) {
+	ArrayList<D> help = new ArrayList<D>();
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (neighbor.get(State.MINE)) {
-		if (!neighbor.get(State.USED) && (s.value(P.REINFORCE) >= neighbor.value(P.REINFORCE)) && (neighbor.value(P.DAMAGE) == 0))
+	    if (neighbor.get(S.MINE)) {
+		if (!neighbor.get(S.USED) && (s.value(F.REINFORCE) >= neighbor.value(F.REINFORCE)) && (neighbor.value(F.DAMAGE) == 0))
 		    help.add(d);
-	    } else if (neighbor.get(State.UNEXPLORED)) 
-		if ((target.value(P.EXPLORE) <= neighbor.value(P.EXPLORE)) && (s.value(P.REINFORCE) <= neighbor.value(P.EXPLORE)))
+	    } else if (neighbor.get(S.UNEXPLORED)) 
+		if ((target.value(F.EXPLORE) <= neighbor.value(F.EXPLORE)) && (s.value(F.REINFORCE) <= neighbor.value(F.EXPLORE)))
 		    target = neighbor;
 	}
 	if ((target != s) && ((s.incoming + s.units + s.value(P.GENERATOR)) < target.units) && (s.outgoing == 0)) {
 	    int setSize = 1 << help.size();
 	    float lowest = Float.MAX_VALUE;
-	    ArrayList<Direction> lowestHelp = new ArrayList<Direction>();
+	    ArrayList<D> lowestHelp = new ArrayList<D>();
 	    for (int selection = 1; selection < setSize; selection++) {
 		int cursor = selection;
-		ArrayList<Direction> temp = new ArrayList<Direction>();
+		ArrayList<D> temp = new ArrayList<D>();
 		if ((cursor & 1) == 1) 
 		    temp.add(help.get(0));
 		if ((cursor & 2) == 2)
@@ -123,36 +126,36 @@ public class Actions {
 		if ((cursor & 8) == 8)
 		    temp.add(help.get(3));
 		float tempTotal = 0;
-		for (Direction d : temp)
+		for (D d : temp)
 		    tempTotal += s.neighbors.get(d).units;
 		tempTotal += s.incoming + s.units + s.value(P.GENERATOR) - target.units;
-		if ((tempTotal > 0) && (tempTotal <= Site.MAX_STRENGTH) && (tempTotal < lowest)) {
+		if ((tempTotal > 0) && (tempTotal <= Constants.MAX_UNITS) && (tempTotal < lowest)) {
 		    lowestHelp = temp;
 		    lowest = tempTotal;
 		}
 	    }
-	    for (Direction d : lowestHelp) {
+	    for (D d : lowestHelp) {
 		Site neighbor = s.neighbors.get(d);
 		neighbor.heading = Site.reverse(d);
 		Actions.commitMove(neighbor, s);
 		neighbor.action = Action.ASSIST;
 	    }
 	    if (lowestHelp.size() > 0)
-		s.set(State.USED);
+		s.set(S.USED);
 	}
     }
     
-    public static void reinforce(Site s, P siteProperty) {
-	Direction bump = null;
+    public static void reinforce(Site s, F field) {
+	D bump = null;
 	
-	for (Direction d : Site.CARDINALS) {
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
-	    if (ValidateAction.move(s, neighbor) && (s.target().value(siteProperty) < neighbor.value(siteProperty))) {
+	    if (ValidateAction.move(s, neighbor) && (s.target().value(field) < neighbor.value(field))) {
 		s.heading = d;
 		bump = null;
 	    }
 	    
-	    if (ValidateAction.bump(s, neighbor) && (s.target().value(siteProperty) < neighbor.value(siteProperty))) {
+	    if (ValidateAction.bump(s, neighbor) && (s.target().value(field) < neighbor.value(field))) {
 		s.heading = d;
 		bump = d;
 	    }
@@ -170,19 +173,19 @@ public class Actions {
 
     public static void attack(Site s) {
 	int lowestCount = Integer.MAX_VALUE;
-	for (Direction d : Site.CARDINALS) {
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
 	    int count = 0;
 	    for (Site n : neighbor.neighbors.values())
-		if (n.get(State.MINE))
+		if (n.get(S.MINE))
 		    count++;
-		else if (n.get(State.ENEMY))
+		else if (n.get(S.ENEMY))
 		    count--;
 		else
 		    count -= 0.5f;
 	    if (ValidateAction.attack(s, neighbor) &&
 		(count <= lowestCount) &&
-		(s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE))) {
+		(s.target().value(F.DAMAGE) <= neighbor.value(F.DAMAGE))) {
 		
 		lowestCount = count;
 		s.heading = d;
@@ -193,10 +196,10 @@ public class Actions {
     }
 
     public static void breach(Site s, GameMap map) {
-	for (Direction d : Site.CARDINALS) {
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
 	    if (ValidateAction.breach(s, neighbor, map) &&
-		(s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE))) {
+		(s.target().value(F.DAMAGE) <= neighbor.value(F.DAMAGE))) {
 		
 		s.heading = d;
 	    }
@@ -207,17 +210,17 @@ public class Actions {
     
     public static void capture(Site s) {
 	int lowestCount = Integer.MAX_VALUE;
-	for (Direction d : Site.CARDINALS) {
+	for (D d : Constants.CARDINALS) {
 	    Site neighbor = s.neighbors.get(d);
 	    int count = 0;
 	    for (Site n : neighbor.neighbors.values())
-		if (n.get(State.MINE))
+		if (n.get(S.MINE))
 		    count++;
-		else if (n.get(State.ENEMY))
+		else if (n.get(S.ENEMY))
 		    count--;
 	    if (ValidateAction.capture(s, neighbor) &&
 		(count <= lowestCount) &&
-		((s.target().value(P.DAMAGE) <= neighbor.value(P.DAMAGE)) || (s.units <= Stats.maxGenerator))) {
+		((s.target().value(F.DAMAGE) <= neighbor.value(F.DAMAGE)) || (s.units <= Stats.maxGenerator))) {
 
 		lowestCount = count;
 		s.heading = d;
@@ -231,12 +234,12 @@ public class Actions {
 	if (s.moving() && (s.units > Stats.maxGenerator)) {
 	    float unitBuildUp = 0;
 	    for (Site n : s.target().neighbors.values())
-		if (n.get(State.ENEMY) && (n.units > unitBuildUp))
+		if (n.get(S.ENEMY) && (n.units > unitBuildUp))
 		    unitBuildUp += n.units;
 	    float units = s.units + s.incoming - s.outgoing;
 	    if (unitBuildUp < units * 1.16f)
 		for (Site n : s.target().neighbors.values())
-		    n.set(P.LOCKED, 0);
+		    n.set(P.ALLOWED_UNITS, 0);
 	}
     }
 }

@@ -5,8 +5,9 @@ import java.util.HashSet;
 import game.Debug;
 import game.GameMap;
 import game.Site;
-import game.Site.P;
-import game.Site.State;
+
+import logic.Constants.P;
+import logic.Constants.S;
 
 abstract public class Entity {
     public int id;
@@ -39,40 +40,40 @@ abstract public class Entity {
     }
 
     public void addGate(Site s) {
-	if (!s.get(State.GATE)) {
-	    if (s.get(State.BORDER))
-		s.remove(State.BORDER);
-	    else if (s.get(State.BATTLE))
-		s.remove(State.BATTLE);
+	if (!s.get(S.GATE)) {
+	    if (s.get(S.BORDER))
+		s.remove(S.BORDER);
+	    else if (s.get(S.BATTLE))
+		s.remove(S.BATTLE);
 	    else 
 		addSite(s);
-	    s.set(State.GATE);
+	    s.set(S.GATE);
 	}
     }
        
     public void addFrontier(Site s) {
-	s.set(State.FRONTIER);
+	s.set(S.FRONTIER);
     }
 
     public void addBorder(Site s) {
-	if (!s.get(State.BATTLE) && !s.get(State.GATE) && !s.get(State.BORDER)) {
+	if (!s.get(S.BATTLE) && !s.get(S.GATE) && !s.get(S.BORDER)) {
 	    addSite(s);
-	    s.set(State.BORDER);
+	    s.set(S.BORDER);
 	}
     }
     
     public void addBattle(Site s) {
-	if (!s.get(State.BATTLE) && !s.get(State.GATE)) {
-	    if (s.get(State.BORDER))
-		s.remove(State.BORDER);
+	if (!s.get(S.BATTLE) && !s.get(S.GATE)) {
+	    if (s.get(S.BORDER))
+		s.remove(S.BORDER);
 	    else 
 		addSite(s);
-	    s.set(State.BATTLE);
+	    s.set(S.BATTLE);
 	}
     }
 
     public void addInterior(Site s) {
-	s.set(State.INTERIOR);
+	s.set(S.INTERIOR);
 	addSite(s);
     }
 
