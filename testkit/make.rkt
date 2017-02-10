@@ -22,8 +22,8 @@
      seed
      solution))
 
-  (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot") 
-  ;;(define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v24/; java -Xmx250m MyBot")
+    (define currentBot "cd /data/factory/repo/wkJava/halite/src/; java -Xmx250m MyBot") 
+  ;;  (define currentBot "cd /data/factory/repo/wkJava/halite/src/release/v27/; java -Xmx250m MyBot")
 
   (define botPool '("cd /data/factory/repo/wkJava/halite/src/release/v10/; java MyBot"
                     "cd /data/factory/repo/wkJava/halite/src/release/v11/; java MyBot"
@@ -34,6 +34,8 @@
                     "cd /data/factory/repo/wkJava/halite/src/release/v16/; java MyBot"
                     ))
 
+  (define playerPool '(2 2 2 2 2 3 3 3 3 4 4 4 5 5 6))
+  
   (define sizePool '(20
                      25
                      25
@@ -61,7 +63,7 @@
             (#t (let* ((randomIndex (random (length bots)))
                        (bot (list-ref bots randomIndex)))
                   (h (- c 1) botPos (remove bot bots) (cons bot acc))))))
-    (let ((bots (random 2 7)))
+    (let ((bots (list-ref playerPool (random (length playerPool)))))
       (h bots (random 1 (+ 1 bots)) botPool null)))
 
   (define (updateBotSolution bots solution)
