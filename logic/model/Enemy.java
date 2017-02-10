@@ -106,7 +106,7 @@ public class Enemy extends Entity {
 	for (Site b : body)
 	    b.commit(F.DAMAGE);
 
-	float defenseRange = Math.max(map.scaling * 1.125f * map.scale, 8f);
+	float defenseRange = Math.max(map.scaling * map.scale, 8f);
 
 	Collections.sort(warfare, maxGeneratorUnits);
 	for (Site w : warfare)
