@@ -72,14 +72,34 @@ public class Enemy extends Entity {
     
     public void placeDefense() {
 	ArrayList<Site> body = new ArrayList<Site>((int)Stats.totalSites);
+	ArrayList<Site> border = new ArrayList<Site>((int)Stats.totalSites);
 	ArrayList<Site> warfare = new ArrayList<Site>((int)Stats.totalSites);
 	for (Site s : map.sites)
 	    if (s.owner == id) 
-		if (s.is(S.BORDER) || s.is(S.INTERIOR))
+		if (s.is(S.INTERIOR))
 		    body.add(s);
+		else if (s.is(S.BORDER))
+		    border.add(s);
 		else if (s.is(S.BATTLE) || s.is(S.GATE))
 		    warfare.add(s);
-	
+
+	body.addAll(border);
+	border.addAll(warfare);
+
+	RingIterator getFrontier = new RingIterator(border,
+						    new Predicate<Site>() {
+							@Override
+							public boolean test(Site t) {
+							    return t.is(S.UNEXPLORED);
+							}
+						    });
+
+	if (map.bot.totalUnits < totalUnits * 1.1)
+	    for (int d = 3; (d > 0) && getFrontier.hasNext(); d--) {
+		for (Site s : getFrontier.next()) {
+		    s.scale(F.EXPLORE, 0.99f - (d * 0.25f));
+		}
+	    }
 	
 	Collections.sort(body, maxGeneratorUnits);
 	
@@ -89,9 +109,11 @@ public class Enemy extends Entity {
 	    b.commit(F.DAMAGE);
 
 	float defenseRange = Math.max(map.scaling * 1.125f * map.scale, 8f);
-	
+
 	Collections.sort(warfare, maxGeneratorUnits);
 	for (Site w : warfare)
 	    spreadDamage(w, defenseRange);
     }
+
+    
 }

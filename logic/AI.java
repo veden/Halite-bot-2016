@@ -220,7 +220,10 @@ public class AI extends Entity {
 	
 	Collections.sort(body, maxUnitDistanceCompare);
 	for (Site s : body) {
-	    if (s.is(S.READY)) {
+	    // if (s.is(S.BORDER) && !s.moving())
+	    // 	Actions.claim(s);
+	    
+	    if (s.is(S.READY) && !s.moving()) {
 		if (s.v(F.DAMAGE) == 0) {
 		    Actions.reinforce(s, F.REINFORCE);
 		} else

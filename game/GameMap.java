@@ -208,8 +208,10 @@ public class GameMap{
 	ArrayList<Site> objectivePoints = new ArrayList<Site>();
 
 	float total = 0f;
+	float eliteTotal = 0f;
 	for (Site s : unexplored)
 	    total += s.v(P.EXPLORE_VALUE);
+	eliteTotal = total * 0.1f;
 	total *= Parameters.objectiveThreshold;
 	
 	for (Site s : unexplored) {	   
@@ -222,6 +224,10 @@ public class GameMap{
 		    if ((v >= n.v(F.EXPLORE)))
 			n.set(F.EXPLORE, v);
 		objectivePoints.add(s);
+		if (eliteTotal > 0) {
+		    eliteTotal -= s.v(P.EXPLORE_VALUE);
+		    s.set(S.OBJECTIVE);
+		}
 	    } else
 		break;
 	}
@@ -253,6 +259,7 @@ public class GameMap{
 	for (Site s : sites)
 	    if (s.isNot(S.UNEXPLORED) || (s.v(P.GENERATOR) == 0))
 		s.set(F.EXPLORE, 0);
+	
     }
 	
 
@@ -267,6 +274,11 @@ public class GameMap{
 	for (Entry<Integer, Enemy> e : enemies.entrySet())
 	    e.getValue().placeDefense();
     }
+
+    // public void identifyEnemyAura() {
+    // 	for (Entry<Integer, Enemy> e : enemies.entrySet())
+    // 	    e.getValue().sour();
+    // }
     
     public Enemy getEnemy(int id) {
 	if (!enemies.containsKey(id))

@@ -28,7 +28,7 @@ public class Constants {
     }
 
     public static enum A {
-	IDLE, EXPLORE, JOINT, ASSIST, REINFORCE, BUMP, CAPTURE, BREACH, ATTACK
+	IDLE, EXPLORE, JOINT, ASSIST, REINFORCE, BUMP, CAPTURE, BREACH, ATTACK, CLAIM
     }
     
     public static final EnumSet<D> DIRECTIONS = EnumSet.of(D.STILL, D.NORTH, D.EAST, D.SOUTH, D.WEST);

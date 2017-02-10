@@ -45,7 +45,15 @@ public class ValidateAction {
 	}
 	return false;
     }
-
+    
+    public static boolean claim(Site a, Site b) {
+	if (a.isNot(S.USED) && b.is(S.UNEXPLORED) && b.is(S.OBJECTIVE) && (b.v(P.ALLOWED_UNITS) >= a.units) && (b.incoming < b.units)) {
+	    float remainingUnits = a.units + b.incoming - b.units;
+	    return (remainingUnits > 0) && (remainingUnits <= Constants.MAX_UNITS);
+	}
+	return false;
+    }
+    
     public static boolean capture(Site a, Site b) {
 	return a.isNot(S.USED) && b.is(S.OPEN) && (b.v(P.ALLOWED_UNITS) >= a.units) && (b.incoming == 0);
     }

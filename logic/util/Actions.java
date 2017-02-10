@@ -75,6 +75,24 @@ public class Actions {
 	    }
 	}
     }
+
+    public static void claim(Site s) {
+	for (D d : Constants.CARDINALS) {
+	    Site neighbor = s.neighbors.get(d);
+	    if (ValidateAction.claim(s, neighbor) && (s.v(F.REINFORCE) <= neighbor.v(F.EXPLORE))) {
+		if (s.target() == s)
+		    s.heading = d;
+		else { 
+		    if (((s.target().v(F.EXPLORE) == neighbor.v(F.EXPLORE)) &&
+			 (s.target().v(P.EXPLORE_VALUE) < neighbor.v(P.EXPLORE_VALUE))) ||
+			(s.target().v(F.EXPLORE) < neighbor.v(F.EXPLORE)))
+			s.heading = d;
+		}
+	    }
+	}
+	if (s.moving())
+	    s.action = A.CLAIM;
+    }
     
     public static void explore(Site s) {
 	for (D d : Constants.CARDINALS) {
