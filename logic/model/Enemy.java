@@ -56,6 +56,8 @@ public class Enemy extends Entity {
 
     public void spreadDamage(Site s, float defenseRange) {	
 	float svalue = 1f + (Parameters.enemyGeneratorWeight * (s.v(P.GENERATOR) / Stats.maxGenerator)) + (Parameters.enemyUnitWeight * (s.units / Constants.MAX_UNITS));
+	// if (s.is(S.GATE))
+	//     svalue *= 0.85f;
 	if (svalue > s.v(F.DAMAGE))
 	    s.set(F.DAMAGE, svalue);
 	RingIterator ri = new RingIterator(s, isBattleOrMine);
@@ -63,6 +65,8 @@ public class Enemy extends Entity {
 	    for (Site r : ri.next()) {
 		for (Site n : r.neighbors.values()) {
 		    float v = 0.8f * n.v(F.DAMAGE);
+		    // if (r.is(S.GATE))
+		    // 	v *= 0.85f;
 		    if (v > r.v(F.DAMAGE))
 			r.set(F.DAMAGE, v);
 		}
@@ -94,10 +98,12 @@ public class Enemy extends Entity {
 							}
 						    });
 
-	if (map.bot.totalUnits < totalUnits * 1.1)
+	boolean strongerEnemy = map.bot.totalUnits < totalUnits * 1.1f || map.bot.totalGenerator < totalGenerator * 1.3125f;
+	
+	if (strongerEnemy)
 	    for (int d = 3; (d > 0) && getFrontier.hasNext(); d--) 
 		for (Site s : getFrontier.next()) 
-		    s.scale(F.EXPLORE, 0.99f - (d * 0.25f));
+		    s.scale(F.EXPLORE, 0.95f - (d * 0.25f));
 	
 	Collections.sort(body, maxGeneratorUnits);
 	

@@ -63,15 +63,15 @@ public class ValidateAction {
 	    float highestUnit = 0;
 	    boolean strongerThan = true;
 	    for (Site neighbor : b.neighbors.values()) {
-		float v = neighbor.v(P.GENERATOR);
-		if (neighbor.is(S.ENEMY) && (highestUnit < v)) {
-		    highestUnit = v;
-		    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
-			strongerThan = false;
-		}
+	    	float v = neighbor.v(P.GENERATOR);
+	    	if (neighbor.is(S.ENEMY) && (highestUnit < v)) {
+	    	    highestUnit = v;
+	    	    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
+	    		strongerThan = false;
+	    	}
 	    }
  	    if (!strongerThan)
-		return false;
+	    	return false;
 	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit;
 	    return (v > 0) && (v <= Constants.MAX_UNITS);

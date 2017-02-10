@@ -20,7 +20,7 @@ public class Actions {
 	    a.outgoing += a.units;
 	    b.incoming += a.units;
 
-	    //b.accumulate(P.ALLOWED_UNITS, -a.units);
+	    //	    b.accumulate(P.ALLOWED_UNITS, -a.units);
 
 	    //	    if (a.action != A.BUMP) {
 	    float decay = ((b.incoming + b.units - b.outgoing) / Constants.MAX_UNITS);
@@ -249,10 +249,10 @@ public class Actions {
 	if (s.moving() && (s.units > Stats.maxGenerator)) {
 	    float unitBuildUp = 0;
 	    for (Site n : s.target().neighbors.values())
-		if (n.is(S.ENEMY) && (n.units > unitBuildUp))
-		    unitBuildUp += n.units;
+		if (n.is(S.ENEMY))
+		    unitBuildUp += n.units * 0.7f;
 	    float units = s.units + s.incoming - s.outgoing;
-	    if (unitBuildUp < units * 1.15f)
+	    if (unitBuildUp < units * 1.1f)
 		for (Site n : s.target().neighbors.values())
 		    n.set(P.ALLOWED_UNITS, 0);
 	}
