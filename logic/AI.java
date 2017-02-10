@@ -210,7 +210,7 @@ public class AI extends Entity {
 	
 	Collections.sort(frontier, maxExploreCompare);
 		    
-	totalExplore *= 0.87f;
+	totalExplore *= 0.8f;
 	for (Site s : frontier)
 	    if (totalExplore > 0) {
 		totalExplore -= s.v(F.EXPLORE);
@@ -224,9 +224,9 @@ public class AI extends Entity {
 	    	Actions.claim(s);
 	    
 	    if (s.is(S.READY) && !s.moving()) {
-		if (s.v(F.DAMAGE) == 0) {
+		if (s.v(F.DAMAGE) == 0)
 		    Actions.reinforce(s, F.REINFORCE);
-		} else
+		else
 		    Actions.reinforce(s, F.DAMAGE);
 	    }
 

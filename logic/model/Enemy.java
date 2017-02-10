@@ -62,7 +62,7 @@ public class Enemy extends Entity {
 	for (int d = 0; (d < defenseRange) && ri.hasNext(); d++) {
 	    for (Site r : ri.next()) {
 		for (Site n : r.neighbors.values()) {
-		    float v = 0.90f * n.v(F.DAMAGE);
+		    float v = 0.8f * n.v(F.DAMAGE);
 		    if (v > r.v(F.DAMAGE))
 			r.set(F.DAMAGE, v);
 		}
