@@ -95,11 +95,9 @@ public class Enemy extends Entity {
 						    });
 
 	if (map.bot.totalUnits < totalUnits * 1.1)
-	    for (int d = 3; (d > 0) && getFrontier.hasNext(); d--) {
-		for (Site s : getFrontier.next()) {
+	    for (int d = 3; (d > 0) && getFrontier.hasNext(); d--) 
+		for (Site s : getFrontier.next()) 
 		    s.scale(F.EXPLORE, 0.99f - (d * 0.25f));
-		}
-	    }
 	
 	Collections.sort(body, maxGeneratorUnits);
 	
