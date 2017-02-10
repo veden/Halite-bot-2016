@@ -115,6 +115,13 @@ public class Site {
 	    properties.put(property, 0f);
 	properties.put(property, properties.get(property) + v);
     }
+
+
+    public void scale(F field, float v) {
+	if (!fields.containsKey(field))
+	    fields.put(field, 0f);
+	fields.put(field, fields.get(field) * v);
+    }
     
     public void set(S s) {
 	status.add(s);
