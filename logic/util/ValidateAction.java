@@ -1,5 +1,8 @@
 package logic.util;
 
+import java.util.HashSet;
+import java.util.function.Predicate;
+
 import game.GameMap;
 import game.Site;
 
@@ -62,15 +65,28 @@ public class ValidateAction {
 	if (a.isNot(S.USED) && b.is(S.NEUTRAL) && b.is(S.GATE) && (b.v(P.ALLOWED_UNITS) >= a.units)) {
 	    float highestUnit = 0;
 	    boolean strongerThan = true;
+
+	    float totalUnits = 0f;
+	    RingIterator ri = new RingIterator(a,
+					       new Predicate<Site>() {
+						   @Override
+						   public boolean test(Site t) {
+						       return t.is(S.MINE);
+						   }
+					       });
+	    for (int i = 0; i < 3 && ri.hasNext(); i++)
+		for (Site s : ri.next())
+		    totalUnits += s.units;
+	    
 	    for (Site neighbor : b.neighbors.values()) {
-	    	float v = neighbor.v(P.GENERATOR);
-	    	if (neighbor.is(S.ENEMY) && (highestUnit < v)) {
-	    	    highestUnit = v;
-	    	    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
-	    		strongerThan = false;
-	    	}
+		float v = neighbor.v(P.GENERATOR);
+		if (neighbor.is(S.ENEMY) && (highestUnit < v)) {
+		    highestUnit = v;
+		    if (map.getEnemy(neighbor.owner).totalUnits > (0.95 * map.bot.totalUnits))
+			strongerThan = false;
+		}
 	    }
- 	    if (!strongerThan)
+ 	    if (!strongerThan && (totalUnits < 1650))
 	    	return false;
 	    highestUnit = highestUnit > b.units ? highestUnit : b.units;
 	    float v = a.units + b.incoming - highestUnit;
@@ -80,7 +96,8 @@ public class ValidateAction {
     }
     
     public static boolean attack(Site a, Site b) {
-	if (a.isNot(S.USED) && b.is(S.NEUTRAL) && b.is(S.BATTLE) && b.isNot(S.GATE) && b.isNot(S.OPEN) && (b.v(P.ALLOWED_UNITS) >= a.units)) {
+	if (a.isNot(S.USED) && b.is(S.NEUTRAL) && b.is(S.BATTLE) && b.isNot(S.GATE) && b.isNot(S.OPEN)
+	    && (b.v(P.ALLOWED_UNITS) >= a.units)) {
 	    float v = a.units + b.incoming;
 	    return (v <= Constants.MAX_UNITS);
 	} else

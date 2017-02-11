@@ -35,7 +35,7 @@ public class MyBot {
 	map.prepSites();
 	
 	Debug.startup(map);
-	server.sendInit("VedenV31");
+	server.sendInit("VedenV32");
 
 	while(true) {
 	    start = Debug.startClock(turn);
